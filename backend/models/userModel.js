@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
           default: false,
         },
         bookTitle: String,
-        borroewedDate: Date,
+        borrowedDate: Date,
         dueDate: Date,
       },
     ],

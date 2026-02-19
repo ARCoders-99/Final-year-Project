@@ -8,6 +8,8 @@ import { generateForgotPasswordEmailTemplate } from "../utils/emailTemplates.js"
 import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto";
 
+
+
 export const register = catchAsyncErrors(async (req, res, next) => {
   const { name, email, password } = req.body;
 
