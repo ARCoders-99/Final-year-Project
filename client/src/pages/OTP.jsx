@@ -11,7 +11,7 @@ const OTP = () => {
   const [otp, setOtp] = useState("");
   const dispatch = useDispatch();
 
-  const { loading, error, message,  isAuthenticated } = useSelector(
+  const { loading, error, message, isAuthenticated } = useSelector(
     (state) => state.auth
   );
 
@@ -65,13 +65,15 @@ const OTP = () => {
                   onChange={(e) => setOtp(e.target.value)}
                   placeholder="OTP"
                   className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                  required
                 />
               </div>
               <button
                 type="submit"
                 className="border-2 mt-5 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
+                disabled={loading}
               >
-                Verify
+                {loading ? "Verifying..." : "Verify"}
               </button>
             </form>
           </div>

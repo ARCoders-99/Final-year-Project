@@ -12,12 +12,13 @@ import { logout, resetAuthSlice } from "../store/slices/authSlice";
 import { toggleAddNewAdminPopup, toggleSettingPopup } from "../store/slices/popUpSlice";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import AddNewAdmin from "../popups/AddNewAdmin";
 import SettingPopup from "../popups/SettingPopup";
 
-const SideBar = ({ isSideBarOpen, setIsSideBarOpen, setSelectedComponent }) => {
+const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
   const dispatch = useDispatch();
-  const { addNewAdminPopup , settingPopup } = useSelector((state) => state.popup);
+  const { addNewAdminPopup, settingPopup } = useSelector((state) => state.popup);
 
   const { loading, error, message, isAuthenticated, user } = useSelector(
     (state) => state.auth
@@ -38,44 +39,45 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen, setSelectedComponent }) => {
     }
   }, [dispatch, isAuthenticated, error, loading, message]);
 
+  const isAdmin = user?.role === "Admin";
+
   return (
     <>
       <aside
-        className={`${
-          isSideBarOpen ? "left-0" : "-left-full"
-        } z-10 transition-all duration-700 md:relative md:left-0 flex w-64 bg-black text-white flex-col h-full`}
+        className={`${isSideBarOpen ? "left-0" : "-left-full"
+          } z-10 transition-all duration-700 md:relative md:left-0 flex w-64 bg-black text-white flex-col h-full`}
         style={{ position: "fixed" }}
       >
         <div className="px-6 py-4 my-8">
           <img src={logo_with_title} alt="logo" />
         </div>
         <nav className="flex-1 px-6 space-y-2">
-          <button
-            onClick={() => setSelectedComponent("Dashboard")}
-            className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
-          >
-            <img src={dashboardIcon} alt="dashboard" /> <span>Dashboard</span>
-          </button>
-          <button
-            onClick={() => setSelectedComponent("Books")}
-            className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
-          >
-            <img src={bookIcon} alt="books" /> <span>Books</span>
-          </button>
-          {isAuthenticated && user?.role === "Admin" && (
+          {isAdmin ? (
             <>
-              <button
-                onClick={() => setSelectedComponent("Catalog")}
+              <Link
+                to="/admin/dashboard"
+                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+              >
+                <img src={dashboardIcon} alt="dashboard" /> <span>Dashboard</span>
+              </Link>
+              <Link
+                to="/admin/books"
+                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+              >
+                <img src={bookIcon} alt="books" /> <span>Books</span>
+              </Link>
+              <Link
+                to="/admin/catalog"
                 className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
               >
                 <img src={catalogIcon} alt="catalog" /> <span>Catalog</span>
-              </button>
-              <button
-                onClick={() => setSelectedComponent("Users")}
+              </Link>
+              <Link
+                to="/admin/users"
                 className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
               >
                 <img src={usersIcon} alt="users" /> <span>Users</span>
-              </button>
+              </Link>
               <button
                 onClick={() => dispatch(toggleAddNewAdminPopup())}
                 className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
@@ -83,19 +85,27 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen, setSelectedComponent }) => {
                 <RiAdminFill className="w-6 h-6" /> <span>Add New Admin</span>
               </button>
             </>
+          ) : (
+            <>
+              <Link
+                to="/"
+                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+              >
+                <img src={dashboardIcon} alt="dashboard" /> <span>Dashboard</span>
+              </Link>
+              <Link
+                to="/borrowed"
+                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+              >
+                <img src={catalogIcon} alt="my-borrowed-books" />{" "}
+                <span>My Borrowed Books</span>
+              </Link>
+            </>
           )}
-          {isAuthenticated && user?.role === "User" && (
-            <button
-              onClick={() => setSelectedComponent("My Borrowed Books")}
-              className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
-            >
-              <img src={catalogIcon} alt="my-borrowed-books" />{" "}
-              <span>My Borrowed Books</span>
-            </button>
-          )}
+
           <button
             onClick={() => dispatch(toggleSettingPopup())}
-            className="  w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+            className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
           >
             <img src={settingIcon} alt="setting" />{" "}
             <span>Update Credentials</span>
@@ -121,11 +131,11 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen, setSelectedComponent }) => {
     </>
   );
 };
+
 import PropTypes from "prop-types";
 SideBar.propTypes = {
   isSideBarOpen: PropTypes.bool.isRequired,
   setIsSideBarOpen: PropTypes.func.isRequired,
-  setSelectedComponent: PropTypes.func.isRequired,
 };
 
 export default SideBar;

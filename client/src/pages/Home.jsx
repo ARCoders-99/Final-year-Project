@@ -1,19 +1,18 @@
-import   { useState } from "react";
+import { useState } from "react";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import Sidebar from "../layout/SideBar";
 import UserDashboard from "../components/UserDashboard";
-import AdminDashboard from "../components/AdminDashboard";
-import Catalogt from "../components/Catalog";
+import AdminDashboard from "../admin/AdminDashboard";
+import Catalog from "../admin/Catalog";
 import MyBorrowedBooks from "../components/MyBorrowedBooks";
-import BookManagement from "../components/BookManagement";
-import Users from "../components/Users";
+import BookManagement from "../admin/BookManagement";
+import Users from "../admin/Users";
 
 const Home = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
-  const [selectedComponent, setSelectedComponent] = useState("");
-
+  const location = useLocation();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   if (!isAuthenticated) {
@@ -21,30 +20,25 @@ const Home = () => {
   }
 
   const renderComponent = () => {
-    switch (selectedComponent) {
-      case "Dashboard":
-        return user?.role === "User" ? <UserDashboard /> : <AdminDashboard />;
+    const path = location.pathname;
 
-      case "Books":
+    switch (path) {
+      case "/admin/dashboard":
+        return <AdminDashboard />;
+      case "/admin/books":
         return <BookManagement />;
-
-      case "Catalog":
-        if (user?.role === "Admin") {
-          return <Catalogt />;
-        }
-        return null;
-
-      case "Users":
-        if (user?.role === "Admin") {
-          return <Users />;
-        }
-        return null;
-
-      case "My Borrowed Books":
+      case "/admin/catalog":
+        return <Catalog />;
+      case "/admin/users":
+        return <Users />;
+      case "/catalog":
+      case "/dashboard":
+      case "/":
+        return user?.role === "Admin" ? <AdminDashboard /> : <UserDashboard />;
+      case "/borrowed":
         return <MyBorrowedBooks />;
-
       default:
-        return user?.role === "User" ? <UserDashboard /> : <AdminDashboard />;
+        return user?.role === "Admin" ? <AdminDashboard /> : <UserDashboard />;
     }
   };
 
@@ -63,7 +57,6 @@ const Home = () => {
         <Sidebar
           isSideBarOpen={isSideBarOpen}
           setIsSideBarOpen={setIsSideBarOpen}
-          setSelectedComponent={setSelectedComponent}
         />
 
         {/* Main Content */}

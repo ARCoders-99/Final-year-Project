@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -12,6 +12,29 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllUsers } from "./store/slices/userSlice";
 import { fetchAllBooks } from "./store/slices/bookSlice";
 import { fetchAllBorrowedBooks, fetchUserBorrowedBooks } from "./store/slices/borrowSlice";
+import AdminLogin from "./admin/AdminLogin";
+import AdminDashboard from "./admin/AdminDashboard";
+import BookManagement from "./admin/BookManagement";
+import Users from "./admin/Users";
+import Catalog from "./admin/Catalog";
+import UserDashboard from "./components/UserDashboard";
+import MyBorrowedBooks from "./components/MyBorrowedBooks";
+
+const ProtectedRoute = ({ children, adminOnly = false }) => {
+  const { isAuthenticated, loading, user } = useSelector((state) => state.auth);
+
+  if (loading) return null;
+
+  if (!isAuthenticated) {
+    return <Navigate to={adminOnly ? "/admin-login" : "/login"} replace />;
+  }
+
+  if (adminOnly && user?.role !== "Admin") {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
 
 const App = () => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
@@ -21,10 +44,7 @@ const App = () => {
   useEffect(() => {
     if (hasCheckedAuth.current) return;
     hasCheckedAuth.current = true;
-
-    dispatch(getUser()).catch(() => {
-      console.log("User not authenticated - normal when logged out");
-    });
+    dispatch(getUser());
   }, [dispatch]);
 
   useEffect(() => {
@@ -35,21 +55,32 @@ const App = () => {
     }
     if (user?.role === "Admin") {
       dispatch(fetchAllUsers());
-      dispatch(fetchAllBorrowedBooks())
+      dispatch(fetchAllBorrowedBooks());
     }
   }, [isAuthenticated, user, dispatch]);
 
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
+        {/* User Routes */}
+        <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/password/forgot" element={<ForgotPassword />} />
         <Route path="/otp-verification/:email" element={<OTP />} />
         <Route path="/password/reset/:token" element={<ResetPassword />} />
+
+        {/* Admin Portal Routes */}
+        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
+        <Route path="/admin/books" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
+        <Route path="/admin/catalog" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <ToastContainer theme="dark" />
+      <ToastContainer theme="dark" position="top-right" />
     </Router>
   );
 };

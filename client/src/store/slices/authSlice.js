@@ -216,6 +216,7 @@ export const login = (data) => async (dispatch) => {
   }
 };
 
+
 export const logout = () => async (dispatch) => {
   dispatch(authSlice.actions.logoutRequest());
   try {

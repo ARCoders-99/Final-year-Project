@@ -10,10 +10,12 @@ const RecordBookPopup = ({ bookId }) => {
 
   const handleRecordBook = (e) => {
     e.preventDefault();
+
     if (!bookId) {
       console.error("Book ID is missing!");
       return;
     }
+
     dispatch(recordBorrowBook(email, bookId));
   };
 
@@ -32,14 +34,14 @@ const RecordBookPopup = ({ bookId }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Borrower's Email"
-                className="w-full px-4 py-2 border-2 border-black rounded-md"
+                className="w-full px-4 py-2 border-2 border-black rounded-md focus:outline-none"
                 required
               />
             </div>
 
             <div className="flex justify-end space-x-4">
               <button
-                className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300"
+                className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 font-semibold"
                 type="button"
                 onClick={() => dispatch(toggleRecordBookPopup())}
               >
@@ -47,7 +49,7 @@ const RecordBookPopup = ({ bookId }) => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 font-semibold"
               >
                 Record
               </button>

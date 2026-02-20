@@ -13,18 +13,18 @@ const ResetPassword = () => {
   const { token } = useParams();
   const dispatch = useDispatch();
 
-  const { loading, error, message,  isAuthenticated } = useSelector(
+  const { loading, error, message, isAuthenticated } = useSelector(
     (state) => state.auth
   );
 
   const handleResetPassword = (e) => {
     e.preventDefault();
+
     const formData = new FormData();
     formData.append("password", password);
-    formData.append("confirmPassword", confirmPassword); // fixed spelling
+    formData.append("confirmPassword", confirmPassword);
     dispatch(resetPassword(formData, token));
   };
-
   useEffect(() => {
     if (message) {
       toast.success(message);
@@ -63,59 +63,59 @@ const ResetPassword = () => {
           </div>
         </div>
         {/* RIGHT SECTION */}
-         <div className="w-full md:w-1/2 flex items-center justify-center bg-white p-8 relative">
-                  <Link 
-                    to={"/password/forgot"}
-                    className="border-2 border-white rounded-3xl font-bold w-52 py-2 px-4 fixed top-10 left-28
+        <div className="w-full md:w-1/2 flex items-center justify-center bg-white p-8 relative">
+          <Link
+            to={"/password/forgot"}
+            className="border-2 border-white rounded-3xl font-bold w-52 py-2 px-4 fixed top-10 left-28
               hover:bg-black text-white transition duration-300 text-end"
-                  >
-                    Back
-                  </Link>
-                  <div className="w-full max-w-sm">
-                    <div className="flex justify-center mb-12">
-                      <div className="rounded-full flex items-center justify-center">
-                        <img src={logo} alt="logo" className="h-24 w-auto" />
-                      </div>
-                    </div>
-                    <div className="mb-8">
-                      <h1 className="text-4xl font-medium text-center mb-5 overflow-hidden">
-                        Reset Password
-                      </h1>
-                      <p className="text-gray-800 text-center mb-12">
-                        Please Enter Your New Password
-                      </p>
-                      <form onSubmit={handleResetPassword}>
-                        <div className="mb-4">
-                          <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter New Password"
-                            className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
-                            required
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <input
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="Confirm New Password"
-                            className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
-                            required
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          className="border-2 mt-5 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
-                          disabled={loading ? true : false}
-                        >
-                          Reset Password
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                </div> 
+          >
+            Back
+          </Link>
+          <div className="w-full max-w-sm">
+            <div className="flex justify-center mb-12">
+              <div className="rounded-full flex items-center justify-center">
+                <img src={logo} alt="logo" className="h-24 w-auto" />
+              </div>
+            </div>
+            <div className="mb-8">
+              <h1 className="text-4xl font-medium text-center mb-5 overflow-hidden">
+                Reset Password
+              </h1>
+              <p className="text-gray-800 text-center mb-12">
+                Please Enter Your New Password
+              </p>
+              <form onSubmit={handleResetPassword}>
+                <div className="mb-4">
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter New Password"
+                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm New Password"
+                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="border-2 mt-5 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
+                  disabled={loading ? true : false}
+                >
+                  Reset Password
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );

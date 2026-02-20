@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addBook, fetchAllBooks } from "../store/slices/bookSlice";
 import { toggleAddBookPopup } from "../store/slices/popUpSlice";
-
 const AddBookPopup = () => {
   const dispatch = useDispatch();
 
@@ -15,27 +14,25 @@ const AddBookPopup = () => {
   const handleAddBook = (e) => {
     e.preventDefault();
 
-    const bookData = {
+    dispatch(addBook({
       title,
       author,
       price,
       quantity,
       description,
-    };
-
-    dispatch(addBook(bookData))
+    }))
       .then(() => dispatch(fetchAllBooks()))
   };
 
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 p-5 flex items-center justify-center z-50">
-        <div className="w-full bg-white rounded-lg shadow-lg md:w-1/3">
+        <div className="w-full bg-white rounded-lg shadow-lg md:w-1/3 max-h-[90vh] overflow-y-auto">
           <div className="p-6">
             <h3 className="text-xl font-bold mb-4">Record Book</h3>
             <form onSubmit={handleAddBook}>
               <div className="mb-4">
-                <label className="block text-gray-900 font-medium">
+                <label className="block text-gray-900 font-medium italic">
                   Book Title
                 </label>
                 <input
@@ -43,12 +40,12 @@ const AddBookPopup = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Book's Title"
-                  className="w-full px-4 py-2 border-2 border-black rounded-md"
+                  className="w-full px-4 py-2 border border-black border-2 rounded-md focus:outline-none"
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-900 font-medium">
+                <label className="block text-gray-900 font-medium italic">
                   Book Author
                 </label>
                 <input
@@ -56,25 +53,25 @@ const AddBookPopup = () => {
                   value={author}
                   onChange={(e) => setAuthor(e.target.value)}
                   placeholder="Book's Author"
-                  className="w-full px-4 py-2 border-2 border-black rounded-md"
+                  className="w-full px-4 py-2 border border-black border-2 rounded-md focus:outline-none"
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-900 font-medium">
-                  Book Price(Price for Borrowing)
+                <label className="block text-gray-900 font-medium italic">
+                  Book Price (Borrowing Fee)
                 </label>
                 <input
                   type="number"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="Book's Price"
-                  className="w-full px-4 py-2 border-2 border-black rounded-md"
+                  className="w-full px-4 py-2 border border-black border-2 rounded-md focus:outline-none"
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-900 font-medium">
+                <label className="block text-gray-900 font-medium italic">
                   Quantity
                 </label>
                 <input
@@ -82,12 +79,12 @@ const AddBookPopup = () => {
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   placeholder="Book's Quantity"
-                  className="w-full px-4 py-2 border-2 border-black rounded-md"
+                  className="w-full px-4 py-2 border border-black border-2 rounded-md focus:outline-none"
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-900 font-medium">
+                <label className="block text-gray-900 font-medium italic">
                   Description
                 </label>
                 <textarea
@@ -95,13 +92,14 @@ const AddBookPopup = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Book's Description"
                   rows={4}
-                  className="px-4 py-2 w-full border-2 border-black rounded-md"
+                  className="px-4 py-2 w-full border border-black border-2 rounded-md focus:outline-none"
+                  required
                 ></textarea>
               </div>
 
               <div className="flex justify-end space-x-4">
                 <button
-                  className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300"
+                  className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 font-semibold"
                   type="button"
                   onClick={() => dispatch(toggleAddBookPopup())}
                 >
@@ -109,7 +107,7 @@ const AddBookPopup = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+                  className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 font-semibold"
                 >
                   Add
                 </button>
