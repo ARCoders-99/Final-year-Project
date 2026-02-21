@@ -19,6 +19,9 @@ import {
 import logo from "../assets/black-logo.png";
 import { useSelector } from "react-redux";
 import Header from "../layout/Header";
+import { motion } from "framer-motion";
+import { fadeIn, staggerContainer, cardHover, pageTransition } from "../utils/animations";
+import { Link } from "react-router-dom";
 
 ChartJS.register(
   CategoryScale,
@@ -62,14 +65,26 @@ const UserDashboard = () => {
   };
 
   return (
-    <>
-      <main className="relative flex-1 p-6 pt-28 bg-gray-50 min-h-screen">
-        <Header />
-        <div className="flex flex-col-reverse xl:flex-row gap-8">
-          {/* LEFT SIDE */}
-          <div className="flex flex-col flex-1 gap-8 justify-between">
-            <div className="flex flex-col gap-8">
-              <div className="flex items-center gap-3 bg-white p-5 min-h-[120px] rounded-lg hover:shadow-inner transition duration-300">
+    <motion.main
+      initial="initial"
+      animate="animate"
+      variants={pageTransition}
+      className="relative flex-1 p-6 pt-28 bg-gray-50 min-h-screen overflow-hidden no-scrollbar"
+    >
+      <Header />
+      <motion.div
+        variants={staggerContainer}
+        className="flex flex-col-reverse xl:flex-row gap-8 no-scrollbar"
+      >
+        {/* LEFT SIDE */}
+        <div className="flex flex-col flex-1 gap-8 justify-between no-scrollbar overflow-hidden">
+          <motion.div variants={staggerContainer} className="flex flex-col gap-8 no-scrollbar">
+            <Link to="/borrowed" className="no-scrollbar overflow-hidden">
+              <motion.div
+                variants={fadeIn}
+                whileHover={cardHover}
+                className="flex items-center gap-3 bg-white p-5 min-h-[120px] rounded-lg shadow-sm hover:shadow-md transition duration-300 cursor-pointer no-scrollbar"
+              >
                 <span className="w-[2px] bg-black h-20"></span>
                 <span className="bg-gray-300 h-20 w-20 flex justify-center items-center rounded-lg">
                   <img src={bookIcon} alt="book-icon" className="w-8 h-8" />
@@ -77,9 +92,15 @@ const UserDashboard = () => {
                 <p className="text-lg xl:text-xl font-semibold">
                   Your Borrowed Book List
                 </p>
-              </div>
+              </motion.div>
+            </Link>
 
-              <div className="flex items-center gap-3 bg-white p-5 min-h-[120px] rounded-lg hover:shadow-inner transition duration-300">
+            <Link to="/borrowed" className="no-scrollbar overflow-hidden">
+              <motion.div
+                variants={fadeIn}
+                whileHover={cardHover}
+                className="flex items-center gap-3 bg-white p-5 min-h-[120px] rounded-lg shadow-sm hover:shadow-md transition duration-300 cursor-pointer no-scrollbar"
+              >
                 <span className="w-[2px] bg-black h-20"></span>
                 <span className="bg-gray-300 h-20 w-20 flex justify-center items-center rounded-lg">
                   <img src={returnIcon} alt="return-icon" className="w-8 h-8" />
@@ -87,10 +108,16 @@ const UserDashboard = () => {
                 <p className="text-lg xl:text-xl font-semibold">
                   Your Returned Book List
                 </p>
-              </div>
+              </motion.div>
+            </Link>
 
-              <div className="flex flex-col lg:flex-row gap-7 items-center justify-between">
-                <div className="flex items-center gap-3 bg-white p-5 max-h-[120px] rounded-lg hover:shadow-inner transition duration-300 w-full lg:w-auto">
+            <div className="flex flex-col lg:flex-row gap-7 items-center justify-between no-scrollbar overflow-hidden">
+              <Link to="/books" className="w-full lg:w-auto no-scrollbar overflow-hidden">
+                <motion.div
+                  variants={fadeIn}
+                  whileHover={cardHover}
+                  className="flex items-center gap-3 bg-white p-5 max-h-[120px] rounded-lg shadow-sm hover:shadow-md transition duration-300 w-full lg:w-auto cursor-pointer no-scrollbar"
+                >
                   <span className="w-[2px] bg-black h-20"></span>
                   <span className="bg-gray-300 h-20 w-20 flex justify-center items-center rounded-lg">
                     <img
@@ -102,49 +129,60 @@ const UserDashboard = () => {
                   <p className="text-lg xl:text-xl font-semibold">
                     Let&apos;s browse books inventory
                   </p>
-                </div>
-                <img
-                  src={logo_with_title}
-                  alt="logo"
-                  className="hidden lg:block w-52 mx-auto"
-                />
-              </div>
+                </motion.div>
+              </Link>
+              <motion.img
+                variants={fadeIn}
+                src={logo_with_title}
+                alt="logo"
+                className="hidden lg:block w-52 mx-auto filter hover:brightness-110 transition-all"
+              />
             </div>
+          </motion.div>
 
-            <div className="bg-white p-7 text-lg sm:text-xl xl:text-3xl font-semibold flex justify-center items-center rounded-2xl min-h-52 relative">
-              <h4 className="text-center text-gray-700">
-                “Reading is to the mind what exercise is to the body.”
-              </h4>
-              <p className="text-gray-500 text-sm absolute right-6 bottom-4">
-                ~ BookWorm Team
+          <motion.div
+            variants={fadeIn}
+            className="bg-white p-7 text-lg sm:text-xl xl:text-3xl font-semibold flex justify-center items-center rounded-2xl min-h-52 relative shadow-sm no-scrollbar"
+          >
+            <h4 className="text-center text-gray-700">
+              “Reading is to the mind what exercise is to the body.”
+            </h4>
+            <p className="text-gray-500 text-sm absolute right-6 bottom-4">
+              ~ BookWorm Team
+            </p>
+          </motion.div>
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="flex flex-col xl:w-[35%] w-full gap-10 items-center no-scrollbar overflow-hidden">
+          <motion.div
+            variants={fadeIn}
+            whileHover={cardHover}
+            className="bg-white rounded-xl p-6 w-full flex justify-center items-center shadow-md cursor-pointer no-scrollbar overflow-hidden"
+          >
+            <Pie data={data} options={{ cutout: 0, responsive: true }} />
+          </motion.div>
+
+          <motion.div
+            variants={fadeIn}
+            className="flex items-center pl-[30px] p-5 w-full sm:w-[400px]  bg-white rounded-lg shadow-md gap-3 cursor-pointer overflow-hidden no-scrollbar"
+          >
+            <img src={logo} alt="logo" className="w-12 h-12" />
+            <span className="w-[2px] bg-black h-full"></span>
+            <div className="flex flex-col gap-2 text-gray-700 text-sm">
+              <p className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#3D3E3E]"></span>
+                <span>Total Borrowed Books</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#151619]"></span>
+                <span>Total Returned Books</span>
               </p>
             </div>
-          </div>
-
-          {/* RIGHT SIDE */}
-          <div className="flex flex-col xl:w-[35%] w-full gap-10 items-center">
-            <div className="bg-white rounded-xl p-6 w-full flex justify-center items-center shadow-md">
-              <Pie data={data} options={{ cutout: 0, responsive: true }} />
-            </div>
-
-            <div className="flex items-center p-5 w-full sm:w-[400px] bg-white rounded-lg shadow-md gap-3">
-              <img src={logo} alt="logo" className="w-12 h-12" />
-              <span className="w-[2px] bg-black h-full"></span>
-              <div className="flex flex-col gap-2 text-gray-700 text-sm">
-                <p className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-[#3D3E3E]"></span>
-                  <span>Total Borrowed Books</span>
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-[#151619]"></span>
-                  <span>Total Returned Books</span>
-                </p>
-              </div>
-            </div>
-          </div>
+          </motion.div>
         </div>
-      </main>
-    </>
+      </motion.div>
+    </motion.main>
   );
 };
 

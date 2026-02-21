@@ -12,7 +12,7 @@ import { logout, resetAuthSlice } from "../store/slices/authSlice";
 import { toggleAddNewAdminPopup, toggleSettingPopup } from "../store/slices/popUpSlice";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import AddNewAdmin from "../popups/AddNewAdmin";
 import SettingPopup from "../popups/SettingPopup";
 
@@ -54,64 +54,85 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
         <nav className="flex-1 px-6 space-y-2">
           {isAdmin ? (
             <>
-              <Link
+              <NavLink
                 to="/admin/dashboard"
-                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+                className={({ isActive }) =>
+                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 ${isActive ? "bg-white/10 border border-white/20 shadow-lg" : "bg-transparent hover:bg-white/5"
+                  }`
+                }
               >
                 <img src={dashboardIcon} alt="dashboard" /> <span>Dashboard</span>
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/admin/books"
-                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+                className={({ isActive }) =>
+                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 ${isActive ? "bg-white/10 border border-white/20 shadow-lg" : "bg-transparent hover:bg-white/5"
+                  }`
+                }
               >
                 <img src={bookIcon} alt="books" /> <span>Books</span>
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/admin/catalog"
-                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+                className={({ isActive }) =>
+                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 ${isActive ? "bg-white/10 border border-white/20 shadow-lg" : "bg-transparent hover:bg-white/5"
+                  }`
+                }
               >
                 <img src={catalogIcon} alt="catalog" /> <span>Catalog</span>
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/admin/users"
-                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+                className={({ isActive }) =>
+                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 ${isActive ? "bg-white/10 border border-white/20 shadow-lg" : "bg-transparent hover:bg-white/5"
+                  }`
+                }
               >
                 <img src={usersIcon} alt="users" /> <span>Users</span>
-              </Link>
+              </NavLink>
               <button
                 onClick={() => dispatch(toggleAddNewAdminPopup())}
-                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+                className="w-full py-2 px-3 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2 hover:bg-white/5 transition-all duration-300"
               >
                 <RiAdminFill className="w-6 h-6" /> <span>Add New Admin</span>
               </button>
             </>
           ) : (
             <>
-              <Link
+              <NavLink
                 to="/"
-                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+                className={({ isActive }) =>
+                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 ${isActive ? "bg-white/10 border border-white/20 shadow-lg" : "bg-transparent hover:bg-white/5"
+                  }`
+                }
               >
                 <img src={dashboardIcon} alt="dashboard" /> <span>Dashboard</span>
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/books"
-                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+                className={({ isActive }) =>
+                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 ${isActive ? "bg-white/10 border border-white/20 shadow-lg" : "bg-transparent hover:bg-white/5"
+                  }`
+                }
               >
                 <img src={bookIcon} alt="books" /> <span>Books</span>
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 to="/borrowed"
-                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+                className={({ isActive }) =>
+                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 ${isActive ? "bg-white/10 border border-white/20 shadow-lg" : "bg-transparent hover:bg-white/5"
+                  }`
+                }
               >
                 <img src={catalogIcon} alt="my-borrowed-books" />{" "}
                 <span>My Borrowed Books</span>
-              </Link>
+              </NavLink>
             </>
           )}
 
           <button
             onClick={() => dispatch(toggleSettingPopup())}
-            className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+            className="w-full py-2 px-3 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2 hover:bg-white/5 transition-all duration-300"
           >
             <img src={settingIcon} alt="setting" />{" "}
             <span>Update Credentials</span>
