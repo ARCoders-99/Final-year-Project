@@ -64,6 +64,8 @@ const App = () => {
       <Routes>
         {/* User Routes */}
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/books" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/borrowed" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/password/forgot" element={<ForgotPassword />} />

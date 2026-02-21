@@ -31,6 +31,8 @@ const Home = () => {
         return <Catalog />;
       case "/admin/users":
         return <Users />;
+      case "/books":
+        return <BookManagement />;
       case "/catalog":
       case "/dashboard":
       case "/":

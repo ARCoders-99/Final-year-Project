@@ -94,6 +94,12 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
                 <img src={dashboardIcon} alt="dashboard" /> <span>Dashboard</span>
               </Link>
               <Link
+                to="/books"
+                className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
+              >
+                <img src={bookIcon} alt="books" /> <span>Books</span>
+              </Link>
+              <Link
                 to="/borrowed"
                 className="w-full py-2 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2"
               >
