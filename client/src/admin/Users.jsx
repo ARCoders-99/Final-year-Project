@@ -51,7 +51,7 @@ const Users = () => {
                   .map((user, index) => (
                     <tr
                       key={user._id}
-                      className={(index + 1) % 2 === 0 ? "bg-gray-50" : ""}
+                      className={`transition-colors duration-200 ${(index + 1) % 2 === 0 ? "bg-gray-50" : ""} hover:bg-gray-100`}
                     >
                       <td className="px-4 py-2">{index + 1}</td>
                       <td className="px-4 py-2">{user.name}</td>

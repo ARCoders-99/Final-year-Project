@@ -88,22 +88,20 @@ const Catalog = () => {
         <header className="flex flex-col gap-3 sm:flex-row md:items-center">
           <button
             className={`relative rounded sm:rounded-tr-none sm:rounded-br-none sm:rounded-tl-lg
-            sm:rounded-bl-lg text-center border-2 font-semibold py-2 w-full sm:w-72 ${
-              filter === "borrowed"
+            sm:rounded-bl-lg text-center border-2 font-semibold py-2 w-full sm:w-72 hover-scale ${filter === "borrowed"
                 ? "bg-black text-white border-black"
                 : "bg-gray-200 text-black border-gray-200 hover:bg-gray-300"
-            }`}
+              }`}
             onClick={() => setFilter("borrowed")}
           >
             Borrowed Books
           </button>
           <button
             className={`relative rounded sm:rounded-tl-none sm:rounded-bl-none sm:rounded-tr-lg
-            sm:rounded-br-lg text-center border-2 font-semibold py-2 w-full sm:w-72 ${
-              filter === "overdue"
+            sm:rounded-br-lg text-center border-2 font-semibold py-2 w-full sm:w-72 hover-scale ${filter === "overdue"
                 ? "bg-black text-white border-black"
                 : "bg-gray-200 text-black border-gray-200 hover:bg-gray-300"
-            }`}
+              }`}
             onClick={() => setFilter("overdue")}
           >
             Overdue Borrowers
@@ -145,9 +143,9 @@ const Catalog = () => {
                       ) : (
                         <PiKeyReturnBold
                           onClick={() =>
-                           openReturnBookPopup(book._id, book?.user.email)
+                            openReturnBookPopup(book._id, book?.user.email)
                           }
-                          className="w-6 h-6"
+                          className="w-6 h-6 hover:cursor-pointer hover-scale text-blue-600"
                         />
                       )}
                     </td>

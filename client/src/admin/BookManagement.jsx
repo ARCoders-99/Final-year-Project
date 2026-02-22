@@ -21,12 +21,12 @@ import RecordBookPopup from "../popups/RecordBookPopup";
 const BookManagement = () => {
   const dispatch = useDispatch();
 
-  const {  error, message, books } = useSelector((state) => state.book);
+  const { error, message, books } = useSelector((state) => state.book);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const { addBookPopup, readBookPopup, recordBookPopup } = useSelector(
     (state) => state.popup
   );
-  const { userBorrowedBooks, loading:   borrowSliceError, message: borrowSliceMessage } = useSelector(
+  const { userBorrowedBooks, loading: borrowSliceError, message: borrowSliceMessage } = useSelector(
     (state) => state.borrow
   );
 
@@ -48,20 +48,20 @@ const BookManagement = () => {
   };
 
   // Borrow book
-const handleBorrowBook = async (bookId) => {
-  try {
-    const actionResult = await dispatch(recordBorrowBook(user.email, bookId));
-    // Only show success message once
-    if (actionResult?.payload) {
-      toast.success(actionResult.payload); 
+  const handleBorrowBook = async (bookId) => {
+    try {
+      const actionResult = await dispatch(recordBorrowBook(user.email, bookId));
+      // Only show success message once
+      if (actionResult?.payload) {
+        toast.success(actionResult.payload);
+      }
+      // Refresh borrowed books and book list
+      dispatch(fetchUserBorrowedBooks());
+      dispatch(fetchAllBooks());
+    } catch (err) {
+      toast.error(err || "Failed to borrow book");
     }
-    // Refresh borrowed books and book list
-    dispatch(fetchUserBorrowedBooks());
-    dispatch(fetchAllBooks());
-  } catch (err) {
-    toast.error(err || "Failed to borrow book");
-  }
-};
+  };
 
 
   // Fetch books and user borrowed books on mount
@@ -108,7 +108,7 @@ const handleBorrowBook = async (bookId) => {
             {isAuthenticated && user?.role === "Admin" && (
               <button
                 onClick={() => dispatch(toggleAddBookPopup())}
-                className="relative pl-14 w-full sm:w-52 flex gap-4 justify-center items-center py-2 pr-4 bg-black text-white rounded-md hover:bg-gray-800 overflow-hidden"
+                className="relative pl-14 w-full sm:w-52 flex gap-4 justify-center items-center py-2 pr-4 bg-black text-white rounded-md hover:bg-gray-800 overflow-hidden hover-scale"
               >
                 <span className="bg-white flex justify-center items-center rounded-full text-black w-7 h-7 text-lg absolute left-4 top-1/2 -translate-y-1/2 shadow-md">
                   +
@@ -158,8 +158,14 @@ const handleBorrowBook = async (bookId) => {
                       <td className="px-4 py-2">{book.availability ? "Available" : "Unavailable"}</td>
                       {user?.role === "Admin" && (
                         <td className="px-4 py-2 flex space-x-2 my-3 justify-center">
-                          <BookA onClick={() => openReadPopup(book._id)} />
-                          <NotebookPen onClick={() => openRecordBookPopup(book._id)} />
+                          <BookA
+                            onClick={() => openReadPopup(book._id)}
+                            className="hover:cursor-pointer hover-scale text-blue-600"
+                          />
+                          <NotebookPen
+                            onClick={() => openRecordBookPopup(book._id)}
+                            className="hover:cursor-pointer hover-scale text-green-600"
+                          />
                         </td>
                       )}
                       {user?.role === "User" && (

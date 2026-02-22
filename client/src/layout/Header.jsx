@@ -54,7 +54,7 @@ const Header = () => {
         <img
           src={settingIcon}
           alt="settingIcon"
-          className="w-8 h-8"
+          className="w-8 h-8 hover:cursor-pointer hover-scale"
           onClick={() => dispatch(toggleSettingPopup())}
         />
       </div>
@@ -63,4 +63,3 @@ const Header = () => {
 };
 
 export default Header;
- 
