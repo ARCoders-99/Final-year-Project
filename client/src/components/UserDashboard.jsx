@@ -21,7 +21,10 @@ import { useSelector } from "react-redux";
 import Header from "../layout/Header";
 import { motion } from "framer-motion";
 import { fadeIn, staggerContainer, cardHover, pageTransition } from "../utils/animations";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { BookA, BookOpen, Search } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { fetchAllDigitalBooks, borrowDigitalBook } from "../store/slices/digitalSlice";
 
 ChartJS.register(
   CategoryScale,
@@ -52,6 +55,14 @@ const UserDashboard = () => {
     setTotalBorrowedBooks(numberOfTotalBorrowedBooks.length);
     setTotalReturnedBooks(numberOfTotalReturnedBooks.length);
   }, [userBorrowedBooks]);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { digitalBooks, loading: digitalLoading } = useSelector((state) => state.digital);
+
+  useEffect(() => {
+    dispatch(fetchAllDigitalBooks());
+  }, [dispatch]);
 
   const data = {
     labels: ["Total Borrowed Books", "Total Returned Books"],
@@ -131,6 +142,21 @@ const UserDashboard = () => {
                   </p>
                 </motion.div>
               </Link>
+              <Link to="/digital-library" className="w-full lg:w-auto no-scrollbar overflow-hidden">
+                <motion.div
+                  variants={fadeIn}
+                  whileHover={cardHover}
+                  className="flex items-center gap-3 bg-white p-5 max-h-[120px] rounded-lg shadow-sm hover:shadow-md transition duration-300 w-full lg:w-auto cursor-pointer no-scrollbar"
+                >
+                  <span className="w-[2px] bg-black h-20"></span>
+                  <span className="bg-gray-300 h-20 w-20 flex justify-center items-center rounded-lg">
+                    <BookA size={32} />
+                  </span>
+                  <p className="text-lg xl:text-xl font-semibold">
+                    Explore Digital Library
+                  </p>
+                </motion.div>
+              </Link>
               <motion.img
                 variants={fadeIn}
                 src={logo_with_title}
@@ -151,10 +177,10 @@ const UserDashboard = () => {
               ~ BookWorm Team
             </p>
           </motion.div>
-        </div>
+        </div >
 
         {/* RIGHT SIDE */}
-        <div className="flex flex-col xl:w-[35%] w-full gap-10 items-center no-scrollbar overflow-hidden">
+        < div className="flex flex-col xl:w-[35%] w-full gap-10 items-center no-scrollbar overflow-hidden" >
           <motion.div
             variants={fadeIn}
             whileHover={cardHover}
@@ -180,8 +206,53 @@ const UserDashboard = () => {
               </p>
             </div>
           </motion.div>
+        </div >
+      </motion.div >
+
+      {/* DIGITAL LIBRARY SECTION */}
+      <motion.section variants={fadeIn} className="mt-12 mb-10 overflow-hidden no-scrollbar">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <BookA size={28} />
+            Digital Library
+          </h3>
+          <Link to="/digital-library" className="text-black font-medium hover:underline flex items-center gap-1">
+            View All <Search size={16} />
+          </Link>
         </div>
-      </motion.div>
+
+        <div className="flex overflow-x-auto gap-6 pb-4 no-scrollbar">
+          {digitalBooks && digitalBooks.length > 0 ? (
+            digitalBooks.slice(0, 5).map((book) => (
+              <motion.div
+                key={book._id}
+                whileHover={cardHover}
+                className="min-w-[240px] max-w-[240px] bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col"
+              >
+                <div className="h-48 bg-gray-200 overflow-hidden">
+                  <img
+                    src={book.coverImage || "https://via.placeholder.com/150x200?text=No+Cover"}
+                    alt={book.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-4 flex-1 flex flex-col">
+                  <h4 className="font-bold text-gray-800 line-clamp-1 mb-1">{book.title}</h4>
+                  <p className="text-xs text-gray-500 mb-3 truncate">{book.author}</p>
+                  <button
+                    onClick={() => navigate("/digital-library")}
+                    className="mt-auto w-full bg-black text-white text-xs py-2 rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    Details
+                  </button>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <p className="text-gray-400 italic">No digital books available.</p>
+          )}
+        </div>
+      </motion.section>
     </motion.main>
   );
 };

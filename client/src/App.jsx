@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllUsers } from "./store/slices/userSlice";
 import { fetchAllBooks } from "./store/slices/bookSlice";
 import { fetchAllBorrowedBooks, fetchUserBorrowedBooks } from "./store/slices/borrowSlice";
+import { fetchAllDigitalBooks, fetchMyDigitalBorrows } from "./store/slices/digitalSlice";
 import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/AdminDashboard";
 import BookManagement from "./admin/BookManagement";
@@ -19,6 +20,8 @@ import Users from "./admin/Users";
 import Catalog from "./admin/Catalog";
 import UserDashboard from "./components/UserDashboard";
 import MyBorrowedBooks from "./components/MyBorrowedBooks";
+import ImportDigitalBook from "./admin/ImportDigitalBook";
+import ReaderPage from "./pages/ReaderPage";
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, loading, user } = useSelector((state) => state.auth);
@@ -52,10 +55,13 @@ const App = () => {
     dispatch(fetchAllBooks());
     if (user?.role === "User") {
       dispatch(fetchUserBorrowedBooks());
+      dispatch(fetchAllDigitalBooks());
+      dispatch(fetchMyDigitalBorrows());
     }
     if (user?.role === "Admin") {
       dispatch(fetchAllUsers());
       dispatch(fetchAllBorrowedBooks());
+      dispatch(fetchAllDigitalBooks());
     }
   }, [isAuthenticated, user, dispatch]);
 
@@ -66,6 +72,8 @@ const App = () => {
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/books" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/borrowed" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/digital-library" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/reader/:id" element={<ProtectedRoute><ReaderPage /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/password/forgot" element={<ForgotPassword />} />
@@ -78,6 +86,7 @@ const App = () => {
         <Route path="/admin/books" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/catalog" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
+        <Route path="/admin/import-digital" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

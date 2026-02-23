@@ -9,6 +9,8 @@ import Catalog from "../admin/Catalog";
 import MyBorrowedBooks from "../components/MyBorrowedBooks";
 import BookManagement from "../admin/BookManagement";
 import Users from "../admin/Users";
+import ImportDigitalBook from "../admin/ImportDigitalBook";
+import DigitalLibrary from "../components/DigitalLibrary";
 
 const Home = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
@@ -31,6 +33,10 @@ const Home = () => {
         return <Catalog />;
       case "/admin/users":
         return <Users />;
+      case "/admin/import-digital":
+        return <ImportDigitalBook />;
+      case "/digital-library":
+        return <DigitalLibrary />;
       case "/books":
         return <BookManagement />;
       case "/catalog":
