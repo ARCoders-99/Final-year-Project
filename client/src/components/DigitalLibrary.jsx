@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllDigitalBooks, borrowDigitalBook, resetDigitalSlice } from "../store/slices/digitalSlice";
+import { fetchAllDigitalBooks, borrowDigitalBook, resetDigitalSlice, fetchMyDigitalBorrows } from "../store/slices/digitalSlice";
 import { toast } from "react-toastify";
 import Header from "../layout/Header";
 import { BookA, Loader2, BookOpen, Clock } from "lucide-react";
@@ -16,6 +16,7 @@ const DigitalLibrary = () => {
 
     useEffect(() => {
         dispatch(fetchAllDigitalBooks());
+        dispatch(fetchMyDigitalBorrows());
     }, [dispatch]);
 
     useEffect(() => {
@@ -89,8 +90,8 @@ const DigitalLibrary = () => {
                                                 onClick={() => handleBorrow(book._id)}
                                                 disabled={loading || borrowed}
                                                 className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors text-sm font-medium ${borrowed
-                                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                                        : "bg-black text-white hover:bg-gray-800"
+                                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                                    : "bg-black text-white hover:bg-gray-800"
                                                     }`}
                                             >
                                                 {borrowed ? "Borrowed" : "Borrow"}

@@ -103,6 +103,8 @@ export const borrowDigitalBook = (id) => async (dispatch) => {
             { withCredentials: true }
         );
         dispatch(digitalSlice.actions.successForBorrowDigitalBook(response.data.message));
+        // Re-fetch borrows to update UI immediately
+        dispatch(fetchMyDigitalBorrows());
     } catch (error) {
         dispatch(digitalSlice.actions.failureForDigital(error.response.data.message));
     }

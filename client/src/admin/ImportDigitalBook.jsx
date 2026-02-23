@@ -30,7 +30,7 @@ const ImportDigitalBook = () => {
     const handleImport = (book) => {
         const importData = {
             ...book,
-            borrowLimitDays: borrowLimit,
+            borrowLimitDays: Number(borrowLimit),
         };
         dispatch(importGutenbergBook(importData));
     };

@@ -31,7 +31,8 @@ export const searchBooks = catchAsyncErrors(async (req, res, next) => {
 export const importBook = catchAsyncErrors(async (req, res, next) => {
     const validation = digitalImportSchema.safeParse(req.body);
     if (!validation.success) {
-        return next(new ErrorHandler(validation.error.errors[0].message, 400));
+        const message = validation.error?.errors?.[0]?.message || "Validation failed during import.";
+        return next(new ErrorHandler(message, 400));
     }
 
     const {

@@ -9,5 +9,5 @@ export const digitalImportSchema = z.object({
     title: z.string().min(1, "Title is required"),
     author: z.string().min(1, "Author is required"),
     htmlLink: z.string().url("Invalid HTML link"),
-    borrowLimitDays: z.number().optional().default(5),
+    borrowLimitDays: z.coerce.number().optional().default(5),
 });
