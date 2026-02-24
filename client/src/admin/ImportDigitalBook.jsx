@@ -8,7 +8,9 @@ import { Search, Loader2, Import } from "lucide-react";
 const ImportDigitalBook = () => {
     const [title, setTitle] = useState("");
     const [author, setAuthor] = useState("");
-    const [borrowLimit, setBorrowLimit] = useState(5);
+    const [borrowLimitDays, setBorrowLimitDays] = useState(5);
+    const [borrowLimitHours, setBorrowLimitHours] = useState(0);
+    const [borrowLimitMinutes, setBorrowLimitMinutes] = useState(0);
 
     const dispatch = useDispatch();
     const { loading, error, message, searchByGutenbergResults } = useSelector(
@@ -28,9 +30,15 @@ const ImportDigitalBook = () => {
     }, [title, author, dispatch]);
 
     const handleImport = (book) => {
+        if (Number(borrowLimitDays) === 0 && Number(borrowLimitHours) === 0 && Number(borrowLimitMinutes) === 0) {
+            toast.error("Please set a borrow limit (at least 1 minute).");
+            return;
+        }
         const importData = {
             ...book,
-            borrowLimitDays: Number(borrowLimit),
+            borrowLimitDays: Number(borrowLimitDays),
+            borrowLimitHours: Number(borrowLimitHours),
+            borrowLimitMinutes: Number(borrowLimitMinutes),
         };
         dispatch(importGutenbergBook(importData));
     };
@@ -77,24 +85,58 @@ const ImportDigitalBook = () => {
                         />
                     </div>
                 </div>
-                <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <label className="text-sm font-medium text-gray-600">Borrow Limit (Days):</label>
-                        <input
-                            type="number"
-                            min="1"
-                            className="border p-2 w-20 rounded-lg focus:ring-2 focus:ring-black outline-none"
-                            value={borrowLimit}
-                            onChange={(e) => setBorrowLimit(e.target.value)}
-                        />
-                    </div>
-                    {loading && (
-                        <div className="flex items-center gap-2 text-gray-500 text-sm">
-                            <Loader2 className="animate-spin" size={16} />
-                            <span>Searching...</span>
+                <div className="mt-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Borrow Limit
+                    </label>
+                    <div className="flex items-end gap-4 flex-wrap">
+                        {/* Days */}
+                        <div className="flex flex-col gap-1 items-center">
+                            <span className="text-xs text-gray-500">Days</span>
+                            <input
+                                type="number"
+                                min="0"
+                                max="365"
+                                className="border p-2 w-20 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-semibold"
+                                value={borrowLimitDays}
+                                onChange={(e) => setBorrowLimitDays(e.target.value)}
+                            />
                         </div>
-                    )}
+                        {/* Hours */}
+                        <div className="flex flex-col gap-1 items-center">
+                            <span className="text-xs text-gray-500">Hours</span>
+                            <input
+                                type="number"
+                                min="0"
+                                max="23"
+                                className="border p-2 w-20 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-semibold"
+                                value={borrowLimitHours}
+                                onChange={(e) => setBorrowLimitHours(e.target.value)}
+                            />
+                        </div>
+                        {/* Minutes */}
+                        <div className="flex flex-col gap-1 items-center">
+                            <span className="text-xs text-gray-500">Minutes</span>
+                            <input
+                                type="number"
+                                min="0"
+                                max="59"
+                                className="border p-2 w-20 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-semibold"
+                                value={borrowLimitMinutes}
+                                onChange={(e) => setBorrowLimitMinutes(e.target.value)}
+                            />
+                        </div>
+                        <p className="text-xs text-gray-400 self-end pb-2">
+                            Expires in: {Number(borrowLimitDays)}d {Number(borrowLimitHours)}h {Number(borrowLimitMinutes)}m after borrow
+                        </p>
+                    </div>
                 </div>
+                {loading && (
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mt-4">
+                        <Loader2 className="animate-spin" size={16} />
+                        <span>Searching...</span>
+                    </div>
+                )}
             </section>
 
             {/* Search Results */}

@@ -31,8 +31,16 @@ export const borrowDigitalBook = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("You already have an active borrow for this book.", 400));
     }
 
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + book.borrowLimitDays);
+    const totalMs =
+        ((book.borrowLimitDays || 0) * 86400 +
+            (book.borrowLimitHours || 0) * 3600 +
+            (book.borrowLimitMinutes || 0) * 60) * 1000;
+
+    if (totalMs <= 0) {
+        return next(new ErrorHandler("This book has no borrow limit configured.", 400));
+    }
+
+    const expiryDate = new Date(Date.now() + totalMs);
 
     borrowRecord = await DigitalBorrow.create({
         user: {

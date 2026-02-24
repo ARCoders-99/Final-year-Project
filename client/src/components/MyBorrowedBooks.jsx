@@ -9,6 +9,44 @@ import { useNavigate } from "react-router-dom";
 import Header from "../layout/Header";
 import ReadBookPopup from "../popups/ReadBookPopup";
 
+// ─── Live countdown helper ─────────────────────────────────────────────────────
+const useCountdown = (targetDate) => {
+  const calc = () => {
+    const diff = new Date(targetDate) - Date.now();
+    if (diff <= 0) return { label: "Expired", status: "expired" };
+    const s = Math.floor(diff / 1000);
+    const d = Math.floor(s / 86400);
+    const h = Math.floor((s % 86400) / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    const label = [d > 0 && `${d}d`, h > 0 && `${h}h`, m > 0 && `${m}m`, `${sec}s`]
+      .filter(Boolean).join(" ");
+    return { label, status: diff < 24 * 3600 * 1000 ? "urgent" : "ok" };
+  };
+  const [state, setState] = useState(calc);
+  useEffect(() => {
+    const id = setInterval(() => setState(calc()), 1000);
+    return () => clearInterval(id);
+  }, [targetDate]);
+  return state;
+};
+
+const ExpiryBadge = ({ expiryDate }) => {
+  const { label, status } = useCountdown(expiryDate);
+  const cls = {
+    ok: "text-green-700 bg-green-50 border-green-200",
+    urgent: "text-amber-700 bg-amber-50 border-amber-200",
+    expired: "text-red-700 bg-red-50 border-red-200",
+  };
+  return (
+    <div className="flex items-center gap-1.5 text-xs font-semibold bg-white p-2 rounded-lg border">
+      <Clock size={13} className={status === "ok" ? "text-green-600" : status === "urgent" ? "text-amber-600" : "text-red-500"} />
+      <span className={`px-1.5 py-0.5 rounded-full border ${cls[status]}`}>{label}</span>
+    </div>
+  );
+};
+// ──────────────────────────────────────────────────────────────────────────────
+
 const MyBorrowedBooks = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -80,8 +118,8 @@ const MyBorrowedBooks = () => {
           <button
             onClick={() => setActiveTab("physical")}
             className={`px-6 py-2 text-sm font-semibold transition-all ${activeTab === "physical"
-                ? "border-b-2 border-black text-black"
-                : "text-gray-500 hover:text-black"
+              ? "border-b-2 border-black text-black"
+              : "text-gray-500 hover:text-black"
               }`}
           >
             Physical Books
@@ -89,8 +127,8 @@ const MyBorrowedBooks = () => {
           <button
             onClick={() => setActiveTab("digital")}
             className={`px-6 py-2 text-sm font-semibold transition-all ${activeTab === "digital"
-                ? "border-b-2 border-black text-black"
-                : "text-gray-500 hover:text-black"
+              ? "border-b-2 border-black text-black"
+              : "text-gray-500 hover:text-black"
               }`}
           >
             Digital Books
@@ -195,10 +233,7 @@ const MyBorrowedBooks = () => {
                           <p className="text-sm text-gray-500 mt-1">{borrow.book.author}</p>
                         </div>
                         <div className="space-y-3">
-                          <div className="flex items-center gap-1.5 text-xs text-amber-600 font-semibold bg-amber-50 p-2 rounded-lg border border-amber-100">
-                            <Clock size={14} />
-                            <span>Expires: {new Date(borrow.expiryDate).toLocaleDateString()}</span>
-                          </div>
+                          <ExpiryBadge expiryDate={borrow.expiryDate} />
                           <button
                             onClick={() => navigate(`/reader/${borrow.book._id}`)}
                             className="w-full flex items-center justify-center gap-2 bg-black text-white py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors shadow-sm"

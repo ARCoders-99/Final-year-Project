@@ -34,6 +34,14 @@ const digitalBookSchema = new mongoose.Schema(
             type: Number,
             default: 5,
         },
+        borrowLimitHours: {
+            type: Number,
+            default: 0,
+        },
+        borrowLimitMinutes: {
+            type: Number,
+            default: 0,
+        },
         type: {
             type: String,
             default: "digital",
