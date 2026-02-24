@@ -12,10 +12,6 @@ const bookSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    description: {
-      type: String,
-      required: true,
-    },
     price: {
       type: Number,
       required: true,
@@ -26,6 +22,14 @@ const bookSchema = new mongoose.Schema(
     },
     availability: {
       type: Boolean,
+      required: true,
+    },
+    pdfUrl: {
+      type: String,
+      required: true,
+    },
+    coverImageUrl: {
+      type: String,
       required: true,
     },
   },

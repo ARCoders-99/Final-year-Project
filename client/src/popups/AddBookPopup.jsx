@@ -1,122 +1,202 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addBook, fetchAllBooks } from "../store/slices/bookSlice";
 import { toggleAddBookPopup } from "../store/slices/popUpSlice";
+import { Loader2, FileText, ImagePlus } from "lucide-react";
+import { toast } from "react-toastify";
+
 const AddBookPopup = () => {
   const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.book);
 
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [description, setDescription] = useState("");
+  const [pdf, setPdf] = useState(null);
+  const [coverImage, setCoverImage] = useState(null);
+  const [pdfPreview, setPdfPreview] = useState("");
+  const [coverPreview, setCoverPreview] = useState("");
+
+  const handlePdfChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Please select a valid PDF file.");
+      e.target.value = "";
+      return;
+    }
+    setPdf(file);
+    setPdfPreview(file.name);
+  };
+
+  const handleCoverChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Cover image must be JPG, PNG, or WebP.");
+      e.target.value = "";
+      return;
+    }
+    setCoverImage(file);
+    setCoverPreview(URL.createObjectURL(file));
+  };
 
   const handleAddBook = (e) => {
     e.preventDefault();
 
-    dispatch(addBook({
-      title,
-      author,
-      price,
-      quantity,
-      description,
-    }))
-      .then(() => dispatch(fetchAllBooks()))
+    if (!pdf) {
+      toast.error("Please upload a PDF file.");
+      return;
+    }
+    if (!coverImage) {
+      toast.error("Please upload a cover image.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("author", author);
+    formData.append("price", price);
+    formData.append("quantity", quantity);
+    formData.append("pdf", pdf);
+    formData.append("coverImage", coverImage);
+
+    dispatch(addBook(formData)).then(() => dispatch(fetchAllBooks()));
   };
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 p-5 flex items-center justify-center z-50">
-        <div className="w-full bg-white rounded-lg shadow-lg md:w-1/3 max-h-[90vh] overflow-y-auto">
-          <div className="p-6">
-            <h3 className="text-xl font-bold mb-4">Record Book</h3>
-            <form onSubmit={handleAddBook}>
-              <div className="mb-4">
-                <label className="block text-gray-900 font-medium italic">
-                  Book Title
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Book's Title"
-                  className="w-full px-4 py-2 border border-black border-2 rounded-md focus:outline-none"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-900 font-medium italic">
-                  Book Author
-                </label>
-                <input
-                  type="text"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                  placeholder="Book's Author"
-                  className="w-full px-4 py-2 border border-black border-2 rounded-md focus:outline-none"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-900 font-medium italic">
-                  Book Price (Borrowing Fee)
-                </label>
+    <div className="fixed inset-0 bg-black bg-opacity-50 p-5 flex items-center justify-center z-50">
+      <div className="w-full bg-white rounded-xl shadow-xl md:w-[480px] max-h-[92vh] overflow-y-auto">
+        <div className="p-6">
+          <h3 className="text-xl font-bold mb-5 text-gray-800">Add New Book</h3>
+          <form onSubmit={handleAddBook} className="flex flex-col gap-4">
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Book Title</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter book title"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                required
+              />
+            </div>
+
+            {/* Author */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Author</label>
+              <input
+                type="text"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                placeholder="Enter author name"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                required
+              />
+            </div>
+
+            {/* Price & Quantity */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Borrowing Fee ($)</label>
                 <input
                   type="number"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  placeholder="Book's Price"
-                  className="w-full px-4 py-2 border border-black border-2 rounded-md focus:outline-none"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                   required
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-900 font-medium italic">
-                  Quantity
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
                 <input
                   type="number"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="Book's Quantity"
-                  className="w-full px-4 py-2 border border-black border-2 rounded-md focus:outline-none"
+                  placeholder="0"
+                  min="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                   required
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-900 font-medium italic">
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Book's Description"
-                  rows={4}
-                  className="px-4 py-2 w-full border border-black border-2 rounded-md focus:outline-none"
-                  required
-                ></textarea>
-              </div>
+            </div>
 
-              <div className="flex justify-end space-x-4">
-                <button
-                  className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 font-semibold"
-                  type="button"
-                  onClick={() => dispatch(toggleAddBookPopup())}
-                >
-                  Close
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 font-semibold"
-                >
-                  Add
-                </button>
-              </div>
-            </form>
-          </div>
+            {/* Upload PDF */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Upload PDF <span className="text-red-500">*</span>
+              </label>
+              <label className="flex items-center gap-2 w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-black transition-colors">
+                <FileText size={18} className="text-gray-500 shrink-0" />
+                <span className="text-sm text-gray-500 truncate">
+                  {pdfPreview || "Click to select PDF file"}
+                </span>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handlePdfChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {/* Upload Cover Image */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Upload Cover Image <span className="text-red-500">*</span>
+              </label>
+              <label className="flex items-start gap-3 w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-black transition-colors">
+                {coverPreview ? (
+                  <img src={coverPreview} alt="Cover preview" className="h-20 w-14 object-cover rounded shrink-0" />
+                ) : (
+                  <ImagePlus size={18} className="text-gray-500 mt-1 shrink-0" />
+                )}
+                <span className="text-sm text-gray-500">
+                  {coverPreview ? "Click to change image" : "Click to select JPG, PNG, or WebP"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleCoverChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => dispatch(toggleAddBookPopup())}
+                className="px-5 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800 font-medium text-sm flex items-center gap-2 disabled:opacity-60"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Uploading…
+                  </>
+                ) : (
+                  "Add Book"
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

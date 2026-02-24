@@ -22,9 +22,10 @@ import Header from "../layout/Header";
 import { motion } from "framer-motion";
 import { fadeIn, staggerContainer, cardHover, pageTransition } from "../utils/animations";
 import { Link, useNavigate } from "react-router-dom";
-import { BookA, BookOpen, Search } from "lucide-react";
+import { BookA, BookOpen, Search, Library } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { fetchAllDigitalBooks, borrowDigitalBook } from "../store/slices/digitalSlice";
+import { fetchAllBooks } from "../store/slices/bookSlice";
 
 ChartJS.register(
   CategoryScale,
@@ -59,9 +60,11 @@ const UserDashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { digitalBooks, loading: digitalLoading } = useSelector((state) => state.digital);
+  const { books: physicalBooks } = useSelector((state) => state.book);
 
   useEffect(() => {
     dispatch(fetchAllDigitalBooks());
+    dispatch(fetchAllBooks());
   }, [dispatch]);
 
   const data = {
@@ -250,6 +253,61 @@ const UserDashboard = () => {
             ))
           ) : (
             <p className="text-gray-400 italic">No digital books available.</p>
+          )}
+        </div>
+      </motion.section>
+
+      {/* PHYSICAL BOOKS SECTION */}
+      <motion.section variants={fadeIn} className="mt-4 mb-10 overflow-hidden no-scrollbar">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <Library size={28} />
+            Physical Books
+          </h3>
+          <Link to="/books" className="text-black font-medium hover:underline flex items-center gap-1">
+            Browse All <Search size={16} />
+          </Link>
+        </div>
+
+        <div className="flex overflow-x-auto gap-6 pb-4 no-scrollbar">
+          {physicalBooks && physicalBooks.length > 0 ? (
+            physicalBooks.slice(0, 6).map((book) => (
+              <motion.div
+                key={book._id}
+                whileHover={cardHover}
+                className="min-w-[200px] max-w-[200px] bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col"
+              >
+                <div className="h-44 bg-gray-200 overflow-hidden">
+                  <img
+                    src={book.coverImageUrl || "https://via.placeholder.com/150x200?text=No+Cover"}
+                    alt={book.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-3 flex-1 flex flex-col">
+                  <h4 className="font-bold text-gray-800 line-clamp-2 text-sm leading-tight mb-1">{book.title}</h4>
+                  <p className="text-xs text-gray-500 truncate">by {book.author}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs font-semibold text-gray-700">${book.price}</span>
+                    <span className={`text-xs font-medium ${book.availability ? "text-green-600" : "text-red-500"
+                      }`}>
+                      {book.availability ? `${book.quantity} left` : "Unavailable"}
+                    </span>
+                  </div>
+                  {book.pdfUrl && (
+                    <button
+                      onClick={() => navigate(`/read-book/${book._id}`)}
+                      className="mt-auto w-full flex items-center justify-center gap-1 bg-black text-white text-xs py-2 rounded-lg hover:bg-gray-800 transition-colors mt-3"
+                    >
+                      <BookOpen size={13} />
+                      Read Book
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <p className="text-gray-400 italic">No physical books available.</p>
           )}
         </div>
       </motion.section>

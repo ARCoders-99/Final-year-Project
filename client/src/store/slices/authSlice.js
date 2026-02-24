@@ -5,6 +5,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState: {
     loading: false,
+    initLoading: false,
     error: null,
     message: null,
     user: null,
@@ -74,17 +75,17 @@ const authSlice = createSlice({
     },
 
     getUserRequest(state) {
-      state.loading = true;
+      state.initLoading = true;
       state.error = null;
       state.message = null;
     },
     getUserSuccess(state, action) {
-      state.loading = false;
+      state.initLoading = false;
       state.user = action.payload.user;
       state.isAuthenticated = true;
     },
     getUserFailed(state) {
-      state.loading = false;
+      state.initLoading = false;
       state.user = null;
       state.isAuthenticated = false;
       state.error = null;

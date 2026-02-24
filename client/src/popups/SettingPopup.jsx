@@ -1,9 +1,10 @@
-import { useState } from "react";
-import closeIcon from "../assets/close-square.png";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updatePassword } from "../store/slices/authSlice";
+import closeIcon from "../assets/close-square.png";
+import { updatePassword, resetAuthSlice } from "../store/slices/authSlice";
 import SettingsIcon from "../assets/setting.png";
 import { toggleSettingPopup } from "../store/slices/popUpSlice";
+import { toast } from "react-toastify";
 
 const SettingPopup = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -11,17 +12,23 @@ const SettingPopup = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.auth);
+  const { loading, message, error } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      dispatch(resetAuthSlice());
+    }
+    if (message) {
+      toast.success(message);
+      dispatch(toggleSettingPopup());
+      dispatch(resetAuthSlice());
+    }
+  }, [dispatch, message, error]);
 
   const handleUpdatePassword = (e) => {
     e.preventDefault();
-
-    const data = new FormData();
-    data.append("currentPassword", currentPassword);
-    data.append("newPassword", newPassword);
-    data.append("confirmNewPassword", confirmNewPassword);
-
-    dispatch(updatePassword(data));
+    dispatch(updatePassword({ currentPassword, newPassword, confirmNewPassword }));
   };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 p-5 flex items-center justify-center z-50">

@@ -64,14 +64,12 @@ export const fetchAllBooks = () => async (dispatch) => {
     });
 };
 
-export const addBook = (data) => async (dispatch) => {
+export const addBook = (formData) => async (dispatch) => {
   dispatch(bookSlice.actions.addBookRequest());
   await axios
-    .post("http://localhost:4000/api/v1/book/admin/add", JSON.stringify(data), {
+    .post("http://localhost:4000/api/v1/book/admin/add", formData, {
       withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      // Do NOT set Content-Type manually — axios sets it with boundary for FormData
     })
     .then((res) => {
       dispatch(bookSlice.actions.addBookSuccess(res.data.message));

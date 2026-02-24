@@ -22,11 +22,12 @@ import UserDashboard from "./components/UserDashboard";
 import MyBorrowedBooks from "./components/MyBorrowedBooks";
 import ImportDigitalBook from "./admin/ImportDigitalBook";
 import ReaderPage from "./pages/ReaderPage";
+import PhysicalBookReader from "./pages/PhysicalBookReader";
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { isAuthenticated, loading, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, initLoading, user } = useSelector((state) => state.auth);
 
-  if (loading) return null;
+  if (initLoading) return null;
 
   if (!isAuthenticated) {
     return <Navigate to={adminOnly ? "/admin-login" : "/login"} replace />;
@@ -74,6 +75,7 @@ const App = () => {
         <Route path="/borrowed" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/digital-library" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/reader/:id" element={<ProtectedRoute><ReaderPage /></ProtectedRoute>} />
+        <Route path="/read-book/:id" element={<ProtectedRoute><PhysicalBookReader /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/password/forgot" element={<ForgotPassword />} />
