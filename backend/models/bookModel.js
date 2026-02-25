@@ -32,6 +32,18 @@ const bookSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    borrowLimitDays: {
+      type: Number,
+      default: 0,
+    },
+    borrowLimitHours: {
+      type: Number,
+      default: 0,
+    },
+    borrowLimitMinutes: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

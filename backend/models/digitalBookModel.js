@@ -32,7 +32,7 @@ const digitalBookSchema = new mongoose.Schema(
         },
         borrowLimitDays: {
             type: Number,
-            default: 5,
+            default: 0,
         },
         borrowLimitHours: {
             type: Number,

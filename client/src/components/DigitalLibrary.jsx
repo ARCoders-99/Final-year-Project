@@ -82,7 +82,13 @@ const DigitalLibrary = () => {
 
                                         <div className="flex items-center gap-2 text-xs text-gray-400 mb-4">
                                             <Clock size={14} />
-                                            <span>{book.borrowLimitDays} Days Access</span>
+                                            <span>
+                                                {[
+                                                    book.borrowLimitDays > 0 && `${book.borrowLimitDays}d`,
+                                                    book.borrowLimitHours > 0 && `${book.borrowLimitHours}h`,
+                                                    book.borrowLimitMinutes > 0 && `${book.borrowLimitMinutes}m`
+                                                ].filter(Boolean).join(" ") || "No Limit"} Access
+                                            </span>
                                         </div>
 
                                         <div className="mt-auto flex gap-2">

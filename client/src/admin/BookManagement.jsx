@@ -268,10 +268,20 @@ const BookManagement = () => {
                           {book.pdfUrl && (
                             <button
                               onClick={() => navigate(`/read-book/${book._id}`)}
-                              className="flex items-center justify-center gap-2 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-700 transition-colors"
+                              disabled={(() => {
+                                const borrow = userBorrowedBooks?.find(b => b.bookId === book._id && !b.returned);
+                                if (!borrow) return true; // Must borrow first
+                                return new Date(borrow.dueDate) <= new Date(); // Must not be expired
+                              })()}
+                              className="flex items-center justify-center gap-2 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <BookOpen size={15} />
-                              Read Book
+                              {(() => {
+                                const borrow = userBorrowedBooks?.find(b => b.bookId === book._id && !b.returned);
+                                if (!borrow) return "Read Book";
+                                if (new Date(borrow.dueDate) <= new Date()) return "Access Expired";
+                                return "Read Book";
+                              })()}
                             </button>
                           )}
                           <button

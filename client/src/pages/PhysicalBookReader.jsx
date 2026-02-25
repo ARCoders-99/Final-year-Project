@@ -36,6 +36,29 @@ const PhysicalBookReader = () => {
                     `http://localhost:4000/api/v1/book/${id}`,
                     { withCredentials: true }
                 );
+
+                // Find the borrow record for this book in user's borrowed books
+                const userResponse = await axios.get(
+                    `http://localhost:4000/api/v1/borrowed/me`,
+                    { withCredentials: true }
+                );
+
+                const borrowedBooks = userResponse.data.borrowedBooks;
+                const borrowRecord = borrowedBooks.find(
+                    (b) => b.bookId === id && !b.returned
+                );
+
+                if (!borrowRecord) {
+                    setFetchError("You must borrow this book before reading it.");
+                    return;
+                }
+
+                const expiryDate = new Date(borrowRecord.dueDate);
+                if (expiryDate <= new Date()) {
+                    setFetchError("Your borrow period has expired. Please return the book and borrow it again if needed.");
+                    return;
+                }
+
                 setBook(data.book);
             } catch (err) {
                 setFetchError(

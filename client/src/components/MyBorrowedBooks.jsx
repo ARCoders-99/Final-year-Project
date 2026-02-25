@@ -165,7 +165,14 @@ const MyBorrowedBooks = () => {
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Book Title</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Borrowed Date</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Due Date</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Remaining Time</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                      {filter === "returned" && (
+                        <>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Returned Date</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fine</th>
+                        </>
+                      )}
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
@@ -177,23 +184,47 @@ const MyBorrowedBooks = () => {
                         <td className="px-6 py-4 text-sm text-gray-600">{formatDate(book.borrowedDate)}</td>
                         <td className="px-6 py-4 text-sm text-gray-600">{formatDate(book.dueDate)}</td>
                         <td className="px-6 py-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${book.returned ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-                            {book.returned ? "Returned" : "Active"}
+                          {!book.returned ? (
+                            <ExpiryBadge expiryDate={book.dueDate} />
+                          ) : (
+                            <span className="text-gray-400 text-sm">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${book.returned ? "bg-green-100 text-green-700" : (new Date(book.dueDate) > new Date() ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700")}`}>
+                            {book.returned ? "Returned" : (new Date(book.dueDate) > new Date() ? "Active" : "Expired")}
                           </span>
                         </td>
+                        {filter === "returned" && (
+                          <>
+                            <td className="px-6 py-4 text-sm text-gray-600">{formatDate(book.returnDate)}</td>
+                            <td className="px-6 py-4 text-sm font-semibold text-red-600">${book.fine?.toFixed(2) || "0.00"}</td>
+                          </>
+                        )}
                         <td className="px-6 py-4 flex gap-3 items-center">
                           <BookA
                             onClick={() => openReadPopup(book.bookId)}
                             className="text-gray-400 hover:text-black cursor-pointer transition-colors"
                             size={20}
+                            title="View details"
                           />
                           {!book.returned && (
-                            <button
-                              onClick={() => handleReturnBook(book._id)}
-                              className="px-4 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors shadow-sm"
-                            >
-                              Return
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => navigate(`/read-book/${book.bookId}`)}
+                                disabled={new Date(book.dueDate) <= new Date()}
+                                className="px-3 py-1.5 bg-black text-white text-xs rounded-lg hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                              >
+                                <BookOpen size={14} />
+                                Read
+                              </button>
+                              <button
+                                onClick={() => handleReturnBook(book._id)}
+                                className="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors shadow-sm"
+                              >
+                                Return
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>

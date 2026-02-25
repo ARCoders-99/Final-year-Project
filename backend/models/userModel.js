@@ -37,6 +37,14 @@ const userSchema = new mongoose.Schema(
         bookTitle: String,
         borrowedDate: Date,
         dueDate: Date,
+        returnDate: {
+          type: Date,
+          default: null,
+        },
+        fine: {
+          type: Number,
+          default: 0,
+        },
       },
     ],
     avatar: {
@@ -81,9 +89,9 @@ userSchema.methods.getResetPasswordToken = function () {
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
-    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+  this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
 
-    return resetToken;
+  return resetToken;
 };
 
 export const User = mongoose.model("User", userSchema);

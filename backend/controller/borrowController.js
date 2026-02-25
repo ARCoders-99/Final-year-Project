@@ -17,12 +17,20 @@ export const recordBorrowedBook = async (req, res, next) => {
   if (!book.availability)
     return next(new ErrorHandler("Book is not available", 400));
 
+  // Calculate due date based on book's borrow limits
+  const totalMs =
+    ((book.borrowLimitDays || 0) * 86400 +
+      (book.borrowLimitHours || 0) * 3600 +
+      (book.borrowLimitMinutes || 0) * 60) * 1000;
+
+  const dueDate = new Date(Date.now() + totalMs);
+
   // Add borrowed book
   user.borrowedBooks.push({
     bookId: book._id,
     bookTitle: book.title,
     borrowedDate: new Date(),
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    dueDate,
     returned: false,
   });
 
@@ -48,6 +56,7 @@ export const returnBorrowBook = async (req, res, next) => {
 
   borrowedBook.returned = true;
   borrowedBook.returnDate = new Date();
+  borrowedBook.fine = calculateFine(borrowedBook.dueDate);
 
   // Update book availability
   const book = await Book.findById(borrowedBook.bookId);

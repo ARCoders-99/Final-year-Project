@@ -17,6 +17,9 @@ const AddBookPopup = () => {
   const [coverImage, setCoverImage] = useState(null);
   const [pdfPreview, setPdfPreview] = useState("");
   const [coverPreview, setCoverPreview] = useState("");
+  const [borrowLimitDays, setBorrowLimitDays] = useState(0);
+  const [borrowLimitHours, setBorrowLimitHours] = useState(0);
+  const [borrowLimitMinutes, setBorrowLimitMinutes] = useState(0);
 
   const handlePdfChange = (e) => {
     const file = e.target.files[0];
@@ -60,6 +63,9 @@ const AddBookPopup = () => {
     formData.append("author", author);
     formData.append("price", price);
     formData.append("quantity", quantity);
+    formData.append("borrowLimitDays", borrowLimitDays);
+    formData.append("borrowLimitHours", borrowLimitHours);
+    formData.append("borrowLimitMinutes", borrowLimitMinutes);
     formData.append("pdf", pdf);
     formData.append("coverImage", coverImage);
 
@@ -125,6 +131,49 @@ const AddBookPopup = () => {
                   required
                 />
               </div>
+            </div>
+
+            {/* Borrow Limit */}
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Borrow Limit</label>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Days</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="365"
+                    value={borrowLimitDays}
+                    onChange={(e) => setBorrowLimitDays(e.target.value)}
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Hours</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="23"
+                    value={borrowLimitHours}
+                    onChange={(e) => setBorrowLimitHours(e.target.value)}
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Minutes</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={borrowLimitMinutes}
+                    onChange={(e) => setBorrowLimitMinutes(e.target.value)}
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  />
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-2 italic">
+                Borrower will have exactly {borrowLimitDays}d {borrowLimitHours}h {borrowLimitMinutes}m to access this book.
+              </p>
             </div>
 
             {/* Upload PDF */}

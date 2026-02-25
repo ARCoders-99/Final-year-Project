@@ -43,7 +43,9 @@ export const importBook = catchAsyncErrors(async (req, res, next) => {
         language,
         coverImage,
         htmlLink,
-        borrowLimitDays
+        borrowLimitDays,
+        borrowLimitHours,
+        borrowLimitMinutes
     } = req.body;
 
     if (!gutenbergId || !title || !author || !htmlLink) {
@@ -64,7 +66,9 @@ export const importBook = catchAsyncErrors(async (req, res, next) => {
         language,
         coverImage,
         htmlLink,
-        borrowLimitDays: borrowLimitDays || 5,
+        borrowLimitDays: borrowLimitDays !== undefined ? Number(borrowLimitDays) : 0,
+        borrowLimitHours: borrowLimitHours !== undefined ? Number(borrowLimitHours) : 0,
+        borrowLimitMinutes: borrowLimitMinutes !== undefined ? Number(borrowLimitMinutes) : 0,
     });
 
     res.status(201).json({

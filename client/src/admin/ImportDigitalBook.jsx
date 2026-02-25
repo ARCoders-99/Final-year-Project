@@ -8,7 +8,7 @@ import { Search, Loader2, Import } from "lucide-react";
 const ImportDigitalBook = () => {
     const [title, setTitle] = useState("");
     const [author, setAuthor] = useState("");
-    const [borrowLimitDays, setBorrowLimitDays] = useState(5);
+    const [borrowLimitDays, setBorrowLimitDays] = useState(0);
     const [borrowLimitHours, setBorrowLimitHours] = useState(0);
     const [borrowLimitMinutes, setBorrowLimitMinutes] = useState(0);
 
