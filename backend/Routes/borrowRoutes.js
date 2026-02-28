@@ -3,6 +3,7 @@ import {
   borrowedBooks,
   getBorrowedBooksForAdmin,
   recordBorrowedBook,
+  recordPaidBorrow,
   returnBorrowBook,
 } from "../controller/borrowController.js";
 import { isAuthenticated, isAuthorized } from "../middlewares/authMiddleware.js";
@@ -14,6 +15,12 @@ router.post(
   "/record-borrow-book/:id",
   isAuthenticated, // anyone logged in
   recordBorrowedBook
+);
+
+router.post(
+  "/record-paid-borrow/:bookId",
+  isAuthenticated,
+  recordPaidBorrow
 );
 
 // USERS can return their borrowed books

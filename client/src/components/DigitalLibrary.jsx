@@ -1,11 +1,14 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllDigitalBooks, borrowDigitalBook, resetDigitalSlice, fetchMyDigitalBorrows } from "../store/slices/digitalSlice";
+import { fetchAllDigitalBooks, borrowDigitalBook, resetDigitalSlice, fetchMyDigitalBorrows, recordPaidDigitalBorrow } from "../store/slices/digitalSlice";
+import { createPaymentIntent } from "../store/slices/borrowSlice";
 import { toast } from "react-toastify";
 import Header from "../layout/Header";
-import { BookA, Loader2, BookOpen, Clock, Trash2 } from "lucide-react";
+import { BookA, Loader2, BookOpen, Clock, Trash2, CreditCard } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import PaymentPopup from "../popups/PaymentPopup";
 
 const DigitalLibrary = () => {
     const dispatch = useDispatch();
@@ -14,6 +17,8 @@ const DigitalLibrary = () => {
         (state) => state.digital
     );
     const { user } = useSelector((state) => state.auth);
+    const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
+    const [paymentData, setPaymentData] = useState({ clientSecret: "", bookId: "", bookTitle: "", price: 0 });
 
     useEffect(() => {
         dispatch(fetchAllDigitalBooks());
@@ -31,8 +36,34 @@ const DigitalLibrary = () => {
         }
     }, [dispatch, error, message]);
 
-    const handleBorrow = (id) => {
+    const handleBorrow = async (id) => {
+        const book = digitalBooks.find((b) => b._id === id);
+        if (!book) return;
+
+        if (book.price > 0) {
+            try {
+                const clientSecret = await dispatch(createPaymentIntent(id));
+                if (clientSecret) {
+                    setPaymentData({
+                        clientSecret,
+                        bookId: book._id,
+                        bookTitle: book.title,
+                        price: book.price
+                    });
+                    setIsPaymentPopupOpen(true);
+                }
+            } catch (err) {
+                toast.error(err || "Failed to initiate payment");
+            }
+            return;
+        }
+
         dispatch(borrowDigitalBook(id));
+    };
+
+    const handlePaymentSuccess = () => {
+        dispatch(fetchMyDigitalBorrows());
+        dispatch(fetchAllDigitalBooks());
     };
 
     const handleDelete = async (id) => {
@@ -105,6 +136,16 @@ const DigitalLibrary = () => {
                                         </h4>
                                         <p className="text-sm text-gray-600 mb-2 truncate">by {book.author}</p>
 
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-1.5 text-black font-semibold">
+                                                <CreditCard size={14} className="text-gray-400" />
+                                                <span>{book.price > 0 ? `$${book.price}` : "Free"}</span>
+                                            </div>
+                                            <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+                                                {book.price > 0 ? "Premium" : "Public Domain"}
+                                            </span>
+                                        </div>
+
                                         <div className="flex items-center gap-2 text-xs text-gray-400 mb-4">
                                             <Clock size={14} />
                                             <span>
@@ -147,6 +188,14 @@ const DigitalLibrary = () => {
                     )}
                 </div>
             )}
+
+            <PaymentPopup
+                isOpen={isPaymentPopupOpen}
+                onClose={() => setIsPaymentPopupOpen(false)}
+                onSuccess={handlePaymentSuccess}
+                recordPaidBorrowThunk={recordPaidDigitalBorrow}
+                {...paymentData}
+            />
         </main>
     );
 };

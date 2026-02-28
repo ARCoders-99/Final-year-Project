@@ -45,8 +45,25 @@ const borrowSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-}, 
-{ timestamps: true }
+  paymentId: {
+    type: String,
+    default: null,
+  },
+  paymentStatus: {
+    type: String,
+    enum: ["pending", "paid", "failed"],
+    default: "pending",
+  },
+  amountPaid: {
+    type: Number,
+    default: 0,
+  },
+  paymentDate: {
+    type: Date,
+    default: null,
+  },
+},
+  { timestamps: true }
 );
 
 export const Borrow = mongoose.model("Borrow", borrowSchema);

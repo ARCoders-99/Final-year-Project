@@ -9,6 +9,13 @@ const borrowSlice = createSlice({
     userBorrowedBooks: [],
     allBorrowedBooks: [],
     message: null,
+    stripeSessionUrl: null,
+    payments: [], // kept for legacy if needed
+    physicalPayments: [],
+    digitalPayments: [],
+    physicalEarnings: 0,
+    digitalEarnings: 0,
+    totalEarnings: 0,
   },
   reducers: {
     fetchUserBorrowedBooksRequest(state) {
@@ -71,6 +78,27 @@ const borrowSlice = createSlice({
       state.loading = false;
       state.error = null;
       state.message = null;
+      state.stripeSessionUrl = null;
+    },
+    paymentRequest(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    paymentSuccess(state, action) {
+      state.loading = false;
+      state.stripeSessionUrl = action.payload;
+    },
+    paymentFailed(state, action) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+    fetchAllPaymentsSuccess(state, action) {
+      state.loading = false;
+      state.physicalPayments = action.payload.physicalPayments || [];
+      state.digitalPayments = action.payload.digitalPayments || [];
+      state.physicalEarnings = action.payload.physicalEarnings || 0;
+      state.digitalEarnings = action.payload.digitalEarnings || 0;
+      state.totalEarnings = action.payload.totalEarnings || 0;
     },
   },
 });
@@ -79,7 +107,7 @@ export const fetchUserBorrowedBooks = () => async (dispatch) => {
   dispatch(borrowSlice.actions.fetchUserBorrowedBooksRequest());
   try {
     const res = await axios.get(
-      "http://localhost:4000/api/v1/borrow/my-borrowed-books",
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/borrow/my-borrowed-books`,
       { withCredentials: true }
     );
     dispatch(
@@ -98,7 +126,7 @@ export const fetchAllBorrowedBooks = () => async (dispatch) => {
   dispatch(borrowSlice.actions.fetchAllBorrowedBooksRequest());
   try {
     const res = await axios.get(
-      "http://localhost:4000/api/v1/borrow/borrowed-books-by-users",
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/borrow/borrowed-books-by-users`,
       { withCredentials: true }
     );
     dispatch(
@@ -117,7 +145,7 @@ export const recordBorrowBook = (email, id) => async (dispatch) => {
   dispatch(borrowSlice.actions.recordBookRequest());
   try {
     const res = await axios.post(
-      `http://localhost:4000/api/v1/borrow/record-borrow-book/${id}`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/borrow/record-borrow-book/${id}`,
       { email },
       {
         withCredentials: true,
@@ -126,16 +154,11 @@ export const recordBorrowBook = (email, id) => async (dispatch) => {
     );
 
     dispatch(borrowSlice.actions.recordBookSuccess(res.data.message));
-
-    // ❌ Remove this line to prevent popup opening automatically
-    // dispatch(toggleRecordBookPopup());
-
+    return res.data.message;
   } catch (err) {
-    dispatch(
-      borrowSlice.actions.recordBookFailed(
-        err.response?.data?.message || "Something went wrong"
-      )
-    );
+    const errorMsg = err.response?.data?.message || "Something went wrong";
+    dispatch(borrowSlice.actions.recordBookFailed(errorMsg));
+    throw errorMsg;
   }
 };
 
@@ -144,7 +167,7 @@ export const returnBook = ({ email, borrowId }) => async (dispatch) => {
   dispatch(borrowSlice.actions.returnBookRequest());
   try {
     const res = await axios.put(
-      `http://localhost:4000/api/v1/borrow/return-borrowed-book/${borrowId}`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/borrow/return-borrowed-book/${borrowId}`,
       { email },
       {
         withCredentials: true,
@@ -169,6 +192,63 @@ export const returnBook = ({ email, borrowId }) => async (dispatch) => {
   }
 };
 
+
+export const createPaymentIntent = (bookId) => async (dispatch) => {
+  dispatch(borrowSlice.actions.paymentRequest());
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/payment/create-payment-intent/${bookId}`,
+      {},
+      { withCredentials: true }
+    );
+    // In this new flow, we return the clientSecret to the caller
+    return res.data.clientSecret;
+  } catch (err) {
+    dispatch(
+      borrowSlice.actions.paymentFailed(
+        err.response?.data?.message || "Failed to initiate payment"
+      )
+    );
+    throw err;
+  }
+};
+
+export const recordPaidBorrow = (bookId, sessionId) => async (dispatch) => {
+  dispatch(borrowSlice.actions.recordBookRequest());
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/borrow/record-paid-borrow/${bookId}`,
+      { sessionId },
+      { withCredentials: true }
+    );
+    dispatch(borrowSlice.actions.recordBookSuccess(res.data.message));
+    return res.data;
+  } catch (err) {
+    dispatch(
+      borrowSlice.actions.recordBookFailed(
+        err.response?.data?.message || "Something went wrong"
+      )
+    );
+    throw err;
+  }
+};
+
+export const fetchAllPayments = () => async (dispatch) => {
+  dispatch(borrowSlice.actions.paymentRequest());
+  try {
+    const res = await axios.get(
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/payment/admin/payments`,
+      { withCredentials: true }
+    );
+    dispatch(borrowSlice.actions.fetchAllPaymentsSuccess(res.data));
+  } catch (err) {
+    dispatch(
+      borrowSlice.actions.paymentFailed(
+        err.response?.data?.message || "Failed to fetch payments"
+      )
+    );
+  }
+};
 
 export const resetBorrowSlice = () => (dispatch) => {
   dispatch(borrowSlice.actions.resetBorrowSlice());

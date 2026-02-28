@@ -23,6 +23,7 @@ import MyBorrowedBooks from "./components/MyBorrowedBooks";
 import ImportDigitalBook from "./admin/ImportDigitalBook";
 import ReaderPage from "./pages/ReaderPage";
 import PhysicalBookReader from "./pages/PhysicalBookReader";
+import Payments from "./admin/Payments";
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, initLoading, user } = useSelector((state) => state.auth);
@@ -88,6 +89,7 @@ const App = () => {
         <Route path="/admin/books" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/catalog" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
+        <Route path="/admin/payments" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/import-digital" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
 
         {/* Fallback */}

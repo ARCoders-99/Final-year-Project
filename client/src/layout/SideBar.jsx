@@ -15,7 +15,7 @@ import { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import AddNewAdmin from "../popups/AddNewAdmin";
 import SettingPopup from "../popups/SettingPopup";
-import { Import, BookA } from "lucide-react";
+import { Import, BookA, DollarSign } from "lucide-react";
 
 const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
   const dispatch = useDispatch();
@@ -46,13 +46,13 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
     <>
       <aside
         className={`${isSideBarOpen ? "left-0" : "-left-full"
-          } z-10 transition-all duration-700 md:relative md:left-0 flex w-64 bg-black text-white flex-col h-full`}
+          } z-10 transition-all duration-700 md:relative md:left-0 flex w-64 bg-black text-white flex-col h-full overflow-y-auto no-scrollbar`}
         style={{ position: "fixed" }}
       >
         <div className="px-6 py-4 my-8">
           <img src={logo_with_title} alt="logo" />
         </div>
-        <nav className="flex-1 px-6 space-y-2">
+        <nav className="flex-1 px-6 space-y-2 overflow-y-auto no-scrollbar">
           {isAdmin ? (
             <>
               <NavLink
@@ -99,6 +99,15 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
                 }
               >
                 <Import size={24} className="text-white" /> <span>Import Digital</span>
+              </NavLink>
+              <NavLink
+                to="/admin/payments"
+                className={({ isActive }) =>
+                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  }`
+                }
+              >
+                <DollarSign size={24} className="text-white" /> <span>Payments</span>
               </NavLink>
               <button
                 onClick={() => dispatch(toggleAddNewAdminPopup())}

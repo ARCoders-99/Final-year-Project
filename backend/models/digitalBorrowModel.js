@@ -35,6 +35,23 @@ const digitalBorrowSchema = new mongoose.Schema(
             enum: ["Active", "Expired"],
             default: "Active",
         },
+        paymentId: {
+            type: String,
+            default: null,
+        },
+        paymentStatus: {
+            type: String,
+            enum: ["pending", "paid", "failed"],
+            default: "pending",
+        },
+        amountPaid: {
+            type: Number,
+            default: 0,
+        },
+        paymentDate: {
+            type: Date,
+            default: null,
+        },
     },
     { timestamps: true }
 );

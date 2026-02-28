@@ -9,6 +9,7 @@ import bookRoutes from "./Routes/bookRouter.js";
 import userRoutes from "./Routes/userRoutes.js";
 import borrowRoutes from "./Routes/borrowRoutes.js";
 import digitalRoutes from "./Routes/digitalRoutes.js";
+import paymentRoutes from "./Routes/paymentRouter.js";
 import expressFileUpload from "express-fileupload";
 import { notifyUsers } from "./services/notifyUsers.js";
 import { removeUnverifiedAccounts } from "./services/removeUnverifiedAccounts.js";
@@ -16,6 +17,7 @@ import { errorMiddleware } from "./middlewares/errorMiddlewares.js";
 
 export const app = express();
 config({ path: "./config/config.env" });
+config(); // This will load .env from the root of the backend directory if path is not specified
 app.use(
   cors({
     origin: process.env.FRONTEND_URL, // Remove the array brackets
@@ -39,6 +41,7 @@ app.use("/api/v1/book", bookRoutes);
 app.use("/api/v1/borrow", borrowRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/digital", digitalRoutes);
+app.use("/api/v1/payment", paymentRoutes);
 
 (async () => {
   await connectDB(); // ✅ just await it

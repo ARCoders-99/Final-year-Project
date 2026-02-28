@@ -4,9 +4,9 @@ import ErrorHandler from "../middlewares/errorMiddlewares.js";
 import { v2 as cloudinary } from "cloudinary";
 
 export const addBook = catchAsyncErrors(async (req, res, next) => {
-  const { title, author, price, quantity, borrowLimitDays, borrowLimitHours, borrowLimitMinutes } = req.body;
+  const { title, author, price, borrowLimitDays, borrowLimitHours, borrowLimitMinutes } = req.body;
 
-  if (!title || !author || !price || quantity === undefined) {
+  if (!title || !author || !price) {
     return next(new ErrorHandler("Please fill all fields.", 400));
   }
 
@@ -53,14 +53,13 @@ export const addBook = catchAsyncErrors(async (req, res, next) => {
     );
   }
 
-  // Automatically set availability based on quantity
-  const availability = Number(quantity) > 0;
+  // Automatically set availability to true
+  const availability = true;
 
   const book = await Book.create({
     title,
     author,
     price: Number(price),
-    quantity: Number(quantity),
     availability,
     pdfUrl: pdfUpload.secure_url,
     coverImageUrl: imageUpload.secure_url,

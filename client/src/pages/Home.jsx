@@ -11,6 +11,7 @@ import BookManagement from "../admin/BookManagement";
 import Users from "../admin/Users";
 import ImportDigitalBook from "../admin/ImportDigitalBook";
 import DigitalLibrary from "../components/DigitalLibrary";
+import Payments from "../admin/Payments";
 
 const Home = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
@@ -35,6 +36,8 @@ const Home = () => {
         return <Users />;
       case "/admin/import-digital":
         return <ImportDigitalBook />;
+      case "/admin/payments":
+        return <Payments />;
       case "/digital-library":
         return <DigitalLibrary />;
       case "/books":

@@ -64,9 +64,13 @@ const PhysicalBookReader = () => {
                 setExpiryDate(expiryDate);
                 setBook(data.book);
             } catch (err) {
-                setFetchError(
-                    err.response?.data?.message || "Failed to load book details."
-                );
+                console.error("Book fetch error:", err);
+                const errorMessage = err.response?.data?.message || err.message || "Failed to load book details.";
+                setFetchError(errorMessage);
+
+                if (!import.meta.env.VITE_BACKEND_URL) {
+                    console.warn("VITE_BACKEND_URL is not defined in the environment.");
+                }
             }
         };
         fetchBook();

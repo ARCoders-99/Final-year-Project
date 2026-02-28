@@ -46,6 +46,10 @@ const digitalBookSchema = new mongoose.Schema(
             type: String,
             default: "digital",
         },
+        price: {
+            type: Number,
+            default: 0,
+        },
     },
     {
         timestamps: true,

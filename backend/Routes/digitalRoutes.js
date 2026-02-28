@@ -8,7 +8,9 @@ import {
 import {
     borrowDigitalBook,
     getDigitalReaderContent,
-    getMyDigitalBorrows
+    getMyDigitalBorrows,
+    getAllDigitalBorrows,
+    recordPaidDigitalBorrow
 } from "../controller/digitalBorrowController.js";
 import { isAuthenticated, isAuthorized } from "../middlewares/authMiddleware.js";
 
@@ -22,7 +24,9 @@ router.delete("/delete/:id", isAuthenticated, isAuthorized("Admin"), deleteDigit
 
 // Digital Borrow Routes
 router.post("/borrow/:id", isAuthenticated, borrowDigitalBook);
+router.post("/record-paid-borrow/:id", isAuthenticated, recordPaidDigitalBorrow);
 router.get("/my-borrows", isAuthenticated, getMyDigitalBorrows);
+router.get("/admin/all-borrows", isAuthenticated, isAuthorized("Admin"), getAllDigitalBorrows);
 router.get("/read/:id", isAuthenticated, getDigitalReaderContent);
 
 export default router;

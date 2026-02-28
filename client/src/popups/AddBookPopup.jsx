@@ -12,7 +12,6 @@ const AddBookPopup = () => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [price, setPrice] = useState("");
-  const [quantity, setQuantity] = useState("");
   const [pdf, setPdf] = useState(null);
   const [coverImage, setCoverImage] = useState(null);
   const [pdfPreview, setPdfPreview] = useState("");
@@ -62,7 +61,6 @@ const AddBookPopup = () => {
     formData.append("title", title);
     formData.append("author", author);
     formData.append("price", price);
-    formData.append("quantity", quantity);
     formData.append("borrowLimitDays", borrowLimitDays);
     formData.append("borrowLimitHours", borrowLimitHours);
     formData.append("borrowLimitMinutes", borrowLimitMinutes);
@@ -104,8 +102,7 @@ const AddBookPopup = () => {
               />
             </div>
 
-            {/* Price & Quantity */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Borrowing Fee ($)</label>
                 <input
@@ -115,18 +112,6 @@ const AddBookPopup = () => {
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="0"
-                  min="0"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                   required
                 />

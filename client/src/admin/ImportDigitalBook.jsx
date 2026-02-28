@@ -11,6 +11,7 @@ const ImportDigitalBook = () => {
     const [borrowLimitDays, setBorrowLimitDays] = useState(0);
     const [borrowLimitHours, setBorrowLimitHours] = useState(0);
     const [borrowLimitMinutes, setBorrowLimitMinutes] = useState(0);
+    const [price, setPrice] = useState(0);
 
     const dispatch = useDispatch();
     const { loading, error, message, searchByGutenbergResults } = useSelector(
@@ -39,6 +40,7 @@ const ImportDigitalBook = () => {
             borrowLimitDays: Number(borrowLimitDays),
             borrowLimitHours: Number(borrowLimitHours),
             borrowLimitMinutes: Number(borrowLimitMinutes),
+            price: Number(price),
         };
         dispatch(importGutenbergBook(importData));
     };
@@ -124,6 +126,16 @@ const ImportDigitalBook = () => {
                                 className="border p-2 w-20 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-semibold"
                                 value={borrowLimitMinutes}
                                 onChange={(e) => setBorrowLimitMinutes(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1 items-center">
+                            <span className="text-xs text-gray-500">Price ($)</span>
+                            <input
+                                type="number"
+                                min="0"
+                                className="border p-2 w-24 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-semibold"
+                                value={price}
+                                onChange={(e) => setPrice(e.target.value)}
                             />
                         </div>
                         <p className="text-xs text-gray-400 self-end pb-2">

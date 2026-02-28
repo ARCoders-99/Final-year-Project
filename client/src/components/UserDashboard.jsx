@@ -311,7 +311,7 @@ const UserDashboard = () => {
                     <span className="text-xs font-semibold text-gray-700">${book.price}</span>
                     <span className={`text-xs font-medium ${book.availability ? "text-green-600" : "text-red-500"
                       }`}>
-                      {book.availability ? `${book.quantity} left` : "Unavailable"}
+                      {book.availability ? `${book.borrowLimitDays || 0}d ${book.borrowLimitHours || 0}h ${book.borrowLimitMinutes || 0}m` : "Unavailable"}
                     </span>
                   </div>
                   {book.pdfUrl && (

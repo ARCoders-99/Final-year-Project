@@ -10,9 +10,12 @@ import { useNavigate } from "react-router-dom";
 import { fetchAllBooks, resetBookSlice } from "../store/slices/bookSlice";
 import {
   recordBorrowBook,
+  createPaymentIntent,
   resetBorrowSlice,
   fetchUserBorrowedBooks,
+  recordPaidBorrow, // Added recordPaidBorrow
 } from "../store/slices/borrowSlice";
+import PaymentPopup from "../popups/PaymentPopup";
 import { toast } from "react-toastify";
 import axios from "axios";
 import Header from "../layout/Header";
@@ -26,6 +29,10 @@ const BookManagement = () => {
 
   const { error, message, books, loading } = useSelector((state) => state.book);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+
+  // Payment popup state
+  const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState({ clientSecret: "", bookId: "", bookTitle: "", price: 0 });
   const { addBookPopup, readBookPopup, recordBookPopup } = useSelector(
     (state) => state.popup
   );
@@ -53,16 +60,42 @@ const BookManagement = () => {
 
   // Borrow book
   const handleBorrowBook = async (bookId) => {
+    const book = books.find((b) => b._id === bookId);
+    if (!book) return;
+
+    if (book.price > 0) {
+      try {
+        const clientSecret = await dispatch(createPaymentIntent(bookId));
+        if (clientSecret) {
+          setPaymentData({
+            clientSecret,
+            bookId: book._id,
+            bookTitle: book.title,
+            price: book.price
+          });
+          setIsPaymentPopupOpen(true);
+        }
+      } catch (err) {
+        toast.error(err || "Failed to initiate payment");
+      }
+      return;
+    }
+
     try {
-      const actionResult = await dispatch(recordBorrowBook(user.email, bookId));
-      if (actionResult?.payload) {
-        toast.success(actionResult.payload);
+      const message = await dispatch(recordBorrowBook(user.email, bookId));
+      if (message) {
+        toast.success(message);
       }
       dispatch(fetchUserBorrowedBooks());
       dispatch(fetchAllBooks());
     } catch (err) {
       toast.error(err || "Failed to borrow book");
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    dispatch(fetchUserBorrowedBooks());
+    dispatch(fetchAllBooks());
   };
 
   const handleDeleteBook = async (id) => {
@@ -175,7 +208,6 @@ const BookManagement = () => {
                       <th className="px-4 py-2 text-left">Cover</th>
                       <th className="px-4 py-2 text-left">Title</th>
                       <th className="px-4 py-2 text-left">Author</th>
-                      <th className="px-4 py-2 text-left">Qty</th>
                       <th className="px-4 py-2 text-left">Price</th>
                       <th className="px-4 py-2 text-left">Status</th>
                       <th className="px-4 py-2 text-center">Actions</th>
@@ -194,7 +226,6 @@ const BookManagement = () => {
                         </td>
                         <td className="px-4 py-2 font-medium">{book.title}</td>
                         <td className="px-4 py-2 text-gray-600">{book.author}</td>
-                        <td className="px-4 py-2">{book.quantity}</td>
                         <td className="px-4 py-2">${book.price}</td>
                         <td className="px-4 py-2">
                           <span
@@ -298,7 +329,7 @@ const BookManagement = () => {
                               }`}
                           >
                             {book.availability
-                              ? `${book.quantity} left`
+                              ? `${book.borrowLimitDays || 0}d ${book.borrowLimitHours || 0}h ${book.borrowLimitMinutes || 0}m`
                               : "Unavailable"}
                           </span>
                         </div>
@@ -349,6 +380,14 @@ const BookManagement = () => {
       {addBookPopup && <AddBookPopup />}
       {readBookPopup && <ReadBookPopup book={readBook} />}
       {recordBookPopup && <RecordBookPopup bookId={borrowBookId} />}
+
+      <PaymentPopup
+        isOpen={isPaymentPopupOpen}
+        onClose={() => setIsPaymentPopupOpen(false)}
+        onSuccess={handlePaymentSuccess}
+        recordPaidBorrowThunk={recordPaidBorrow}
+        {...paymentData}
+      />
     </>
   );
 };

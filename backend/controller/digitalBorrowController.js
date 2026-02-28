@@ -19,6 +19,11 @@ export const borrowDigitalBook = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Digital book not found.", 404));
     }
 
+    // Check price
+    if (book.price > 0) {
+        return next(new ErrorHandler("This book requires payment before borrowing.", 400));
+    }
+
     // Check if already borrowed and active
     let borrowRecord = await DigitalBorrow.findOne({
         "user.id": user._id,
@@ -55,6 +60,68 @@ export const borrowDigitalBook = catchAsyncErrors(async (req, res, next) => {
     res.status(201).json({
         success: true,
         message: "Digital book borrowed successfully.",
+        borrowRecord,
+    });
+});
+
+// Record Paid Digital Borrow (After successful Stripe payment)
+export const recordPaidDigitalBorrow = catchAsyncErrors(async (req, res, next) => {
+    const { id: bookId } = req.params;
+    const { sessionId } = req.body;
+    const user = req.user;
+
+    if (!sessionId) {
+        return next(new ErrorHandler("Payment session ID is required", 400));
+    }
+
+    // 1. Verify payment with Stripe
+    const Stripe = (await import("stripe")).default;
+    if (!process.env.STRIPE_SECRET_KEY) {
+        return next(new ErrorHandler("STRIPE_SECRET_KEY is not defined in environment variables", 500));
+    }
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const intent = await stripe.paymentIntents.retrieve(sessionId);
+
+    if (intent.status !== "succeeded") {
+        return next(new ErrorHandler("Payment not verified", 400));
+    }
+
+    // 2. Check if book exists
+    const book = await DigitalBook.findById(bookId);
+    if (!book) return next(new ErrorHandler("Digital book not found", 404));
+
+    // 3. Prevent duplicate borrow for same session
+    let borrowRecord = await DigitalBorrow.findOne({ paymentId: intent.id });
+    if (borrowRecord) {
+        return res.status(200).json({ success: true, message: "Book already recorded.", borrowRecord });
+    }
+
+    // 4. Calculate expiry date
+    const totalMs =
+        ((book.borrowLimitDays || 0) * 86400 +
+            (book.borrowLimitHours || 0) * 3600 +
+            (book.borrowLimitMinutes || 0) * 60) * 1000;
+
+    const expiryDate = new Date(Date.now() + totalMs);
+
+    // 5. Create Digital Borrow record
+    borrowRecord = await DigitalBorrow.create({
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+        },
+        book: bookId,
+        expiryDate,
+        paymentId: intent.id,
+        paymentStatus: "paid",
+        amountPaid: intent.amount / 100,
+        paymentDate: new Date(),
+    });
+
+    res.status(201).json({
+        success: true,
+        message: "Payment verified and digital book borrowed successfully!",
         borrowRecord,
     });
 });
@@ -105,6 +172,14 @@ export const getMyDigitalBorrows = catchAsyncErrors(async (req, res, next) => {
         expiryDate: { $gt: new Date() },
     }).populate("book");
 
+    res.status(200).json({
+        success: true,
+        borrows,
+    });
+});
+// Get All Digital Borrows (Admin)
+export const getAllDigitalBorrows = catchAsyncErrors(async (req, res, next) => {
+    const borrows = await DigitalBorrow.find().populate("book");
     res.status(200).json({
         success: true,
         borrows,

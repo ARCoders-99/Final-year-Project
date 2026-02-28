@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema(
           type: Number,
           default: 0,
         },
+        paymentId: String,
+        paymentStatus: String,
+        amountPaid: Number,
+        paymentDate: Date,
       },
     ],
     avatar: {

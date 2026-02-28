@@ -200,7 +200,9 @@ const MyBorrowedBooks = () => {
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Book Title</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Borrowed Date</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Due Date</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Remaining Time</th>
+                      {filter !== "returned" && (
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Remaining Time</th>
+                      )}
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                       {filter === "returned" && (
                         <>
@@ -218,13 +220,15 @@ const MyBorrowedBooks = () => {
                         <td className="px-6 py-4 text-sm font-medium text-gray-800">{book.bookTitle}</td>
                         <td className="px-6 py-4 text-sm text-gray-600">{formatDate(book.borrowedDate)}</td>
                         <td className="px-6 py-4 text-sm text-gray-600">{formatDate(book.dueDate)}</td>
-                        <td className="px-6 py-4">
-                          {!book.returned ? (
-                            <ExpiryBadge expiryDate={book.dueDate} />
-                          ) : (
-                            <span className="text-gray-400 text-sm">-</span>
-                          )}
-                        </td>
+                        {filter !== "returned" && (
+                          <td className="px-6 py-4">
+                            {!book.returned ? (
+                              <ExpiryBadge expiryDate={book.dueDate} />
+                            ) : (
+                              <span className="text-gray-400 text-sm">-</span>
+                            )}
+                          </td>
+                        )}
                         <td className="px-6 py-4">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${book.returned ? "bg-green-100 text-green-700" : (new Date(book.dueDate) > new Date() ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700")}`}>
                             {book.returned ? "Returned" : (new Date(book.dueDate) > new Date() ? "Active" : "Expired")}
