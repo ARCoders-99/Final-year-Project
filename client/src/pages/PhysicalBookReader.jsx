@@ -27,19 +27,21 @@ const PhysicalBookReader = () => {
     const [scale, setScale] = useState(1.0);
     const [pdfError, setPdfError] = useState("");
     const [pdfLoading, setPdfLoading] = useState(true);
+    const [accessExpired, setAccessExpired] = useState(false);
+    const [expiryDate, setExpiryDate] = useState(null);
 
     // Fetch book metadata from backend (keeps PDF URL server-side)
     useEffect(() => {
         const fetchBook = async () => {
             try {
                 const { data } = await axios.get(
-                    `http://localhost:4000/api/v1/book/${id}`,
+                    `${import.meta.env.VITE_BACKEND_URL}/api/v1/book/${id}`,
                     { withCredentials: true }
                 );
 
                 // Find the borrow record for this book in user's borrowed books
                 const userResponse = await axios.get(
-                    `http://localhost:4000/api/v1/borrowed/me`,
+                    `${import.meta.env.VITE_BACKEND_URL}/api/v1/borrow/my-borrowed-books`,
                     { withCredentials: true }
                 );
 
@@ -55,10 +57,11 @@ const PhysicalBookReader = () => {
 
                 const expiryDate = new Date(borrowRecord.dueDate);
                 if (expiryDate <= new Date()) {
-                    setFetchError("Your borrow period has expired. Please return the book and borrow it again if needed.");
+                    setFetchError("Your borrow period has expired. Please borrow again to continue reading.");
                     return;
                 }
 
+                setExpiryDate(expiryDate);
                 setBook(data.book);
             } catch (err) {
                 setFetchError(
@@ -68,6 +71,15 @@ const PhysicalBookReader = () => {
         };
         fetchBook();
     }, [id]);
+
+    // Real-time expiry guard: redirect exactly when dueDate is reached
+    useEffect(() => {
+        if (!expiryDate) return;
+        const msLeft = expiryDate.getTime() - Date.now();
+        if (msLeft <= 0) { setAccessExpired(true); return; }
+        const timer = setTimeout(() => setAccessExpired(true), msLeft);
+        return () => clearTimeout(timer);
+    }, [expiryDate]);
 
     const onDocumentLoadSuccess = useCallback(({ numPages }) => {
         setNumPages(numPages);
@@ -87,6 +99,25 @@ const PhysicalBookReader = () => {
         setPageNumber((prev) => Math.min(prev + 1, numPages));
     const zoomIn = () => setScale((s) => Math.min(s + 0.2, 2.5));
     const zoomOut = () => setScale((s) => Math.max(s - 0.2, 0.5));
+
+    // Real-time access expired overlay
+    if (accessExpired) {
+        return (
+            <div className="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center gap-4 z-50">
+                <div className="text-center">
+                    <p className="text-5xl mb-4">⏰</p>
+                    <h2 className="text-white text-2xl font-bold mb-2">Access Expired</h2>
+                    <p className="text-gray-400 mb-6">Your borrow period for this book has ended.</p>
+                </div>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-2 px-6 py-2 bg-white text-black rounded-lg hover:bg-gray-100 font-medium"
+                >
+                    <ArrowLeft size={16} /> Go Back
+                </button>
+            </div>
+        );
+    }
 
     // Error fetching book
     if (fetchError) {

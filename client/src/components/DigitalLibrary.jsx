@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllDigitalBooks, borrowDigitalBook, resetDigitalSlice, fetchMyDigitalBorrows } from "../store/slices/digitalSlice";
 import { toast } from "react-toastify";
 import Header from "../layout/Header";
-import { BookA, Loader2, BookOpen, Clock } from "lucide-react";
+import { BookA, Loader2, BookOpen, Clock, Trash2 } from "lucide-react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const DigitalLibrary = () => {
@@ -32,6 +33,21 @@ const DigitalLibrary = () => {
 
     const handleBorrow = (id) => {
         dispatch(borrowDigitalBook(id));
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("Are you sure you want to delete this digital book?")) {
+            try {
+                const { data } = await axios.delete(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/v1/digital-book/delete/${id}`,
+                    { withCredentials: true }
+                );
+                toast.success(data.message || "Book deleted successfully!");
+                dispatch(fetchAllDigitalBooks());
+            } catch (error) {
+                toast.error(error.response?.data?.message || "Failed to delete book");
+            }
+        }
     };
 
     const isAlreadyBorrowed = (bookId) => {
@@ -73,6 +89,15 @@ const DigitalLibrary = () => {
                                         <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm">
                                             {book.language}
                                         </div>
+                                        {user?.role === "Admin" && (
+                                            <button
+                                                onClick={() => handleDelete(book._id)}
+                                                className="absolute top-2 left-2 bg-red-600/80 hover:bg-red-600 text-white p-1.5 rounded-full backdrop-blur-sm transition-colors shadow-lg"
+                                                title="Delete Book"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="p-5 flex-1 flex flex-col">
                                         <h4 className="font-bold text-gray-800 line-clamp-2 mb-1 h-12 leading-tight">

@@ -75,6 +75,41 @@ const MyBorrowedBooks = () => {
     }
   }, [dispatch, isAuthenticated]);
 
+  // Auto-return expired borrows in real-time
+  useEffect(() => {
+    if (!userBorrowedBooks || userBorrowedBooks.length === 0) return;
+
+    const timers = [];
+    const now = Date.now();
+
+    const runReturn = async (borrow) => {
+      try {
+        await dispatch(returnBook({ borrowId: borrow._id }));
+      } catch (_) {
+        // Silently skip — may already be returned
+      }
+      dispatch(fetchUserBorrowedBooks());
+    };
+
+    for (const borrow of userBorrowedBooks) {
+      if (borrow.returned) continue;
+
+      const msUntilExpiry = new Date(borrow.dueDate).getTime() - now;
+
+      if (msUntilExpiry <= 0) {
+        // Already expired but not yet returned — return it immediately
+        runReturn(borrow);
+      } else {
+        // Schedule return at the exact expiry moment
+        const timer = setTimeout(() => runReturn(borrow), msUntilExpiry);
+        timers.push(timer);
+      }
+    }
+
+    // Cleanup timers if component unmounts or borrows update
+    return () => timers.forEach(clearTimeout);
+  }, [userBorrowedBooks, dispatch]);
+
   // Date formatting function
   const formatDate = (timeStamp) => {
     if (!timeStamp) return "N/A";

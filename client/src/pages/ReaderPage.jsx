@@ -25,24 +25,30 @@ const ReaderPage = () => {
     useEffect(() => {
         if (!borrowRecord) return;
 
-        const timer = setInterval(() => {
-            const now = new Date().getTime();
-            const expiry = new Date(borrowRecord.expiryDate).getTime();
+        const expiry = new Date(borrowRecord.expiryDate).getTime();
+
+        const tick = () => {
+            const now = Date.now();
             const diff = expiry - now;
 
             if (diff <= 0) {
-                setTimeLeft("Expired");
                 clearInterval(timer);
-            } else {
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                setTimeLeft(`${days}d ${hours}h ${minutes}m`);
+                // Immediately lock: show no-access screen then redirect
+                navigate(-1);
+                return;
             }
-        }, 1000);
 
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            setTimeLeft(`${days > 0 ? days + "d " : ""}${hours}h ${minutes}m ${seconds}s`);
+        };
+
+        tick(); // Run immediately
+        const timer = setInterval(tick, 1000);
         return () => clearInterval(timer);
-    }, [borrowRecord]);
+    }, [borrowRecord, navigate]);
 
     if (loading && !borrowRecord) {
         return (

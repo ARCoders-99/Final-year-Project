@@ -26,6 +26,7 @@ import { BookA, BookOpen, Search, Library } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { fetchAllDigitalBooks, borrowDigitalBook } from "../store/slices/digitalSlice";
 import { fetchAllBooks } from "../store/slices/bookSlice";
+import { fetchUserBorrowedBooks } from "../store/slices/borrowSlice";
 
 ChartJS.register(
   CategoryScale,
@@ -65,7 +66,26 @@ const UserDashboard = () => {
   useEffect(() => {
     dispatch(fetchAllDigitalBooks());
     dispatch(fetchAllBooks());
+    dispatch(fetchUserBorrowedBooks());
   }, [dispatch]);
+
+  // Real-time expiry: schedule a re-fetch at the exact dueDate of each active borrow
+  useEffect(() => {
+    if (!userBorrowedBooks || userBorrowedBooks.length === 0) return;
+    const now = Date.now();
+    const timers = [];
+    for (const borrow of userBorrowedBooks) {
+      if (borrow.returned) continue;
+      const msLeft = new Date(borrow.dueDate).getTime() - now;
+      if (msLeft > 0) {
+        timers.push(setTimeout(() => {
+          dispatch(fetchUserBorrowedBooks());
+          dispatch(fetchAllBooks());
+        }, msLeft));
+      }
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [userBorrowedBooks, dispatch]);
 
   const data = {
     labels: ["Total Borrowed Books", "Total Returned Books"],

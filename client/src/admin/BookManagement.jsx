@@ -1,4 +1,4 @@
-import { BookOpen, NotebookPen, ExternalLink, BookA, Loader2 } from "lucide-react";
+import { BookOpen, NotebookPen, ExternalLink, BookA, Loader2, Trash2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   toggleAddBookPopup,
@@ -14,6 +14,7 @@ import {
   fetchUserBorrowedBooks,
 } from "../store/slices/borrowSlice";
 import { toast } from "react-toastify";
+import axios from "axios";
 import Header from "../layout/Header";
 import AddBookPopup from "../popups/AddBookPopup";
 import ReadBookPopup from "../popups/ReadBookPopup";
@@ -64,6 +65,21 @@ const BookManagement = () => {
     }
   };
 
+  const handleDeleteBook = async (id) => {
+    if (window.confirm("Are you sure you want to delete this book?")) {
+      try {
+        const { data } = await axios.delete(
+          `${import.meta.env.VITE_BACKEND_URL}/api/v1/book/delete/${id}`,
+          { withCredentials: true }
+        );
+        toast.success(data.message || "Book deleted successfully!");
+        dispatch(fetchAllBooks());
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to delete book");
+      }
+    }
+  };
+
   // Fetch books and user borrowed books on mount
   useEffect(() => {
     if (isAuthenticated) {
@@ -71,6 +87,24 @@ const BookManagement = () => {
       dispatch(fetchUserBorrowedBooks());
     }
   }, [dispatch, isAuthenticated]);
+
+  // Real-time expiry: schedule a re-fetch at the exact dueDate of each active borrow
+  useEffect(() => {
+    if (!userBorrowedBooks || userBorrowedBooks.length === 0) return;
+    const now = Date.now();
+    const timers = [];
+    for (const borrow of userBorrowedBooks) {
+      if (borrow.returned) continue;
+      const msLeft = new Date(borrow.dueDate).getTime() - now;
+      if (msLeft > 0) {
+        timers.push(setTimeout(() => {
+          dispatch(fetchUserBorrowedBooks());
+          dispatch(fetchAllBooks());
+        }, msLeft));
+      }
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [userBorrowedBooks, dispatch]);
 
   // Handle global messages and errors
   useEffect(() => {
@@ -194,6 +228,12 @@ const BookManagement = () => {
                               onClick={() => openRecordBookPopup(book._id)}
                               className="hover:cursor-pointer text-green-600 hover:text-green-800"
                               title="Record borrow"
+                            />
+                            <Trash2
+                              size={17}
+                              onClick={() => handleDeleteBook(book._id)}
+                              className="hover:cursor-pointer text-red-600 hover:text-red-800"
+                              title="Delete book"
                             />
                           </div>
                         </td>

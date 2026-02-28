@@ -2,7 +2,8 @@ import express from "express";
 import {
     searchBooks,
     importBook,
-    getAllDigitalBooks
+    getAllDigitalBooks,
+    deleteDigitalBook
 } from "../controller/digitalBookController.js";
 import {
     borrowDigitalBook,
@@ -17,6 +18,7 @@ const router = express.Router();
 router.get("/search", isAuthenticated, isAuthorized("Admin"), searchBooks);
 router.post("/import", isAuthenticated, isAuthorized("Admin"), importBook);
 router.get("/all", isAuthenticated, getAllDigitalBooks);
+router.delete("/delete/:id", isAuthenticated, isAuthorized("Admin"), deleteDigitalBook);
 
 // Digital Borrow Routes
 router.post("/borrow/:id", isAuthenticated, borrowDigitalBook);

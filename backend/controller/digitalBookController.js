@@ -86,3 +86,16 @@ export const getAllDigitalBooks = catchAsyncErrors(async (req, res, next) => {
         books,
     });
 });
+
+// Delete Digital Book (Admin Only)
+export const deleteDigitalBook = catchAsyncErrors(async (req, res, next) => {
+    const { id } = req.params;
+    const book = await DigitalBook.findByIdAndDelete(id);
+    if (!book) {
+        return next(new ErrorHandler("Digital book not found.", 404));
+    }
+    res.status(200).json({
+        success: true,
+        message: "Digital book deleted successfully.",
+    });
+});
