@@ -49,7 +49,7 @@ const ForgotPassword = () => {
                 className="mb-12 h-44 w-auto"
               />
             </div>
-            <h3 className="text-gray-300 max-w-[320px] mx-auto text-3xl font-medium leading-10">
+            <h3 className="text-gray-300 max-w-[320px] mx-auto text-3xl font-bold leading-10">
               Your premier digital library for borrowing and reading books
             </h3>
           </div>
@@ -70,7 +70,7 @@ const ForgotPassword = () => {
               </div>
             </div>
             <div className="mb-8">
-              <h1 className="text-4xl font-medium text-center mb-5 overflow-hidden">
+              <h1 className="text-4xl font-bold text-center mb-5 overflow-hidden">
                 Forgot Password
               </h1>
               <p className="text-gray-800 text-center mb-12">
@@ -89,7 +89,7 @@ const ForgotPassword = () => {
                 </div>
                 <button
                   type="submit"
-                  className="border-2 mt-5 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
+                  className="border-2 mt-5 border-black w-full font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
                   disabled={loading ? true : false}
                 >
                   Reset Password

@@ -1,13 +1,14 @@
-import { BookA, BookOpen, Clock, Loader2 } from "lucide-react";
+import { BookA, BookOpen, Clock, Loader2, Undo2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleReadBookPopup } from "../store/slices/popUpSlice";
 import { returnBook, fetchUserBorrowedBooks } from "../store/slices/borrowSlice";
-import { fetchMyDigitalBorrows } from "../store/slices/digitalSlice";
+import { fetchMyDigitalBorrows, returnDigitalBook } from "../store/slices/digitalSlice";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import Header from "../layout/Header";
 import ReadBookPopup from "../popups/ReadBookPopup";
+import { AnimatePresence } from "framer-motion";
 
 // ─── Live countdown helper ─────────────────────────────────────────────────────
 const useCountdown = (targetDate) => {
@@ -57,7 +58,7 @@ const MyBorrowedBooks = () => {
   const { isAuthenticated } = useSelector((state) => state.auth);
 
   const [readBook, setReadBook] = useState({});
-  const [filter, setFilter] = useState("nonReturned"); // default to non-returned
+  const [filter, setFilter] = useState("nonReturned"); // Shared filter: nonReturned | returned
   const [activeTab, setActiveTab] = useState("physical"); // physical | digital
 
   // Open book details popup
@@ -75,68 +76,58 @@ const MyBorrowedBooks = () => {
     }
   }, [dispatch, isAuthenticated]);
 
-  // Auto-return expired borrows in real-time
+  // Auto-return expired physical borrows in real-time
   useEffect(() => {
     if (!userBorrowedBooks || userBorrowedBooks.length === 0) return;
-
     const timers = [];
     const now = Date.now();
-
     const runReturn = async (borrow) => {
-      try {
-        await dispatch(returnBook({ borrowId: borrow._id }));
-      } catch (_) {
-        // Silently skip — may already be returned
-      }
+      try { await dispatch(returnBook({ borrowId: borrow._id })); } catch (_) { }
       dispatch(fetchUserBorrowedBooks());
     };
-
     for (const borrow of userBorrowedBooks) {
       if (borrow.returned) continue;
-
       const msUntilExpiry = new Date(borrow.dueDate).getTime() - now;
-
-      if (msUntilExpiry <= 0) {
-        // Already expired but not yet returned — return it immediately
-        runReturn(borrow);
-      } else {
-        // Schedule return at the exact expiry moment
-        const timer = setTimeout(() => runReturn(borrow), msUntilExpiry);
-        timers.push(timer);
-      }
+      if (msUntilExpiry <= 0) { runReturn(borrow); }
+      else { timers.push(setTimeout(() => runReturn(borrow), msUntilExpiry)); }
     }
-
-    // Cleanup timers if component unmounts or borrows update
     return () => timers.forEach(clearTimeout);
   }, [userBorrowedBooks, dispatch]);
 
-  // Date formatting function
   const formatDate = (timeStamp) => {
     if (!timeStamp) return "N/A";
     const date = new Date(timeStamp);
     if (isNaN(date.getTime())) return "Invalid Date";
-    const formattedDate = `${String(date.getDate()).padStart(2, "0")}-${String(
-      date.getMonth() + 1
-    ).padStart(2, "0")}-${date.getFullYear()}`;
-    const formattedTime = `${String(date.getHours()).padStart(2, "0")}:${String(
-      date.getMinutes()
-    ).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
-    return `${formattedDate} ${formattedTime}`;
+    return `${String(date.getDate()).padStart(2, "0")}-${String(date.getMonth() + 1).padStart(2, "0")}-${date.getFullYear()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
   };
 
-  // Separate returned and non-returned books (Physical)
-  const returnedBooks = userBorrowedBooks?.filter((book) => book.returned === true);
-  const nonReturnedBooks = userBorrowedBooks?.filter((book) => book.returned === false);
-  const physicalBooksToDisplay = filter === "returned" ? returnedBooks : nonReturnedBooks;
+  // Filtering for Physical Books
+  const physicalReturned = userBorrowedBooks?.filter((b) => b.returned === true) || [];
+  const physicalBorrowed = userBorrowedBooks?.filter((b) => b.returned === false) || [];
+  const physicalToDisplay = filter === "returned" ? physicalReturned : physicalBorrowed;
 
-  // Handle returning a physical book
-  const handleReturnBook = async (borrowId) => {
+  // Filtering for Digital Books
+  const digitalReturned = myDigitalBorrows?.filter((b) => b.returned === true || new Date(b.expiryDate) <= new Date()) || [];
+  const digitalBorrowed = myDigitalBorrows?.filter((b) => b.returned === false && new Date(b.expiryDate) > new Date()) || [];
+  const digitalToDisplay = filter === "returned" ? digitalReturned : digitalBorrowed;
+
+  const handleReturnPhysical = async (borrowId) => {
     try {
       await dispatch(returnBook({ borrowId }));
-      toast.success("Book returned successfully!");
+      toast.success("Physical book returned!");
       dispatch(fetchUserBorrowedBooks());
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to return book.");
+      toast.error(err.response?.data?.message || "Failed to return.");
+    }
+  };
+
+  const handleReturnDigital = async (borrowId) => {
+    try {
+      await dispatch(returnDigitalBook(borrowId));
+      toast.success("Digital book returned!");
+      dispatch(fetchMyDigitalBorrows());
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to return.");
     }
   };
 
@@ -145,194 +136,97 @@ const MyBorrowedBooks = () => {
       <main className="relative flex-1 p-6 pt-28 bg-gray-50 min-h-screen">
         <Header />
         <header className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">My Borrowed Books</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">My Borrowed Books</h2>
         </header>
 
-        {/* Tabs */}
+        {/* Main Tabs */}
         <div className="flex border-b border-gray-200 mb-6">
-          <button
-            onClick={() => setActiveTab("physical")}
-            className={`px-6 py-2 text-sm font-semibold transition-all ${activeTab === "physical"
-              ? "border-b-2 border-black text-black"
-              : "text-gray-500 hover:text-black"
-              }`}
-          >
-            Physical Books
-          </button>
-          <button
-            onClick={() => setActiveTab("digital")}
-            className={`px-6 py-2 text-sm font-semibold transition-all ${activeTab === "digital"
-              ? "border-b-2 border-black text-black"
-              : "text-gray-500 hover:text-black"
-              }`}
-          >
-            Digital Books
-          </button>
+          <button onClick={() => setActiveTab("physical")} className={`px-6 py-2 text-sm font-semibold transition-all ${activeTab === "physical" ? "border-b-2 border-black text-black" : "text-gray-500 hover:text-black"}`}>Physical Books</button>
+          <button onClick={() => setActiveTab("digital")} className={`px-6 py-2 text-sm font-semibold transition-all ${activeTab === "digital" ? "border-b-2 border-black text-black" : "text-gray-500 hover:text-black"}`}>Digital Books</button>
         </div>
 
-        {activeTab === "physical" && (
-          <>
-            {/* Filter buttons */}
-            <div className="flex flex-col gap-3 sm:flex-row md:items-center mt-4">
-              <button
-                onClick={() => setFilter("returned")}
-                className={`rounded-lg border-2 font-semibold py-2 w-full sm:w-64 transition-all ${filter === "returned" ? "bg-black text-white border-black" : "bg-white text-gray-600 border-gray-200"
-                  }`}
-              >
-                Returned
-              </button>
-              <button
-                onClick={() => setFilter("nonReturned")}
-                className={`rounded-lg border-2 font-semibold py-2 w-full sm:w-64 transition-all ${filter === "nonReturned" ? "bg-black text-white border-black" : "bg-white text-gray-600 border-gray-200"
-                  }`}
-              >
-                Currently Borrowed
-              </button>
-            </div>
+        {/* Sub-tabs */}
+        <div className="flex flex-col gap-3 sm:flex-row md:items-center mt-4">
+          <button onClick={() => setFilter("nonReturned")} className={`rounded-lg border-2 font-semibold py-2 w-full sm:w-64 transition-all ${filter === "nonReturned" ? "bg-black text-white border-black shadow-lg" : "bg-white text-gray-600 border-gray-200"}`}>Currently Borrowed</button>
+          <button onClick={() => setFilter("returned")} className={`rounded-lg border-2 font-semibold py-2 w-full sm:w-64 transition-all ${filter === "returned" ? "bg-black text-white border-black shadow-lg" : "bg-white text-gray-600 border-gray-200"}`}>Returned Books</button>
+        </div>
 
-            {/* Physical Books Table */}
-            {physicalBooksToDisplay && physicalBooksToDisplay.length > 0 ? (
-              <div className="mt-6 overflow-hidden bg-white rounded-xl shadow-sm border border-gray-100">
-                <table className="min-w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ID</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Book Title</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Borrowed Date</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Due Date</th>
+        {/* Content Area */}
+        <div className="mt-8">
+          {(activeTab === "physical" ? physicalToDisplay : digitalToDisplay)?.length > 0 ? (
+            <div className="overflow-hidden bg-white rounded-xl shadow-sm border border-gray-100">
+              <table className="min-w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100 text-left">
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">ID</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Book Title</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Borrowed</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Due / Expiry</th>
+                    {filter !== "returned" && <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Remaining</th>}
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    {filter === "returned" && <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Returned At</th>}
+                    {filter !== "returned" && <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {(activeTab === "physical" ? physicalToDisplay : digitalToDisplay).map((record, index) => (
+                    <tr key={record._id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-gray-400">#{(index + 1).toString().padStart(2, '0')}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-gray-800">{activeTab === "physical" ? record.bookTitle : record.book?.title}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{formatDate(activeTab === "physical" ? record.borrowedDate : record.borrowDate)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{formatDate(activeTab === "physical" ? record.dueDate : record.expiryDate)}</td>
                       {filter !== "returned" && (
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Remaining Time</th>
-                      )}
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                      {filter === "returned" && (
-                        <>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Returned Date</th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fine</th>
-                        </>
-                      )}
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {physicalBooksToDisplay.map((book, index) => (
-                      <tr key={book._id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-800">{book.bookTitle}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{formatDate(book.borrowedDate)}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{formatDate(book.dueDate)}</td>
-                        {filter !== "returned" && (
-                          <td className="px-6 py-4">
-                            {!book.returned ? (
-                              <ExpiryBadge expiryDate={book.dueDate} />
-                            ) : (
-                              <span className="text-gray-400 text-sm">-</span>
-                            )}
-                          </td>
-                        )}
                         <td className="px-6 py-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${book.returned ? "bg-green-100 text-green-700" : (new Date(book.dueDate) > new Date() ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700")}`}>
-                            {book.returned ? "Returned" : (new Date(book.dueDate) > new Date() ? "Active" : "Expired")}
-                          </span>
+                          <ExpiryBadge expiryDate={activeTab === "physical" ? record.dueDate : record.expiryDate} />
                         </td>
-                        {filter === "returned" && (
-                          <>
-                            <td className="px-6 py-4 text-sm text-gray-600">{formatDate(book.returnDate)}</td>
-                            <td className="px-6 py-4 text-sm font-semibold text-red-600">${book.fine?.toFixed(2) || "0.00"}</td>
-                          </>
-                        )}
-                        <td className="px-6 py-4 flex gap-3 items-center">
-                          <BookA
-                            onClick={() => openReadPopup(book.bookId)}
-                            className="text-gray-400 hover:text-black cursor-pointer transition-colors"
-                            size={20}
-                            title="View details"
-                          />
-                          {!book.returned && (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => navigate(`/read-book/${book.bookId}`)}
-                                disabled={new Date(book.dueDate) <= new Date()}
-                                className="px-3 py-1.5 bg-black text-white text-xs rounded-lg hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
-                              >
-                                <BookOpen size={14} />
-                                Read
+                      )}
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${record.returned || (activeTab === "digital" && new Date(record.expiryDate) <= new Date())
+                            ? "bg-green-100 text-green-700"
+                            : (new Date(activeTab === "physical" ? record.dueDate : record.expiryDate) > new Date()
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-red-100 text-red-700")
+                          }`}>
+                          {record.returned || (activeTab === "digital" && new Date(record.expiryDate) <= new Date())
+                            ? "Returned"
+                            : (new Date(activeTab === "physical" ? record.dueDate : record.expiryDate) > new Date() ? "Active" : "Expired")}
+                        </span>
+                      </td>
+                      {filter === "returned" && (
+                        <td className="px-6 py-4 text-sm text-gray-600">{formatDate(record.returnDate || record.updatedAt)}</td>
+                      )}
+                      {filter !== "returned" && (
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end items-center gap-3">
+                            <BookA onClick={() => openReadPopup(activeTab === "physical" ? record.bookId : record.book?._id)} className="text-gray-400 hover:text-black cursor-pointer transition-colors" size={18} title="View Details" />
+                            {!record.returned && new Date(activeTab === "physical" ? record.dueDate : record.expiryDate) > new Date() && (
+                              <button onClick={() => navigate(activeTab === "physical" ? `/read-book/${record.bookId}` : `/reader/${record.book?._id}`)} className="px-3 py-1.5 bg-black text-white text-[10px] rounded-lg hover:bg-gray-800 font-semibold uppercase tracking-widest">
+                                <div className="flex items-center gap-1.5"><BookOpen size={12} /> Read</div>
                               </button>
-                              <button
-                                onClick={() => handleReturnBook(book._id)}
-                                className="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-colors shadow-sm"
-                              >
-                                Return
+                            )}
+                            {!record.returned && (
+                              <button onClick={() => activeTab === "physical" ? handleReturnPhysical(record._id) : handleReturnDigital(record._id)} className="px-3 py-1.5 bg-red-100 text-red-600 text-[10px] rounded-lg hover:bg-red-200 font-semibold uppercase tracking-widest transition-colors flex items-center gap-1.5">
+                                <Undo2 size={12} /> Return
                               </button>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="mt-10 text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
-                <p className="text-gray-500 text-lg">No collections found in this category.</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {activeTab === "digital" && (
-          <div className="mt-4">
-            {digitalLoading ? (
-              <div className="flex justify-center py-20">
-                <Loader2 className="animate-spin text-black" size={40} />
-              </div>
-            ) : myDigitalBorrows && myDigitalBorrows.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {myDigitalBorrows.map((borrow) => (
-                  <div key={borrow._id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all group">
-                    <div className="flex p-4 gap-4">
-                      <div className="relative overflow-hidden rounded shadow-sm flex-shrink-0">
-                        <img
-                          src={borrow.book.coverImage || "/placeholder.png"}
-                          alt={borrow.book.title}
-                          className="w-24 h-36 object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <div className="flex flex-col flex-1 justify-between py-1">
-                        <div>
-                          <h3 className="font-bold text-gray-800 line-clamp-2 leading-snug">{borrow.book.title}</h3>
-                          <p className="text-sm text-gray-500 mt-1">{borrow.book.author}</p>
-                        </div>
-                        <div className="space-y-3">
-                          <ExpiryBadge expiryDate={borrow.expiryDate} />
-                          <button
-                            onClick={() => navigate(`/reader/${borrow.book._id}`)}
-                            className="w-full flex items-center justify-center gap-2 bg-black text-white py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors shadow-sm"
-                          >
-                            <BookOpen size={16} />
-                            Read Now
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
-                <p className="text-gray-500 text-lg">You haven't borrowed any digital books yet.</p>
-                <button
-                  onClick={() => navigate("/digital-library")}
-                  className="mt-4 px-6 py-2 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-all"
-                >
-                  Browse Digital Library
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-200 shadow-sm text-gray-400 italic">
+              No {activeTab} records found in this category.
+            </div>
+          )}
+        </div>
       </main>
-
-      {readBookPopup && <ReadBookPopup book={readBook} />}
+      <AnimatePresence>
+        {readBookPopup && <ReadBookPopup key="read-book-popup" book={readBook} />}
+      </AnimatePresence>
     </>
   );
 };

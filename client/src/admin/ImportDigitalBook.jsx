@@ -88,7 +88,7 @@ const ImportDigitalBook = () => {
                     </div>
                 </div>
                 <div className="mt-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
                         Borrow Limit
                     </label>
                     <div className="flex items-end gap-4 flex-wrap">
@@ -99,7 +99,7 @@ const ImportDigitalBook = () => {
                                 type="number"
                                 min="0"
                                 max="365"
-                                className="border p-2 w-20 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-semibold"
+                                className="border p-2 w-20 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-medium"
                                 value={borrowLimitDays}
                                 onChange={(e) => setBorrowLimitDays(e.target.value)}
                             />
@@ -111,7 +111,7 @@ const ImportDigitalBook = () => {
                                 type="number"
                                 min="0"
                                 max="23"
-                                className="border p-2 w-20 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-semibold"
+                                className="border p-2 w-20 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-medium"
                                 value={borrowLimitHours}
                                 onChange={(e) => setBorrowLimitHours(e.target.value)}
                             />
@@ -123,7 +123,7 @@ const ImportDigitalBook = () => {
                                 type="number"
                                 min="0"
                                 max="59"
-                                className="border p-2 w-20 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-semibold"
+                                className="border p-2 w-20 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-medium"
                                 value={borrowLimitMinutes}
                                 onChange={(e) => setBorrowLimitMinutes(e.target.value)}
                             />
@@ -133,7 +133,7 @@ const ImportDigitalBook = () => {
                             <input
                                 type="number"
                                 min="0"
-                                className="border p-2 w-24 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-semibold"
+                                className="border p-2 w-24 text-center rounded-lg focus:ring-2 focus:ring-black outline-none text-base font-medium"
                                 value={price}
                                 onChange={(e) => setPrice(e.target.value)}
                             />
@@ -153,7 +153,7 @@ const ImportDigitalBook = () => {
 
             {/* Search Results */}
             <section>
-                <h3 className="text-xl font-semibold mb-4 text-gray-700">Gutenberg Results</h3>
+                <h3 className="text-xl font-bold mb-4 text-gray-700">Gutenberg Results</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {searchByGutenbergResults && searchByGutenbergResults.length > 0 ? (
                         searchByGutenbergResults.map((book) => (
@@ -172,7 +172,7 @@ const ImportDigitalBook = () => {
                                     <div className="mt-auto">
                                         <button
                                             onClick={() => handleImport(book)}
-                                            className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
+                                            className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors font-bold"
                                         >
                                             <Import size={18} />
                                             Import to Library

@@ -123,7 +123,7 @@ const UserDashboard = () => {
                 <span className="bg-gray-300 h-20 w-20 flex justify-center items-center rounded-lg">
                   <img src={bookIcon} alt="book-icon" className="w-8 h-8" />
                 </span>
-                <p className="text-lg xl:text-xl font-semibold">
+                <p className="text-lg xl:text-xl font-bold">
                   Your Borrowed Book List
                 </p>
               </motion.div>
@@ -139,7 +139,7 @@ const UserDashboard = () => {
                 <span className="bg-gray-300 h-20 w-20 flex justify-center items-center rounded-lg">
                   <img src={returnIcon} alt="return-icon" className="w-8 h-8" />
                 </span>
-                <p className="text-lg xl:text-xl font-semibold">
+                <p className="text-lg xl:text-xl font-bold">
                   Your Returned Book List
                 </p>
               </motion.div>
@@ -160,7 +160,7 @@ const UserDashboard = () => {
                       className="w-8 h-8"
                     />
                   </span>
-                  <p className="text-lg xl:text-xl font-semibold">
+                  <p className="text-lg xl:text-xl font-bold">
                     Let&apos;s browse books inventory
                   </p>
                 </motion.div>
@@ -175,7 +175,7 @@ const UserDashboard = () => {
                   <span className="bg-gray-300 h-20 w-20 flex justify-center items-center rounded-lg">
                     <BookA size={32} />
                   </span>
-                  <p className="text-lg xl:text-xl font-semibold">
+                  <p className="text-lg xl:text-xl font-bold">
                     Explore Digital Library
                   </p>
                 </motion.div>
@@ -191,7 +191,7 @@ const UserDashboard = () => {
 
           <motion.div
             variants={fadeIn}
-            className="bg-white p-7 text-lg sm:text-xl xl:text-3xl font-semibold flex justify-center items-center rounded-2xl min-h-52 relative shadow-sm no-scrollbar"
+            className="bg-white p-7 text-lg sm:text-xl xl:text-3xl font-bold flex justify-center items-center rounded-2xl min-h-52 relative shadow-sm no-scrollbar"
           >
             <h4 className="text-center text-gray-700">
               “Reading is to the mind what exercise is to the body.”
@@ -308,7 +308,7 @@ const UserDashboard = () => {
                   <h4 className="font-bold text-gray-800 line-clamp-2 text-sm leading-tight mb-1">{book.title}</h4>
                   <p className="text-xs text-gray-500 truncate">by {book.author}</p>
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs font-semibold text-gray-700">${book.price}</span>
+                    <span className="text-xs font-bold text-gray-700">${book.price}</span>
                     <span className={`text-xs font-medium ${book.availability ? "text-green-600" : "text-red-500"
                       }`}>
                       {book.availability ? `${book.borrowLimitDays || 0}d ${book.borrowLimitHours || 0}h ${book.borrowLimitMinutes || 0}m` : "Unavailable"}

@@ -46,3 +46,17 @@ export const slideIn = {
     exit: { x: -100, opacity: 0 },
     transition: { type: "spring", stiffness: 100, damping: 20 }
 };
+
+export const popupVariants = {
+    initial: { opacity: 0, scale: 0.95, y: 10 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.95, y: 10 },
+    transition: { type: "spring", stiffness: 300, damping: 25 }
+};
+
+export const backdropVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.3 }
+};

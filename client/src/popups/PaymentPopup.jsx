@@ -12,6 +12,9 @@ import { X, Loader2, Lock } from "lucide-react";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
+import { motion } from "framer-motion";
+import { popupVariants, backdropVariants } from "../utils/animations";
+
 const CheckoutForm = ({ clientSecret, bookId, onClose, onSuccess, recordPaidBorrowThunk }) => {
     const stripe = useStripe();
     const elements = useElements();
@@ -52,7 +55,7 @@ const CheckoutForm = ({ clientSecret, bookId, onClose, onSuccess, recordPaidBorr
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-gray-700 mb-2">
                     Card Details
                 </label>
                 <div className="bg-white p-3 rounded-lg border border-gray-300">
@@ -61,6 +64,7 @@ const CheckoutForm = ({ clientSecret, bookId, onClose, onSuccess, recordPaidBorr
                             style: {
                                 base: {
                                     fontSize: "16px",
+                                    fontFamily: "Montserrat, sans-serif",
                                     color: "#424770",
                                     "::placeholder": { color: "#aab7c4" },
                                 },
@@ -71,7 +75,7 @@ const CheckoutForm = ({ clientSecret, bookId, onClose, onSuccess, recordPaidBorr
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-gray-400 justify-center">
+            <div className="flex items-center gap-2 text-xs text-gray-400 justify-center font-medium">
                 <Lock size={12} />
                 Secured by Stripe
             </div>
@@ -98,14 +102,24 @@ const PaymentPopup = ({ isOpen, onClose, clientSecret, bookId, bookTitle, price,
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            {/* Overlay */}
-            <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            {/* Backdrop */}
+            <motion.div
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={backdropVariants}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
             />
 
             {/* Modal */}
-            <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+            <motion.div
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={popupVariants}
+                className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden no-scrollbar"
+            >
                 <div className="bg-black p-8 text-white relative">
                     <button
                         onClick={onClose}
@@ -115,12 +129,12 @@ const PaymentPopup = ({ isOpen, onClose, clientSecret, bookId, bookTitle, price,
                     </button>
 
                     <h2 className="text-2xl font-bold mb-2">Complete Borrow</h2>
-                    <p className="text-gray-400 text-sm">
-                        Please enter your card details to borrow <span className="text-white font-semibold">"{bookTitle}"</span>.
+                    <p className="text-gray-400 text-sm font-medium">
+                        Please enter your card details to borrow <span className="text-white font-bold">"{bookTitle}"</span>.
                     </p>
 
                     <div className="mt-6 flex items-baseline gap-1">
-                        <span className="text-sm font-medium text-gray-400">Total:</span>
+                        <span className="text-sm font-bold text-gray-400">Total:</span>
                         <span className="text-3xl font-bold text-white">${price?.toFixed(2)}</span>
                     </div>
                 </div>
@@ -136,7 +150,7 @@ const PaymentPopup = ({ isOpen, onClose, clientSecret, bookId, bookTitle, price,
                         />
                     </Elements>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 };

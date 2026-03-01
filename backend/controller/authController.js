@@ -254,14 +254,14 @@ export const updatePassword = catchAsyncErrors(async (req, res, next) => {
   const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
   if (!currentPassword || !newPassword || !confirmNewPassword) {
-    return next(new ErrorHandler("Please enter all fields.", 400)); 
+    return next(new ErrorHandler("Please enter all fields.", 400));
   }
 
   const isPasswordMatched = await bcrypt.compare(
     currentPassword,
     user.password
   );
-  if(!isPasswordMatched){
+  if (!isPasswordMatched) {
     return next(new ErrorHandler("Currunt Password is incorrect", 400))
   }
   if (
@@ -290,5 +290,35 @@ export const updatePassword = catchAsyncErrors(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Password updated.",
+  });
+});
+
+export const updateProfile = catchAsyncErrors(async (req, res, next) => {
+  const user = await User.findById(req.user._id);
+
+  const { name, email, oldPassword, newPassword } = req.body;
+
+  if (name) user.name = name;
+  if (email) user.email = email;
+
+  if (oldPassword && newPassword) {
+    const isPasswordMatched = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordMatched) {
+      return next(new ErrorHandler("Current password is incorrect.", 400));
+    }
+
+    if (newPassword.length < 8 || newPassword.length > 16) {
+      return next(new ErrorHandler("New password must be between 8 and 16 characters.", 400));
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+  }
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Profile updated successfully.",
+    user,
   });
 });

@@ -18,7 +18,9 @@ const ReaderPage = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        const record = myDigitalBorrows.find((b) => b.book._id === id);
+        const record = myDigitalBorrows.find(
+            (b) => b.book._id === id && !b.returned && new Date(b.expiryDate) > new Date()
+        );
         setBorrowRecord(record);
     }, [myDigitalBorrows, id]);
 

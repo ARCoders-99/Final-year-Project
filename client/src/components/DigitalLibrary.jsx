@@ -9,6 +9,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PaymentPopup from "../popups/PaymentPopup";
+import { AnimatePresence } from "framer-motion";
 
 const DigitalLibrary = () => {
     const dispatch = useDispatch();
@@ -82,9 +83,9 @@ const DigitalLibrary = () => {
     };
 
     const isAlreadyBorrowed = (bookId) => {
-        // We would ideally fetch my borrows here, but for now let's assume we can check in myDigitalBorrows
-        // In a real app, we'd need to ensure myDigitalBorrows is populated.
-        return myDigitalBorrows.some((b) => b.book._id === bookId);
+        return myDigitalBorrows.some(
+            (b) => b.book._id === bookId && !b.returned && new Date(b.expiryDate) > new Date()
+        );
     };
 
     return (
@@ -137,7 +138,7 @@ const DigitalLibrary = () => {
                                         <p className="text-sm text-gray-600 mb-2 truncate">by {book.author}</p>
 
                                         <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-1.5 text-black font-semibold">
+                                            <div className="flex items-center gap-1.5 text-black font-bold">
                                                 <CreditCard size={14} className="text-gray-400" />
                                                 <span>{book.price > 0 ? `$${book.price}` : "Free"}</span>
                                             </div>
@@ -161,7 +162,7 @@ const DigitalLibrary = () => {
                                             <button
                                                 onClick={() => handleBorrow(book._id)}
                                                 disabled={loading || borrowed}
-                                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors text-sm font-medium ${borrowed
+                                                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors text-sm font-bold ${borrowed
                                                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                                     : "bg-black text-white hover:bg-gray-800"
                                                     }`}
@@ -189,13 +190,18 @@ const DigitalLibrary = () => {
                 </div>
             )}
 
-            <PaymentPopup
-                isOpen={isPaymentPopupOpen}
-                onClose={() => setIsPaymentPopupOpen(false)}
-                onSuccess={handlePaymentSuccess}
-                recordPaidBorrowThunk={recordPaidDigitalBorrow}
-                {...paymentData}
-            />
+            <AnimatePresence>
+                {isPaymentPopupOpen && (
+                    <PaymentPopup
+                        key="payment-popup"
+                        isOpen={isPaymentPopupOpen}
+                        onClose={() => setIsPaymentPopupOpen(false)}
+                        onSuccess={handlePaymentSuccess}
+                        recordPaidBorrowThunk={recordPaidDigitalBorrow}
+                        {...paymentData}
+                    />
+                )}
+            </AnimatePresence>
         </main>
     );
 };

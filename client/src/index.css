@@ -1,16 +1,28 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Global Transitions */
+/* Global Transitions & Typography */
 * {
-  font-family: "Montserrat", serif;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  /* Minimal default weight */
   font-optical-sizing: auto;
   font-style: normal;
   overflow-x: hidden;
   box-sizing: border-box;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  /* Default bold for headings */
 }
 
 /* Premium Hover Effects */

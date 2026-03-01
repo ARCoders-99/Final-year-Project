@@ -13,6 +13,7 @@ import { toggleAddNewAdminPopup, toggleSettingPopup } from "../store/slices/popU
 import { toast } from "react-toastify";
 import { useEffect } from "react";
 import { NavLink } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import AddNewAdmin from "../popups/AddNewAdmin";
 import SettingPopup from "../popups/SettingPopup";
 import { Import, BookA, DollarSign } from "lucide-react";
@@ -58,7 +59,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               <NavLink
                 to="/admin/dashboard"
                 className={({ isActive }) =>
-                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  `w-full py-2 px-3 font-semibold rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active font-bold" : "bg-transparent hover:bg-white/5"
                   }`
                 }
               >
@@ -67,7 +68,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               <NavLink
                 to="/admin/books"
                 className={({ isActive }) =>
-                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  `w-full py-2 px-3 font-semibold rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active font-bold" : "bg-transparent hover:bg-white/5"
                   }`
                 }
               >
@@ -76,7 +77,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               <NavLink
                 to="/admin/catalog"
                 className={({ isActive }) =>
-                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  `w-full py-2 px-3 font-semibold rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active font-bold" : "bg-transparent hover:bg-white/5"
                   }`
                 }
               >
@@ -85,7 +86,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               <NavLink
                 to="/admin/users"
                 className={({ isActive }) =>
-                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  `w-full py-2 px-3 font-semibold rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active font-bold" : "bg-transparent hover:bg-white/5"
                   }`
                 }
               >
@@ -94,7 +95,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               <NavLink
                 to="/admin/import-digital"
                 className={({ isActive }) =>
-                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  `w-full py-2 px-3 font-semibold rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active font-bold" : "bg-transparent hover:bg-white/5"
                   }`
                 }
               >
@@ -103,7 +104,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               <NavLink
                 to="/admin/payments"
                 className={({ isActive }) =>
-                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  `w-full py-2 px-3 font-semibold rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active font-bold" : "bg-transparent hover:bg-white/5"
                   }`
                 }
               >
@@ -111,7 +112,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               </NavLink>
               <button
                 onClick={() => dispatch(toggleAddNewAdminPopup())}
-                className="w-full py-2 px-3 font-medium bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2 hover:bg-white/5 transition-all duration-300 hover-scale"
+                className="w-full py-2 px-3 font-semibold bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2 hover:bg-white/5 transition-all duration-300 hover-scale"
               >
                 <RiAdminFill className="w-6 h-6" /> <span>Add New Admin</span>
               </button>
@@ -121,7 +122,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               <NavLink
                 to="/"
                 className={({ isActive }) =>
-                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  `w-full py-2 px-3 font-semibold rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active font-bold" : "bg-transparent hover:bg-white/5"
                   }`
                 }
               >
@@ -130,7 +131,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               <NavLink
                 to="/books"
                 className={({ isActive }) =>
-                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  `w-full py-2 px-3 font-semibold rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active font-bold" : "bg-transparent hover:bg-white/5"
                   }`
                 }
               >
@@ -139,7 +140,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               <NavLink
                 to="/borrowed"
                 className={({ isActive }) =>
-                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  `w-full py-2 px-3 font-semibold rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active font-bold" : "bg-transparent hover:bg-white/5"
                   }`
                 }
               >
@@ -149,7 +150,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
               <NavLink
                 to="/digital-library"
                 className={({ isActive }) =>
-                  `w-full py-2 px-3 font-medium rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active" : "bg-transparent hover:bg-white/5"
+                  `w-full py-2 px-3 font-semibold rounded-md hover:cursor-pointer flex items-center space-x-2 transition-all duration-300 hover-scale ${isActive ? "sidebar-active font-bold" : "bg-transparent hover:bg-white/5"
                   }`
                 }
               >
@@ -160,7 +161,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
 
           <button
             onClick={() => dispatch(toggleSettingPopup())}
-            className="w-full py-2 px-3 font-medium  bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2 hover:bg-white/5 transition-all duration-300 hover-scale"
+            className="w-full py-2 px-3 font-semibold  bg-transparent rounded-md hover:cursor-pointer flex items-center space-x-2 hover:bg-white/5 transition-all duration-300 hover-scale"
           >
             <img src={settingIcon} alt="setting" />{" "}
             <span className="text-left ">Update Credentials</span>
@@ -168,7 +169,7 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
         </nav>
         <div className="px-6 py-4">
           <button
-            className="py-2 font-medium text-center bg-transparent rounded-md hover:cursor-pointer flex items-center justify-center space-x-5 mb-7 mx-auto w-fit hover-scale"
+            className="py-2 font-bold text-center bg-transparent rounded-md hover:cursor-pointer flex items-center justify-center space-x-5 mb-7 mx-auto w-fit hover-scale"
             onClick={handleLogout}
           >
             <img src={logoutIcon} alt="logout" /> <span>Log Out</span>
@@ -181,8 +182,10 @@ const SideBar = ({ isSideBarOpen, setIsSideBarOpen }) => {
           className="h-fit w-fit absolute top-0 right-4 mt-4 block md:hidden"
         />
       </aside>
-      {addNewAdminPopup && <AddNewAdmin />}
-      {settingPopup && <SettingPopup />}
+      <AnimatePresence>
+        {addNewAdminPopup && <AddNewAdmin key="add-admin-popup" />}
+        {settingPopup && <SettingPopup key="setting-popup" />}
+      </AnimatePresence>
     </>
   );
 };

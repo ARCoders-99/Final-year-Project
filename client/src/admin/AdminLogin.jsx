@@ -52,8 +52,8 @@ const AdminLogin = () => {
                         <div className="flex justify-center mb-8">
                             <img src={logo} alt="logo" className="h-20 w-auto" />
                         </div>
-                        <h1 className="text-4xl font-medium text-center mb-4 text-red-600">Admin Portal</h1>
-                        <p className="text-gray-600 text-center mb-8 font-semibold">Restricted Access - Admin Credentials Required</p>
+                        <h1 className="text-4xl font-bold text-center mb-4 text-red-600">Admin Portal</h1>
+                        <p className="text-gray-600 text-center mb-8 font-bold">Restricted Access - Admin Credentials Required</p>
 
                         <form onSubmit={handleLogin}>
                             <div className="mb-4">
@@ -80,7 +80,7 @@ const AdminLogin = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="border-2 border-red-600 w-full font-semibold bg-red-600 text-white py-2 rounded-lg hover:bg-white hover:text-red-600 transition"
+                                className="border-2 border-red-600 w-full font-bold bg-red-600 text-white py-2 rounded-lg hover:bg-white hover:text-red-600 transition"
                             >
                                 {loading ? "AUTHENTICATING..." : "ADMIN LOGIN"}
                             </button>

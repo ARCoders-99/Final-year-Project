@@ -1,18 +1,36 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import closeIcon from "../assets/close-square.png";
-import { updatePassword, resetAuthSlice } from "../store/slices/authSlice";
-import SettingsIcon from "../assets/setting.png";
+import { useSelector, useDispatch } from "react-redux";
+import { updateCredentials, resetAuthSlice } from "../store/slices/authSlice";
 import { toggleSettingPopup } from "../store/slices/popUpSlice";
 import { toast } from "react-toastify";
+import { Loader2, X, Lock, Mail, User } from "lucide-react";
+import { motion } from "framer-motion";
+import { popupVariants, backdropVariants } from "../utils/animations";
 
 const SettingPopup = () => {
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-
   const dispatch = useDispatch();
-  const { loading, message, error } = useSelector((state) => state.auth);
+  const { loading, error, message, user } = useSelector((state) => state.auth);
+
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+
+  const handleClose = () => {
+    dispatch(toggleSettingPopup());
+  };
+
+  const handleUpdateCredentials = (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("email", email);
+    if (oldPassword && newPassword) {
+      formData.append("oldPassword", oldPassword);
+      formData.append("newPassword", newPassword);
+    }
+    dispatch(updateCredentials(formData));
+  };
 
   useEffect(() => {
     if (error) {
@@ -21,104 +39,123 @@ const SettingPopup = () => {
     }
     if (message) {
       toast.success(message);
-      dispatch(toggleSettingPopup());
       dispatch(resetAuthSlice());
+      handleClose();
     }
-  }, [dispatch, message, error]);
+  }, [dispatch, error, message]);
 
-  const handleUpdatePassword = (e) => {
-    e.preventDefault();
-    dispatch(updatePassword({ currentPassword, newPassword, confirmNewPassword }));
-  };
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 p-5 flex items-center justify-center z-50">
-      <div className="w-full bg-white rounded-lg shadow-lg sm:w-auto lg:w-1/2 2xl:w-1/3">
-        <div className="p-6">
-          <header className="flex justify-between items-center mb-7 pb-5 border-b-[1px] border-black">
+    <div className="fixed inset-0 p-5 flex items-center justify-center z-50">
+      {/* Backdrop */}
+      <motion.div
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={backdropVariants}
+        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        onClick={handleClose}
+      />
+
+      {/* Modal */}
+      <motion.div
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={popupVariants}
+        className="relative w-full bg-white rounded-3xl shadow-2xl md:w-[480px] max-h-[92vh] overflow-y-auto no-scrollbar"
+      >
+        <div className="p-8">
+          <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <img
-                src={SettingsIcon}
-                alt="setting-icon"
-                className="bg-gray-300 p-5 rounded-lg"
-              />
-              <h3 className="text-xl font-bold">Change Credentials</h3>
+              <div className="bg-black p-3 rounded-xl">
+                <Lock size={20} className="text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800">Update Credentials</h3>
             </div>
-            <img
-              src={closeIcon}
-              alt="close-icon"
-              className="cursor-pointer"
-              onClick={() => dispatch(toggleSettingPopup())}
-            />
-          </header>
-          <form onSubmit={handleUpdatePassword}>
-            <div className="mb-4">
-              <div className="sm:flex gap-4 items-center">
-                <label className="block text-gray-900 font-medium w-full sm:w-1/3">
-                  Current Password
+            <button onClick={handleClose} className="text-gray-400 hover:text-black transition-colors">
+              <X size={24} />
+            </button>
+          </div>
+
+          <form onSubmit={handleUpdateCredentials} className="flex flex-col gap-5">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5 flex items-center gap-2">
+                  <User size={16} /> Full Name
                 </label>
                 <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Current Password"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-medium transition-all"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5 flex items-center gap-2">
+                  <Mail size={16} /> Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-medium transition-all"
                   required
                 />
               </div>
             </div>
 
-            <div className="mb-4">
-              <div className="sm:flex gap-4 items-center">
-                <label className="block text-gray-900 font-medium w-full sm:w-1/3">
-                  New Password
-                </label>
+            <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Change Password (Optional)</h4>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">Old Password</label>
+                <input
+                  type="password"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-medium transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">New Password</label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter New Password"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
-                  required
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-medium transition-all"
                 />
               </div>
             </div>
 
-            <div className="mb-4">
-              <div className="sm:flex gap-4 items-center">
-                <label className="block text-gray-900 font-medium w-full sm:w-1/3">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  placeholder="Confirm New Password"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Buttons */}
-            <div className="flex gap-4 mt-10">
+            <div className="flex justify-end gap-3 mt-4">
               <button
                 type="button"
-                onClick={() => dispatch(toggleSettingPopup())}
-                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 font-semibold"
+                onClick={handleClose}
+                className="px-6 py-3 bg-gray-100 rounded-xl hover:bg-gray-200 font-bold text-sm transition-all shadow-sm"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 font-semibold"
+                className="px-8 py-3 bg-black text-white rounded-xl hover:bg-gray-800 font-bold text-sm flex items-center gap-2 disabled:opacity-60 transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
               >
-                Confirm
+                {loading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Updating…
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
               </button>
             </div>
           </form>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

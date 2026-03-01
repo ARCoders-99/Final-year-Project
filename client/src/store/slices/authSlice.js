@@ -133,6 +133,21 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
 
+    updateProfileRequest(state) {
+      state.loading = true;
+      state.error = null;
+      state.message = null;
+    },
+    updateProfileSuccess(state, action) {
+      state.loading = false;
+      state.message = action.payload.message;
+      state.user = action.payload.user;
+    },
+    updateProfileFailed(state, action) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+
     resetAuthSlice(state) {
       state.loading = false;
       state.error = null;
@@ -303,6 +318,27 @@ export const updatePassword = (data) => async (dispatch) => {
   } catch (error) {
     dispatch(
       authSlice.actions.updatePasswordFailed(
+        error.response?.data?.message || error.message
+      )
+    );
+  }
+};
+
+export const updateCredentials = (data) => async (dispatch) => {
+  dispatch(authSlice.actions.updateProfileRequest());
+  try {
+    const res = await axios.put(
+      "http://localhost:4000/api/v1/auth/update/profile",
+      data,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    dispatch(authSlice.actions.updateProfileSuccess(res.data));
+  } catch (error) {
+    dispatch(
+      authSlice.actions.updateProfileFailed(
         error.response?.data?.message || error.message
       )
     );

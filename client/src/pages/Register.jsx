@@ -54,7 +54,7 @@ const Register = () => {
           <p className="text-gray-300">Already have an account? Sign in now.</p>
           <Link
             to="/login"
-            className="block w-fit mx-auto border-2 border-white rounded-lg font-semibold py-2 px-6 text-white hover:bg-white hover:text-black transition-all duration-300 ease-in-out"
+            className="block w-fit mx-auto border-2 border-white rounded-lg font-bold py-2 px-6 text-white hover:bg-white hover:text-black transition-all duration-300 ease-in-out"
           >
             SIGN IN
           </Link>
@@ -66,7 +66,7 @@ const Register = () => {
         <div className="w-full max-w-sm">
           <div className="flex justify-center mb-8">
             <div className="flex items-center gap-5">
-              <h3 className="font-medium text-4xl">Sign Up</h3>
+              <h3 className="font-bold text-4xl">Sign Up</h3>
               <img src={logo} alt="logo" className="h-auto w-20" />
             </div>
           </div>
@@ -107,7 +107,7 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className="border-2 mt-5 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
+              className="border-2 mt-5 border-black w-full font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
             >
               {loading ? "PROCESSING..." : "SIGN UP"}
             </button>

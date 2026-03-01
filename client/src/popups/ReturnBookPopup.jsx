@@ -18,7 +18,7 @@ const ReturnBookPopup = ({ bookId, email }) => {
           <h3 className="text-xl font-bold mb-4">Return Book</h3>
           <form onSubmit={handleReturnBook}>
             <div className="mb-4">
-              <label className="block text-gray-900 font-medium">
+              <label className="block text-gray-900 font-bold">
                 User Email
               </label>
               <input
@@ -33,7 +33,7 @@ const ReturnBookPopup = ({ bookId, email }) => {
 
             <div className="flex justify-end space-x-4">
               <button
-                className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300"
+                className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 font-bold"
                 type="button"
                 onClick={() => dispatch(toggleReturnBookPopup())}
               >
@@ -41,7 +41,7 @@ const ReturnBookPopup = ({ bookId, email }) => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 font-bold"
               >
                 Return
               </button>

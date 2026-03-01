@@ -109,7 +109,7 @@ const AdminDashboard = () => {
               alt="avatar"
               className="rounded-full w-28 h-28 object-cover"
             />
-            <h2 className="text-xl font-semibold">{user?.name}</h2>
+            <h2 className="text-xl font-bold">{user?.name}</h2>
             <p className="text-black-600 text-sm text-center max-w-md">
               Welcome to your admin dashboard. Manage settings and monitor
               statistics efficiently.

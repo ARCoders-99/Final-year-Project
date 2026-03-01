@@ -5,6 +5,9 @@ import { toggleAddBookPopup } from "../store/slices/popUpSlice";
 import { Loader2, FileText, ImagePlus } from "lucide-react";
 import { toast } from "react-toastify";
 
+import { motion } from "framer-motion";
+import { popupVariants, backdropVariants } from "../utils/animations";
+
 const AddBookPopup = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.book);
@@ -19,6 +22,10 @@ const AddBookPopup = () => {
   const [borrowLimitDays, setBorrowLimitDays] = useState(0);
   const [borrowLimitHours, setBorrowLimitHours] = useState(0);
   const [borrowLimitMinutes, setBorrowLimitMinutes] = useState(0);
+
+  const handleClose = () => {
+    dispatch(toggleAddBookPopup());
+  };
 
   const handlePdfChange = (e) => {
     const file = e.target.files[0];
@@ -71,40 +78,54 @@ const AddBookPopup = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 p-5 flex items-center justify-center z-50">
-      <div className="w-full bg-white rounded-xl shadow-xl md:w-[480px] max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 p-5 flex items-center justify-center z-50">
+      <motion.div
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={backdropVariants}
+        className="absolute inset-0 bg-black bg-opacity-50"
+        onClick={handleClose}
+      />
+      <motion.div
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={popupVariants}
+        className="relative w-full bg-white rounded-xl shadow-xl md:w-[480px] max-h-[92vh] overflow-y-auto no-scrollbar"
+      >
         <div className="p-6">
           <h3 className="text-xl font-bold mb-5 text-gray-800">Add New Book</h3>
           <form onSubmit={handleAddBook} className="flex flex-col gap-4">
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Book Title</label>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Book Title</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter book title"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black font-medium"
                 required
               />
             </div>
 
             {/* Author */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Author</label>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Author</label>
               <input
                 type="text"
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="Enter author name"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black font-medium"
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Borrowing Fee ($)</label>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Borrowing Fee ($)</label>
                 <input
                   type="number"
                   value={price}
@@ -112,7 +133,7 @@ const AddBookPopup = () => {
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black font-medium"
                   required
                 />
               </div>
@@ -120,7 +141,7 @@ const AddBookPopup = () => {
 
             {/* Borrow Limit */}
             <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Borrow Limit</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Borrow Limit</label>
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Days</label>
@@ -130,7 +151,7 @@ const AddBookPopup = () => {
                     max="365"
                     value={borrowLimitDays}
                     onChange={(e) => setBorrowLimitDays(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black text-sm font-medium"
                   />
                 </div>
                 <div className="flex-1">
@@ -141,7 +162,7 @@ const AddBookPopup = () => {
                     max="23"
                     value={borrowLimitHours}
                     onChange={(e) => setBorrowLimitHours(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black text-sm font-medium"
                   />
                 </div>
                 <div className="flex-1">
@@ -152,23 +173,23 @@ const AddBookPopup = () => {
                     max="59"
                     value={borrowLimitMinutes}
                     onChange={(e) => setBorrowLimitMinutes(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                    className="w-full px-3 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black text-sm font-medium"
                   />
                 </div>
               </div>
-              <p className="text-[10px] text-gray-400 mt-2 italic">
+              <p className="text-[10px] text-gray-400 mt-2 italic font-medium">
                 Borrower will have exactly {borrowLimitDays}d {borrowLimitHours}h {borrowLimitMinutes}m to access this book.
               </p>
             </div>
 
             {/* Upload PDF */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-bold text-gray-700 mb-1">
                 Upload PDF <span className="text-red-500">*</span>
               </label>
               <label className="flex items-center gap-2 w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-black transition-colors">
                 <FileText size={18} className="text-gray-500 shrink-0" />
-                <span className="text-sm text-gray-500 truncate">
+                <span className="text-sm text-gray-500 truncate font-medium">
                   {pdfPreview || "Click to select PDF file"}
                 </span>
                 <input
@@ -182,7 +203,7 @@ const AddBookPopup = () => {
 
             {/* Upload Cover Image */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-bold text-gray-700 mb-1">
                 Upload Cover Image <span className="text-red-500">*</span>
               </label>
               <label className="flex items-start gap-3 w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-black transition-colors">
@@ -191,7 +212,7 @@ const AddBookPopup = () => {
                 ) : (
                   <ImagePlus size={18} className="text-gray-500 mt-1 shrink-0" />
                 )}
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 font-medium">
                   {coverPreview ? "Click to change image" : "Click to select JPG, PNG, or WebP"}
                 </span>
                 <input
@@ -207,15 +228,15 @@ const AddBookPopup = () => {
             <div className="flex justify-end gap-3 mt-2">
               <button
                 type="button"
-                onClick={() => dispatch(toggleAddBookPopup())}
-                className="px-5 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium text-sm"
+                onClick={handleClose}
+                className="px-5 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 font-bold text-sm"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800 font-medium text-sm flex items-center gap-2 disabled:opacity-60"
+                className="px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800 font-bold text-sm flex items-center gap-2 disabled:opacity-60"
               >
                 {loading ? (
                   <>
@@ -229,7 +250,7 @@ const AddBookPopup = () => {
             </div>
           </form>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

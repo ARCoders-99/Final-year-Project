@@ -47,7 +47,7 @@ const Login = () => {
             <div className="flex justify-center mb-8">
               <img src={logo} alt="logo" className="h-20 w-auto" />
             </div>
-            <h1 className="text-4xl font-medium text-center mb-4">Welcome Back!!!</h1>
+            <h1 className="text-4xl font-bold text-center mb-4">Welcome Back!!!</h1>
             <p className="text-gray-600 text-center mb-8">Please enter your credentials to login</p>
 
             <form onSubmit={handleLogin} noValidate>
@@ -74,20 +74,20 @@ const Login = () => {
               </div>
 
               <div className="flex justify-between items-center mb-8">
-                <Link to={"/password/forgot"} className="font-semibold text-sm hover:underline">Forgot Password?</Link>
+                <Link to={"/password/forgot"} className="font-bold text-sm hover:underline">Forgot Password?</Link>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="border-2 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
+                className="border-2 border-black w-full font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
               >
                 {loading ? "AUTHENTICATING..." : "SIGN IN"}
               </button>
             </form>
 
 
-            <div className="mt-8 text-center text-sm md:hidden font-semibold">
+            <div className="mt-8 text-center text-sm md:hidden font-bold">
               New to our platform? <Link to="/register" className="text-blue-600 hover:underline">Sign Up</Link>
             </div>
           </div>
@@ -100,7 +100,7 @@ const Login = () => {
             <p className="text-gray-300 mb-12">New to our platform? Sign up now.</p>
             <Link
               to="/register"
-              className="border-2 border-white px-8 font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition inline-block"
+              className="border-2 border-white px-8 font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition inline-block"
             >
               SIGN UP
             </Link>

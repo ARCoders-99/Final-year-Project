@@ -52,6 +52,14 @@ const digitalBorrowSchema = new mongoose.Schema(
             type: Date,
             default: null,
         },
+        returned: {
+            type: Boolean,
+            default: false,
+        },
+        returnDate: {
+            type: Date,
+            default: null,
+        },
     },
     { timestamps: true }
 );

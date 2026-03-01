@@ -22,6 +22,7 @@ import Header from "../layout/Header";
 import AddBookPopup from "../popups/AddBookPopup";
 import ReadBookPopup from "../popups/ReadBookPopup";
 import RecordBookPopup from "../popups/RecordBookPopup";
+import { AnimatePresence } from "framer-motion";
 
 
 const BookManagement = () => {
@@ -169,7 +170,7 @@ const BookManagement = () => {
       <main className="relative flex-1 p-6 pt-28">
         <Header />
         <header className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center mb-6">
-          <h2 className="text-xl font-medium md:text-2xl md:font-semibold">
+          <h2 className="text-xl font-bold md:text-2xl md:font-bold">
             {isAdmin ? "Book Management" : "Books"}
           </h2>
 
@@ -224,7 +225,7 @@ const BookManagement = () => {
                             className="h-12 w-9 object-cover rounded"
                           />
                         </td>
-                        <td className="px-4 py-2 font-medium">{book.title}</td>
+                        <td className="px-4 py-2 font-semibold">{book.title}</td>
                         <td className="px-4 py-2 text-gray-600">{book.author}</td>
                         <td className="px-4 py-2">${book.price}</td>
                         <td className="px-4 py-2">
@@ -319,7 +320,7 @@ const BookManagement = () => {
                         </h4>
                         <p className="text-sm text-gray-500">by {book.author}</p>
                         <div className="flex items-center justify-between mt-2 text-sm">
-                          <span className="font-semibold text-gray-800">
+                          <span className="font-bold text-gray-800">
                             ${book.price} <span className="font-normal text-gray-400">/ borrow</span>
                           </span>
                           <span
@@ -376,18 +377,22 @@ const BookManagement = () => {
           </>
         )}
       </main>
+      <AnimatePresence>
+        {addBookPopup && <AddBookPopup key="add-book-popup" />}
+        {readBookPopup && <ReadBookPopup key="read-book-popup" book={readBook} />}
+        {recordBookPopup && <RecordBookPopup key="record-book-popup" bookId={borrowBookId} />}
 
-      {addBookPopup && <AddBookPopup />}
-      {readBookPopup && <ReadBookPopup book={readBook} />}
-      {recordBookPopup && <RecordBookPopup bookId={borrowBookId} />}
-
-      <PaymentPopup
-        isOpen={isPaymentPopupOpen}
-        onClose={() => setIsPaymentPopupOpen(false)}
-        onSuccess={handlePaymentSuccess}
-        recordPaidBorrowThunk={recordPaidBorrow}
-        {...paymentData}
-      />
+        {isPaymentPopupOpen && (
+          <PaymentPopup
+            key="payment-popup"
+            isOpen={isPaymentPopupOpen}
+            onClose={() => setIsPaymentPopupOpen(false)}
+            onSuccess={handlePaymentSuccess}
+            recordPaidBorrowThunk={recordPaidBorrow}
+            {...paymentData}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

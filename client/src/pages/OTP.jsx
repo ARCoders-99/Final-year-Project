@@ -51,7 +51,7 @@ const OTP = () => {
                 <img src={logo} alt="logo" className="h-24 w-auto" />
               </div>
             </div>
-            <h1 className="text-4xl font-medium text-center mb-12 overflow-hidden">
+            <h1 className="text-4xl font-bold text-center mb-12 overflow-hidden">
               Check your MailBox
             </h1>
             <p className="text-gray-800 text-center mb-12">
@@ -70,7 +70,7 @@ const OTP = () => {
               </div>
               <button
                 type="submit"
-                className="border-2 mt-5 border-black w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
+                className="border-2 mt-5 border-black w-full font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
                 disabled={loading}
               >
                 {loading ? "Verifying..." : "Verify"}
@@ -94,7 +94,7 @@ const OTP = () => {
             </p>
             <Link
               to={"/register"}
-              className="border-2 mt-5 border-white px-8 w-full font-semibold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
+              className="border-2 mt-5 border-white px-8 w-full font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
             >
               SIGN UP
             </Link>

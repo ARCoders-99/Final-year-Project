@@ -162,6 +162,25 @@ export const fetchAllDigitalBorrows = () => async (dispatch) => {
     }
 };
 
+export const returnDigitalBook = (id) => async (dispatch) => {
+    dispatch(digitalSlice.actions.requestForDigital());
+    try {
+        const response = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/return/${id}`,
+            {},
+            { withCredentials: true }
+        );
+        dispatch(digitalSlice.actions.successForBorrowDigitalBook(response.data.message));
+        // Re-fetch borrows to update UI immediately
+        dispatch(fetchMyDigitalBorrows());
+        return response.data;
+    } catch (error) {
+        const errorMsg = error.response?.data?.message || "Something went wrong";
+        dispatch(digitalSlice.actions.failureForDigital(errorMsg));
+        throw errorMsg;
+    }
+};
+
 export const resetDigitalSlice = () => (dispatch) => {
     dispatch(digitalSlice.actions.resetDigitalSlice());
 };

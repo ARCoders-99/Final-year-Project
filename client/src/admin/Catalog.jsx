@@ -59,7 +59,7 @@ const Catalog = () => {
 
         {/* Sub Header & Tab Navigation */}
         <header className="flex flex-col gap-4 sm:flex-row md:justify-between md:items-center">
-          <h2 className="text-xl font-medium md:text-2xl md:font-semibold">
+          <h2 className="text-xl font-bold md:text-2xl md:font-bold">
             Borrowed Books Catalog
           </h2>
           <div className="flex bg-gray-100 p-1 rounded-md">
@@ -106,7 +106,7 @@ const Catalog = () => {
                       className={`transition-colors duration-200 ${(index + 1) % 2 === 0 ? "bg-gray-50" : ""} hover:bg-gray-100 cursor-default`}
                     >
                       <td className="px-4 py-2">{index + 1}</td>
-                      <td className="px-4 py-2 font-medium">{record?.book?.title || "N/A"}</td>
+                      <td className="px-4 py-2 font-semibold">{record?.book?.title || "N/A"}</td>
                       <td className="px-4 py-2">{record?.user?.name}</td>
                       <td className="px-4 py-2">{record?.user?.email}</td>
                       <td className="px-4 py-2">{formatDate(record.dueDate)}</td>

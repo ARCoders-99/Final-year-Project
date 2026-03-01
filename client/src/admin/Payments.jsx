@@ -46,11 +46,11 @@ const Payments = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50 border-b border-gray-100">
-                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">User</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Book</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Amount</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Date</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">User</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Book</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Amount</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -62,22 +62,22 @@ const Payments = () => {
                                                 <User size={14} />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-semibold text-gray-800">{payment.user.name}</p>
+                                                <p className="text-sm font-medium text-gray-800">{payment.user.name}</p>
                                                 <p className="text-xs text-gray-400">{payment.user.email}</p>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2 text-sm text-gray-700 font-medium">
+                                        <div className="flex items-center gap-2 text-sm text-gray-700 font-normal">
                                             <BookIcon size={16} className="text-gray-400" />
                                             {payment.book?.title || "Unknown Book"}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="text-sm font-bold text-gray-800">${payment.amountPaid.toFixed(2)}</span>
+                                        <span className="text-sm font-semibold text-gray-800">${payment.amountPaid.toFixed(2)}</span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-black rounded-full uppercase tracking-widest border border-green-200">
+                                        <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-semibold rounded-full uppercase tracking-widest border border-green-200">
                                             {payment.paymentStatus}
                                         </span>
                                     </td>
@@ -101,8 +101,8 @@ const Payments = () => {
             <Header />
 
             <header className="mb-8">
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">Payment Hub</h2>
-                <p className="text-gray-500 font-medium">Monitor and manage all borrowing revenue streams.</p>
+                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Payment Hub</h2>
+                <p className="text-gray-500 font-normal">Monitor and manage all borrowing revenue streams.</p>
             </header>
 
             {/* Stats Summary */}
@@ -112,8 +112,8 @@ const Payments = () => {
                         <DollarSign size={28} />
                     </div>
                     <div>
-                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-0.5">Total Revenue</p>
-                        <h4 className="text-3xl font-black text-gray-900">${totalEarnings.toFixed(2)}</h4>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-0.5">Total Revenue</p>
+                        <h4 className="text-3xl font-bold text-gray-900">${totalEarnings.toFixed(2)}</h4>
                     </div>
                 </div>
 
@@ -122,8 +122,8 @@ const Payments = () => {
                         <BookIcon size={28} />
                     </div>
                     <div>
-                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-0.5">Physical Intake</p>
-                        <h4 className="text-3xl font-black text-gray-900">${physicalEarnings.toFixed(2)}</h4>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-0.5">Physical Intake</p>
+                        <h4 className="text-3xl font-bold text-gray-900">${physicalEarnings.toFixed(2)}</h4>
                     </div>
                 </div>
 
@@ -132,8 +132,8 @@ const Payments = () => {
                         <BookOpen size={28} />
                     </div>
                     <div>
-                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-0.5">Digital Intake</p>
-                        <h4 className="text-3xl font-black text-gray-900">${digitalEarnings.toFixed(2)}</h4>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mb-0.5">Digital Intake</p>
+                        <h4 className="text-3xl font-bold text-gray-900">${digitalEarnings.toFixed(2)}</h4>
                     </div>
                 </div>
             </div>
@@ -142,7 +142,7 @@ const Payments = () => {
             <div className="flex p-1 bg-gray-200/50 rounded-2xl w-fit mb-8 border border-gray-200">
                 <button
                     onClick={() => setActiveTab("physical")}
-                    className={`flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-black transition-all duration-300 ${activeTab === "physical"
+                    className={`flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === "physical"
                         ? "bg-white text-black shadow-sm ring-1 ring-gray-100"
                         : "text-gray-500 hover:text-gray-800"
                         }`}
@@ -152,7 +152,7 @@ const Payments = () => {
                 </button>
                 <button
                     onClick={() => setActiveTab("digital")}
-                    className={`flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-black transition-all duration-300 ${activeTab === "digital"
+                    className={`flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === "digital"
                         ? "bg-white text-black shadow-sm ring-1 ring-gray-100"
                         : "text-gray-500 hover:text-gray-800"
                         }`}

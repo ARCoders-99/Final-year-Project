@@ -164,12 +164,29 @@ export const getDigitalReaderContent = catchAsyncErrors(async (req, res, next) =
     }
 });
 
-// Get User's Active Digital Borrows
+// Get User's All Digital Borrows (Active & Expired)
 export const getMyDigitalBorrows = catchAsyncErrors(async (req, res, next) => {
+    const userId = req.user._id;
+
+    // Auto-update expired borrows to "Returned"
+    const now = new Date();
+    await DigitalBorrow.updateMany(
+        {
+            "user.id": userId,
+            returned: false,
+            expiryDate: { $lte: now }
+        },
+        {
+            $set: {
+                returned: true,
+                returnDate: now,
+                status: "Expired"
+            }
+        }
+    );
+
     const borrows = await DigitalBorrow.find({
-        "user.id": req.user._id,
-        status: "Active",
-        expiryDate: { $gt: new Date() },
+        "user.id": userId,
     }).populate("book");
 
     res.status(200).json({
@@ -177,6 +194,37 @@ export const getMyDigitalBorrows = catchAsyncErrors(async (req, res, next) => {
         borrows,
     });
 });
+
+// Return Digital Book
+export const returnDigitalBook = catchAsyncErrors(async (req, res, next) => {
+    const { id } = req.params;
+
+    const borrow = await DigitalBorrow.findById(id);
+
+    if (!borrow) {
+        return next(new ErrorHandler("Borrow record not found", 404));
+    }
+
+    if (borrow.user.id.toString() !== req.user._id.toString()) {
+        return next(new ErrorHandler("You are not authorized to return this book", 403));
+    }
+
+    if (borrow.returned) {
+        return next(new ErrorHandler("This book is already returned", 400));
+    }
+
+    borrow.returned = true;
+    borrow.returnDate = new Date();
+    borrow.status = "Expired"; // Setting to Expired so it's treated as inactive
+
+    await borrow.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Digital book returned successfully",
+    });
+});
+
 // Get All Digital Borrows (Admin)
 export const getAllDigitalBorrows = catchAsyncErrors(async (req, res, next) => {
     const borrows = await DigitalBorrow.find().populate("book");
