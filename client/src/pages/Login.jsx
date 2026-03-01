@@ -4,13 +4,25 @@ import logo_with_title from "../assets/logo-with-title.png";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { login, resetMessageErrorAction } from "../store/slices/authSlice";
+import { login, googleLogin, resetMessageErrorAction } from "../store/slices/authSlice";
+import { auth, googleProvider } from "../firebase";
+import { signInWithPopup } from "firebase/auth";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
   const navigateTo = useNavigate();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem("rememberedEmail");
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const { loading, error, message, isAuthenticated } = useSelector(
     (state) => state.auth
@@ -18,7 +30,36 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return toast.error("Please enter a valid email address.");
+    }
+    if (password.length < 8 || password.length > 16) {
+      return toast.error("Password must be between 8 and 16 characters.");
+    }
+
+    if (rememberMe) {
+      localStorage.setItem("rememberedEmail", email);
+    } else {
+      localStorage.removeItem("rememberedEmail");
+    }
+
     dispatch(login({ email, password }));
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      dispatch(googleLogin({
+        name: user.displayName,
+        email: user.email,
+        uid: user.uid
+      }));
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
 
@@ -74,6 +115,16 @@ const Login = () => {
               </div>
 
               <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 accent-black cursor-pointer"
+                  />
+                  <label htmlFor="rememberMe" className="text-sm font-bold cursor-pointer">Remember Me</label>
+                </div>
                 <Link to={"/password/forgot"} className="font-bold text-sm hover:underline">Forgot Password?</Link>
               </div>
 
@@ -83,6 +134,21 @@ const Login = () => {
                 className="border-2 border-black w-full font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
               >
                 {loading ? "AUTHENTICATING..." : "SIGN IN"}
+              </button>
+
+              <div className="flex items-center my-4">
+                <hr className="flex-grow border-gray-300" />
+                <span className="px-3 text-gray-500 text-sm">OR</span>
+                <hr className="flex-grow border-gray-300" />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                className="flex items-center justify-center gap-2 border-2 border-gray-300 w-full font-bold bg-white text-black py-2 rounded-lg hover:border-black transition"
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="google" className="h-5 w-5" />
+                CONTINUE WITH GOOGLE
               </button>
             </form>
 

@@ -1,0 +1,108 @@
+import { useEffect, useState } from "react";
+import logo from "../assets/black-logo.png";
+import logo_with_title from "../assets/logo-with-title.png";
+import { useDispatch, useSelector } from "react-redux";
+import { forgotPassword, resetAuthSlice } from "../store/slices/authSlice";
+import { toast } from "react-toastify";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+
+const AdminForgotPassword = () => {
+    const [email, setEmail] = useState("");
+
+    const dispatch = useDispatch();
+    const navigateTo = useNavigate();
+
+    const { loading, error, message, isAuthenticated } = useSelector(
+        (state) => state.auth
+    );
+
+    const handleForgotPassword = (e) => {
+        e.preventDefault();
+        dispatch(forgotPassword(email));
+    };
+    useEffect(() => {
+        if (message) {
+            toast.success(message);
+            dispatch(resetAuthSlice());
+            navigateTo(`/admin/password/forgot/otp/${email}`);
+        }
+        if (error) {
+            toast.error(error);
+            dispatch(resetAuthSlice());
+        }
+    }, [dispatch, isAuthenticated, error, message, loading, email, navigateTo]);
+
+    if (isAuthenticated) {
+        return <Navigate to="/admin/dashboard" />;
+    }
+
+    return (
+        <>
+            <div className="flex flex-col justify-center md:flex-row h-screen">
+                {/* LEFT SECTION */}
+                <div
+                    className="hidden w-full md:w-1/2 bg-black text-white md:flex flex-col items-center
+    justify-center p-8 rounded-tr-[80px] rounded-br-[80px]">
+                    <div className="text-center h-[450px]">
+                        <div className="flex justify-center mb-12">
+                            <img
+                                src={logo_with_title}
+                                alt="logo"
+                                className="mb-12 h-44 w-auto"
+                            />
+                        </div>
+                        <h3 className="text-gray-300 max-w-[320px] mx-auto text-3xl font-bold leading-10">
+                            Your premier digital library for borrowing and reading books
+                        </h3>
+                    </div>
+                </div>
+                {/* RIGHT SECTION */}
+                <div className="w-full md:w-1/2 flex items-center justify-center bg-white p-8 relative">
+                    <Link
+                        to={"/admin/login"}
+                        className="border-2 border-red-600 rounded-3xl font-bold w-52 py-2 px-4 fixed top-10 left-28
+       hover:bg-red-600 hover:text-white transition duration-300 text-end"
+                    >
+                        Back
+                    </Link>
+                    <div className="w-full max-w-sm">
+                        <div className="flex justify-center mb-12">
+                            <div className="rounded-full flex items-center justify-center">
+                                <img src={logo} alt="logo" className="h-24 w-auto" />
+                            </div>
+                        </div>
+                        <div className="mb-8">
+                            <h1 className="text-4xl font-bold text-center mb-5 overflow-hidden text-red-600">
+                                Admin Forgot Password
+                            </h1>
+                            <p className="text-gray-800 text-center mb-12">
+                                Please enter your admin email
+                            </p>
+                            <form onSubmit={handleForgotPassword}>
+                                <div className="mb-4">
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="Admin Email"
+                                        className="w-full px-4 py-3 border border-black rounded-md focus:outline-none focus:border-red-600"
+                                        required
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    className="border-2 mt-5 border-red-600 w-full font-bold bg-red-600 text-white py-2 rounded-lg hover:bg-white hover:text-red-600 transition"
+                                    disabled={loading ? true : false}
+                                >
+                                    Reset Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+};
+
+export default AdminForgotPassword;

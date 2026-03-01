@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import logo from "../assets/black-logo.png";
@@ -12,6 +12,7 @@ const ResetPassword = () => {
 
   const { token } = useParams();
   const dispatch = useDispatch();
+  const navigateTo = useNavigate();
 
   const { loading, error, message, isAuthenticated } = useSelector(
     (state) => state.auth
@@ -29,6 +30,7 @@ const ResetPassword = () => {
     if (message) {
       toast.success(message);
       dispatch(resetAuthSlice());
+      navigateTo("/login");
     }
 
     if (error) {
@@ -37,9 +39,6 @@ const ResetPassword = () => {
     }
   }, [dispatch, message, error, loading]);
 
-  if (isAuthenticated) {
-    return <Navigate to={"/"} />;
-  }
 
   return (
     <>

@@ -2,15 +2,24 @@ import { useEffect, useState } from "react";
 import logo from "../assets/black-logo.png";
 import logo_with_title from "../assets/logo-with-title.png";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { login, resetMessageErrorAction } from "../store/slices/authSlice";
 const AdminLogin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
 
     const navigateTo = useNavigate();
     const dispatch = useDispatch();
+
+    useEffect(() => {
+        const rememberedAdminEmail = localStorage.getItem("rememberedAdminEmail");
+        if (rememberedAdminEmail) {
+            setEmail(rememberedAdminEmail);
+            setRememberMe(true);
+        }
+    }, []);
 
     const { loading, error, message, isAuthenticated, user } = useSelector(
         (state) => state.auth
@@ -18,6 +27,13 @@ const AdminLogin = () => {
 
     const handleLogin = (e) => {
         e.preventDefault();
+
+        if (rememberMe) {
+            localStorage.setItem("rememberedAdminEmail", email);
+        } else {
+            localStorage.removeItem("rememberedAdminEmail");
+        }
+
         dispatch(login({ email, password }));
     };
 
@@ -66,7 +82,7 @@ const AdminLogin = () => {
                                     required
                                 />
                             </div>
-                            <div className="mb-4">
+                            <div className="mb-6">
                                 <input
                                     type="password"
                                     value={password}
@@ -75,6 +91,19 @@ const AdminLogin = () => {
                                     className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
                                     required
                                 />
+                            </div>
+
+                            <div className="flex items-center mb-8">
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="adminRememberMe"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        className="w-4 h-4 accent-red-600 cursor-pointer"
+                                    />
+                                    <label htmlFor="adminRememberMe" className="text-sm font-bold cursor-pointer">Remember Me</label>
+                                </div>
                             </div>
 
                             <button

@@ -55,6 +55,15 @@ const AddBookPopup = () => {
   const handleAddBook = (e) => {
     e.preventDefault();
 
+    if (title.length < 1 || title.length > 100) {
+      return toast.error("Title must be between 1 and 100 characters.");
+    }
+    if (author.length < 1 || author.length > 50) {
+      return toast.error("Author must be between 1 and 50 characters.");
+    }
+    if (Number(price) < 0) {
+      return toast.error("Price cannot be negative.");
+    }
     if (!pdf) {
       toast.error("Please upload a PDF file.");
       return;

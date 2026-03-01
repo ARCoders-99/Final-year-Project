@@ -22,14 +22,31 @@ const SettingPopup = () => {
 
   const handleUpdateCredentials = (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("email", email);
-    if (oldPassword && newPassword) {
-      formData.append("oldPassword", oldPassword);
-      formData.append("newPassword", newPassword);
+
+    if (name.length < 3 || name.length > 30) {
+      return toast.error("Name must be between 3 and 30 characters.");
     }
-    dispatch(updateCredentials(formData));
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return toast.error("Please enter a valid email address.");
+    }
+
+    const updateData = { name, email };
+
+    if (!oldPassword || !newPassword) {
+      return toast.error("Both old and new password are required to save changes.");
+    }
+    if (oldPassword === newPassword) {
+      return toast.error("New password cannot be the same as the old password.");
+    }
+    if (newPassword.length < 8 || newPassword.length > 16) {
+      return toast.error("New password must be between 8 and 16 characters.");
+    }
+    updateData.oldPassword = oldPassword;
+    updateData.newPassword = newPassword;
+
+    dispatch(updateCredentials(updateData));
   };
 
   useEffect(() => {

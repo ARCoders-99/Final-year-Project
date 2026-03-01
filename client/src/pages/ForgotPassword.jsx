@@ -4,12 +4,13 @@ import logo_with_title from "../assets/logo-with-title.png";
 import { useDispatch, useSelector } from "react-redux";
 import { forgotPassword, resetAuthSlice } from "../store/slices/authSlice";
 import { toast } from "react-toastify";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
 
   const dispatch = useDispatch();
+  const navigateTo = useNavigate();
 
   const { loading, error, message, isAuthenticated } = useSelector(
     (state) => state.auth
@@ -23,12 +24,13 @@ const ForgotPassword = () => {
     if (message) {
       toast.success(message);
       dispatch(resetAuthSlice());
+      navigateTo(`/password/forgot/otp/${email}`);
     }
     if (error) {
       toast.error(error);
       dispatch(resetAuthSlice());
     }
-  }, [dispatch, isAuthenticated, error, message, loading]);
+  }, [dispatch, isAuthenticated, error, message, loading, email, navigateTo]);
 
   if (isAuthenticated) {
     return <Navigate to="/" />;

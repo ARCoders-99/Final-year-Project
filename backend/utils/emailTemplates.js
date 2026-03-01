@@ -18,7 +18,7 @@ export function generateVerificationOtpEmailTemplate(otpCode) {
   </div>`;
 }
 
-export function generateForgotPasswordEmailTemplate(resetPasswordUrl){
+export function generateForgotPasswordEmailTemplate(resetPasswordUrl) {
   return `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #000; color: #fff;">
     <h2 style="color: #fff; text-align: center;">Reset Your Password</h2>
@@ -41,4 +41,25 @@ export function generateForgotPasswordEmailTemplate(resetPasswordUrl){
     </footer>
 </div>
   `
+}
+
+export function generateForgotPasswordOtpEmailTemplate(otpCode) {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #000; color: #fff;">
+      <h2 style="color: #fff; text-align: center;">Password Recovery Code</h2>
+      <p style="font-size: 16px; color: #ccc;">Dear User,</p>
+      <p style="font-size: 16px; color: #ccc;">You requested to reset your password. Please use the following OTP (One-Time Password) to proceed with the reset process:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <span style="display: inline-block; font-size: 32px; font-weight: bold; color: #000; padding: 15px 30px; border-radius: 8px; background-color: #fff; letter-spacing: 5px;">
+          ${otpCode}
+        </span>
+      </div>
+      <p style="font-size: 16px; color: #ccc; text-align: center;">This code is valid for 15 minutes. Please do not share this code with anyone.</p>
+      <p style="font-size: 14px; color: #999; text-align: center; margin-top: 20px;">If you did not request this, please ignore this email.</p>
+      <footer style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
+          <p>Thank you,<br>Bookworm Team</p>
+          <p style="font-size: 12px; color: #444;">This is an automated message. Please do not reply to this email.</p>
+      </footer>
+  </div>
+    `
 }

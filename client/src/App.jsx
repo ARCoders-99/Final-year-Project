@@ -6,6 +6,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import OTP from "./pages/OTP";
 import ResetPassword from "./pages/ResetPassword";
 import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useEffect, useRef } from "react";
 import { getUser } from "./store/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,6 +20,7 @@ import BookManagement from "./admin/BookManagement";
 import Users from "./admin/Users";
 import Catalog from "./admin/Catalog";
 import UserDashboard from "./components/UserDashboard";
+import ForgotPasswordOTP from "./pages/ForgotPasswordOTP";
 import MyBorrowedBooks from "./components/MyBorrowedBooks";
 import ImportDigitalBook from "./admin/ImportDigitalBook";
 import ReaderPage from "./pages/ReaderPage";
@@ -89,8 +91,8 @@ const App = () => {
         <Route path="/admin/books" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/catalog" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
-        <Route path="/admin/payments" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/import-digital" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
+        <Route path="/password/forgot/otp/:email" element={<ForgotPasswordOTP />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

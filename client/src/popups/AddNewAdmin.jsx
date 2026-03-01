@@ -6,6 +6,7 @@ import { Loader2, ImagePlus, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { popupVariants, backdropVariants } from "../utils/animations";
 import placeHolder from "../assets/placeholder.jpg";
+import { toast } from "react-toastify";
 
 const AddNewAdmin = () => {
   const dispatch = useDispatch();
@@ -36,12 +37,30 @@ const AddNewAdmin = () => {
 
   const handleAddNewAdmin = (e) => {
     e.preventDefault();
+
+    if (name.length < 3 || name.length > 30) {
+      return toast.error("Name must be between 3 and 30 characters.");
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return toast.error("Please enter a valid email address.");
+    }
+    if (phone.length < 10 || phone.length > 15) {
+      return toast.error("Phone number must be between 10 and 15 digits.");
+    }
+    if (password.length < 8 || password.length > 16) {
+      return toast.error("Password must be between 8 and 16 characters.");
+    }
+    if (!avatar) {
+      return toast.error("Admin avatar is required.");
+    }
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("email", email);
     formData.append("password", password);
     formData.append("phone", phone);
-    if (avatar) formData.append("avatar", avatar);
+    formData.append("avatar", avatar);
     formData.append("role", "Admin");
 
     dispatch(addNewAdmin(formData));

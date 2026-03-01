@@ -232,6 +232,27 @@ export const login = (data) => async (dispatch) => {
   }
 };
 
+export const googleLogin = (data) => async (dispatch) => {
+  dispatch(authSlice.actions.loginRequest());
+  try {
+    const res = await axios.post(
+      "http://localhost:4000/api/v1/auth/social-login",
+      data,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    dispatch(authSlice.actions.loginSuccess(res.data));
+  } catch (error) {
+    dispatch(
+      authSlice.actions.loginFailed(
+        error.response?.data?.message || error.message
+      )
+    );
+  }
+};
+
 
 export const logout = () => async (dispatch) => {
   dispatch(authSlice.actions.logoutRequest());
@@ -273,6 +294,28 @@ export const forgotPassword = (email) => async (dispatch) => {
       }
     );
     dispatch(authSlice.actions.forgotPasswordSuccess(res.data.message));
+  } catch (error) {
+    dispatch(
+      authSlice.actions.forgotPasswordFailed(
+        error.response?.data?.message || error.message
+      )
+    );
+  }
+};
+
+export const verifyForgotPasswordOtp = (email, otp) => async (dispatch) => {
+  dispatch(authSlice.actions.forgotPasswordRequest());
+  try {
+    const res = await axios.post(
+      "http://localhost:4000/api/v1/auth/password/verify-otp",
+      { email, otp },
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    dispatch(authSlice.actions.forgotPasswordSuccess(res.data.message));
+    return res.data.token;
   } catch (error) {
     dispatch(
       authSlice.actions.forgotPasswordFailed(

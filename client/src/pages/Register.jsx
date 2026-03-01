@@ -20,6 +20,18 @@ const Register = () => {
 
   const handleRegister = (e) => {
     e.preventDefault();
+
+    if (name.length < 3 || name.length > 30) {
+      return toast.error("Name must be between 3 and 30 characters.");
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return toast.error("Please enter a valid email address.");
+    }
+    if (password.length < 8 || password.length > 16) {
+      return toast.error("Password must be between 8 and 16 characters.");
+    }
+
     dispatch(register({ name, email, password }));
   };
 

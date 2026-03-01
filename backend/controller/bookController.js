@@ -2,13 +2,10 @@ import { catchAsyncErrors } from "../middlewares/catchAsyncErrors.js";
 import { Book } from "../models/bookModel.js";
 import ErrorHandler from "../middlewares/errorMiddlewares.js";
 import { v2 as cloudinary } from "cloudinary";
+import { addBookSchema } from "../utils/validationSchema.js";
 
 export const addBook = catchAsyncErrors(async (req, res, next) => {
-  const { title, author, price, borrowLimitDays, borrowLimitHours, borrowLimitMinutes } = req.body;
-
-  if (!title || !author || !price) {
-    return next(new ErrorHandler("Please fill all fields.", 400));
-  }
+  const { title, author, price, borrowLimitDays, borrowLimitHours, borrowLimitMinutes } = addBookSchema.parse(req.body);
 
   if (!req.files || !req.files.pdf || !req.files.coverImage) {
     return next(new ErrorHandler("Both PDF and cover image are required.", 400));
