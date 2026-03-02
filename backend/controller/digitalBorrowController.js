@@ -132,14 +132,14 @@ export const getDigitalReaderContent = catchAsyncErrors(async (req, res, next) =
     const user = req.user;
 
     // Verify active borrow
-    const borrowRecord = await DigitalBorrow.findOne({
+    let borrowRecord = await DigitalBorrow.findOne({
         "user.id": user._id,
         book: bookId,
         status: "Active",
         expiryDate: { $gt: new Date() },
     });
 
-    if (!borrowRecord) {
+    if (!borrowRecord && user.role !== "Admin") {
         return next(new ErrorHandler("Access denied. No active borrow record found or borrow has expired.", 403));
     }
 

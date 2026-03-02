@@ -3,7 +3,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { updateCredentials, resetAuthSlice } from "../store/slices/authSlice";
 import { toggleSettingPopup } from "../store/slices/popUpSlice";
 import { toast } from "react-toastify";
-import { Loader2, X, Lock, Mail, User } from "lucide-react";
+import { Loader2, X, Lock, Mail, User, Eye, EyeOff } from "lucide-react";
+import Button from "../components/ui/Button";
 import { motion } from "framer-motion";
 import { popupVariants, backdropVariants } from "../utils/animations";
 
@@ -15,6 +16,8 @@ const SettingPopup = () => {
   const [email, setEmail] = useState(user?.email || "");
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const handleClose = () => {
     dispatch(toggleSettingPopup());
@@ -126,49 +129,60 @@ const SettingPopup = () => {
             <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
               <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Change Password (Optional)</h4>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1.5">Old Password</label>
-                <input
-                  type="password"
-                  value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-medium transition-all"
-                />
+                <label className="block text-sm font-bold text-gray-700 mb-1.5 text-start">Old Password</label>
+                <div className="relative">
+                  <input
+                    type={showOldPassword ? "text" : "password"}
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-medium transition-all pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
+                  >
+                    {showOldPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1.5">New Password</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-medium transition-all"
-                />
+                <label className="block text-sm font-bold text-gray-700 mb-1.5 text-start">New Password</label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-medium transition-all pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
+                  >
+                    {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-4">
-              <button
+              <Button
                 type="button"
                 onClick={handleClose}
-                className="px-6 py-3 bg-gray-100 rounded-xl hover:bg-gray-200 font-bold text-sm transition-all shadow-sm"
+                className="px-6 py-3 bg-gray-100 rounded-xl hover:bg-gray-200 font-bold text-sm text-black border-none shadow-none translate-y-0"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-black text-white rounded-xl hover:bg-gray-800 font-bold text-sm flex items-center gap-2 disabled:opacity-60 transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+                loading={loading}
+                className="px-8 py-3 bg-black text-white rounded-xl hover:bg-gray-800 font-bold text-sm flex items-center gap-2"
               >
-                {loading ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Updating…
-                  </>
-                ) : (
-                  "Save Changes"
-                )}
-              </button>
+                Save Changes
+              </Button>
             </div>
           </form>
         </div>

@@ -1,6 +1,7 @@
 import { useDispatch } from "react-redux";
 import { returnBook } from "../store/slices/borrowSlice";
 import { toggleReturnBookPopup } from "../store/slices/popUpSlice";
+import Button from "../components/ui/Button";
 
 const ReturnBookPopup = ({ bookId, email }) => {
   const dispatch = useDispatch();
@@ -32,19 +33,19 @@ const ReturnBookPopup = ({ bookId, email }) => {
             </div>
 
             <div className="flex justify-end space-x-4">
-              <button
-                className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 font-bold"
+              <Button
+                className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 font-bold text-black border-none shadow-none translate-y-0"
                 type="button"
                 onClick={() => dispatch(toggleReturnBookPopup())}
               >
                 Close
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
                 className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 font-bold"
               >
                 Return
-              </button>
+              </Button>
             </div>
           </form>
         </div>

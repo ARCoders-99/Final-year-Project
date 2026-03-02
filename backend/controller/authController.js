@@ -293,7 +293,7 @@ export const resetPassword = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: "Password reset successfully. Please login with your new password.",
+    message: "Password Reset Successfully",
   });
 });
 

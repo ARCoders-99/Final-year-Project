@@ -31,7 +31,6 @@ export const searchGutenbergBooks = async (query) => {
             title: book.title,
             author: book.authors.map((a) => a.name).join(", "),
             description: book.subjects.slice(0, 3).join(", "),
-            language: book.languages.join(", "),
             coverImage: findFormat(book.formats, "image/jpeg"),
             htmlLink: findFormat(book.formats, "text/html"),
         }));
@@ -66,7 +65,6 @@ export const getGutenbergBookById = async (id) => {
             title: book.title,
             author: book.authors.map((a) => a.name).join(", "),
             description: book.subjects.slice(0, 3).join(", "),
-            language: book.languages.join(", "),
             coverImage: findFormat(book.formats, "image/jpeg"),
             htmlLink: findFormat(book.formats, "text/html"),
         };

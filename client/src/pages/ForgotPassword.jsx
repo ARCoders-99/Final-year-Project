@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { forgotPassword, resetAuthSlice } from "../store/slices/authSlice";
 import { toast } from "react-toastify";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -89,13 +90,13 @@ const ForgotPassword = () => {
                     required
                   />
                 </div>
-                <button
+                <Button
                   type="submit"
+                  loading={loading}
                   className="border-2 mt-5 border-black w-full font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
-                  disabled={loading ? true : false}
                 >
-                  Reset Password
-                </button>
+                  Send OTP
+                </Button>
               </form>
             </div>
           </div>

@@ -181,6 +181,20 @@ export const returnDigitalBook = (id) => async (dispatch) => {
     }
 };
 
+export const deleteDigitalBook = (id) => async (dispatch) => {
+    dispatch(digitalSlice.actions.requestForDigital());
+    try {
+        const response = await axios.delete(
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/delete/${id}`,
+            { withCredentials: true }
+        );
+        dispatch(digitalSlice.actions.successForImportDigitalBook(response.data.message));
+        dispatch(fetchAllDigitalBooks()); // Re-fetch to update list
+    } catch (error) {
+        dispatch(digitalSlice.actions.failureForDigital(error.response?.data?.message || "Something went wrong"));
+    }
+};
+
 export const resetDigitalSlice = () => (dispatch) => {
     dispatch(digitalSlice.actions.resetDigitalSlice());
 };

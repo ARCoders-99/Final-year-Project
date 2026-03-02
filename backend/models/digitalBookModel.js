@@ -15,9 +15,6 @@ const digitalBookSchema = new mongoose.Schema(
         description: {
             type: String,
         },
-        language: {
-            type: String,
-        },
         coverImage: {
             type: String,
         },

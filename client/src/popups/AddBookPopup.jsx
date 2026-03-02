@@ -4,6 +4,7 @@ import { addBook, fetchAllBooks } from "../store/slices/bookSlice";
 import { toggleAddBookPopup } from "../store/slices/popUpSlice";
 import { Loader2, FileText, ImagePlus } from "lucide-react";
 import { toast } from "react-toastify";
+import Button from "../components/ui/Button";
 
 import { motion } from "framer-motion";
 import { popupVariants, backdropVariants } from "../utils/animations";
@@ -235,27 +236,20 @@ const AddBookPopup = () => {
 
             {/* Buttons */}
             <div className="flex justify-end gap-3 mt-2">
-              <button
+              <Button
                 type="button"
                 onClick={handleClose}
-                className="px-5 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 font-bold text-sm"
+                className="px-5 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 font-bold text-sm text-black border-none shadow-none translate-y-0"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                disabled={loading}
-                className="px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800 font-bold text-sm flex items-center gap-2 disabled:opacity-60"
+                loading={loading}
+                className="px-5 py-2 bg-black text-white rounded-lg hover:bg-gray-800 font-bold text-sm"
               >
-                {loading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Uploading…
-                  </>
-                ) : (
-                  "Add Book"
-                )}
-              </button>
+                Add Book
+              </Button>
             </div>
           </form>
         </div>

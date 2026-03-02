@@ -23,12 +23,15 @@ import AddBookPopup from "../popups/AddBookPopup";
 import ReadBookPopup from "../popups/ReadBookPopup";
 import RecordBookPopup from "../popups/RecordBookPopup";
 import { AnimatePresence } from "framer-motion";
+import Button from "../components/ui/Button";
+import { fetchAllDigitalBooks, deleteDigitalBook, resetDigitalSlice as resetDigital } from "../store/slices/digitalSlice";
 
 
 const BookManagement = () => {
   const dispatch = useDispatch();
 
   const { error, message, books, loading } = useSelector((state) => state.book);
+  const { digitalBooks, loading: digitalLoading, error: digitalError, message: digitalMessage } = useSelector((state) => state.digital);
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   // Payment popup state
@@ -44,11 +47,14 @@ const BookManagement = () => {
   const [readBook, setReadBook] = useState({});
   const [borrowBookId, setBorrowBookId] = useState("");
   const [searchedKeyword, setSearchedKeyword] = useState("");
+  const [selectedTab, setSelectedTab] = useState("physical"); // 'physical' or 'digital'
   const navigate = useNavigate();
 
   // Open book popup
   const openReadPopup = (id) => {
-    const book = books.find((book) => book._id === id);
+    const book = selectedTab === "physical"
+      ? books.find((b) => b._id === id)
+      : digitalBooks.find((b) => b._id === id);
     setReadBook(book);
     dispatch(toggleReadBookPopup());
   };
@@ -65,19 +71,23 @@ const BookManagement = () => {
     if (!book) return;
 
     if (book.price > 0) {
+      // Open popup instantly
+      setPaymentData({
+        clientSecret: "",
+        bookId: book._id,
+        bookTitle: book.title,
+        price: book.price
+      });
+      setIsPaymentPopupOpen(true);
+
       try {
         const clientSecret = await dispatch(createPaymentIntent(bookId));
         if (clientSecret) {
-          setPaymentData({
-            clientSecret,
-            bookId: book._id,
-            bookTitle: book.title,
-            price: book.price
-          });
-          setIsPaymentPopupOpen(true);
+          setPaymentData(prev => ({ ...prev, clientSecret }));
         }
       } catch (err) {
         toast.error(err || "Failed to initiate payment");
+        setIsPaymentPopupOpen(false);
       }
       return;
     }
@@ -114,13 +124,22 @@ const BookManagement = () => {
     }
   };
 
+  const handleDeleteDigitalBook = (id) => {
+    if (window.confirm("Are you sure you want to delete this digital book?")) {
+      dispatch(deleteDigitalBook(id));
+    }
+  };
+
   // Fetch books and user borrowed books on mount
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(fetchAllBooks());
       dispatch(fetchUserBorrowedBooks());
+      if (user?.role === "Admin") {
+        dispatch(fetchAllDigitalBooks());
+      }
     }
-  }, [dispatch, isAuthenticated]);
+  }, [dispatch, isAuthenticated, user]);
 
   // Real-time expiry: schedule a re-fetch at the exact dueDate of each active borrow
   useEffect(() => {
@@ -142,24 +161,26 @@ const BookManagement = () => {
 
   // Handle global messages and errors
   useEffect(() => {
-    if (message || borrowSliceMessage) {
-      toast.success(message || borrowSliceMessage);
+    if (message || borrowSliceMessage || digitalMessage) {
+      toast.success(message || borrowSliceMessage || digitalMessage);
       dispatch(resetBookSlice());
       dispatch(resetBorrowSlice());
+      dispatch(resetDigital());
     }
 
-    if (error || borrowSliceError) {
-      toast.error(error || borrowSliceError);
+    if (error || borrowSliceError || digitalError) {
+      toast.error(error || borrowSliceError || digitalError);
       dispatch(resetBookSlice());
       dispatch(resetBorrowSlice());
+      dispatch(resetDigital());
     }
-  }, [dispatch, error, message, borrowSliceError, borrowSliceMessage]);
+  }, [dispatch, error, message, borrowSliceError, borrowSliceMessage, digitalError, digitalMessage]);
 
   const handleSearch = (e) => {
     setSearchedKeyword(e.target.value.toLowerCase());
   };
 
-  const searchedBooks = books.filter((book) =>
+  const searchedBooks = (selectedTab === "physical" ? books : digitalBooks).filter((book) =>
     book.title.toLowerCase().includes(searchedKeyword)
   );
 
@@ -170,13 +191,31 @@ const BookManagement = () => {
       <main className="relative flex-1 p-6 pt-28">
         <Header />
         <header className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center mb-6">
-          <h2 className="text-xl font-bold md:text-2xl md:font-bold">
-            {isAdmin ? "Book Management" : "Books"}
-          </h2>
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl font-bold md:text-2xl md:font-bold">
+              {isAdmin ? "Book Management" : "Books"}
+            </h2>
+            {isAdmin && (
+              <div className="flex gap-4 mt-2">
+                <button
+                  onClick={() => setSelectedTab("physical")}
+                  className={`text-sm font-bold pb-1 transition-colors ${selectedTab === "physical" ? "border-b-2 border-black text-black" : "text-gray-400 hover:text-black"}`}
+                >
+                  Physical Books
+                </button>
+                <button
+                  onClick={() => setSelectedTab("digital")}
+                  className={`text-sm font-bold pb-1 transition-colors ${selectedTab === "digital" ? "border-b-2 border-black text-black" : "text-gray-400 hover:text-black"}`}
+                >
+                  Digital Books
+                </button>
+              </div>
+            )}
+          </div>
 
           <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
-            {isAuthenticated && isAdmin && (
-              <button
+            {isAuthenticated && isAdmin && selectedTab === "physical" && (
+              <Button
                 onClick={() => dispatch(toggleAddBookPopup())}
                 className="relative pl-14 w-full sm:w-52 flex gap-4 justify-center items-center py-2 pr-4 bg-black text-white rounded-md hover:bg-gray-800 overflow-hidden hover-scale"
               >
@@ -184,13 +223,24 @@ const BookManagement = () => {
                   +
                 </span>
                 Add Book
-              </button>
+              </Button>
+            )}
+            {isAuthenticated && isAdmin && selectedTab === "digital" && (
+              <Button
+                onClick={() => navigate("/admin/import-digital")}
+                className="relative pl-14 w-full sm:w-52 flex gap-4 justify-center items-center py-2 pr-4 bg-black text-white rounded-md hover:bg-gray-800 overflow-hidden hover-scale"
+              >
+                <span className="bg-white flex justify-center items-center rounded-full text-black w-7 h-7 text-lg absolute left-4 top-1/2 -translate-y-1/2 shadow-md">
+                  +
+                </span>
+                Import Digital
+              </Button>
             )}
 
             <input
               type="text"
-              placeholder="Search books..."
-              className="w-full sm:w-52 border p-2 border-gray-300 rounded-md"
+              placeholder={`Search ${selectedTab === "physical" ? "physical" : "digital"} books...`}
+              className="w-full sm:w-52 border p-2 border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-black outline-none transition-all"
               value={searchedKeyword}
               onChange={handleSearch}
             />
@@ -205,68 +255,89 @@ const BookManagement = () => {
                 <table className="min-w-full border-collapse">
                   <thead>
                     <tr className="bg-gray-200">
-                      <th className="px-4 py-2 text-left">#</th>
-                      <th className="px-4 py-2 text-left">Cover</th>
-                      <th className="px-4 py-2 text-left">Title</th>
-                      <th className="px-4 py-2 text-left">Author</th>
-                      <th className="px-4 py-2 text-left">Price</th>
-                      <th className="px-4 py-2 text-left">Status</th>
-                      <th className="px-4 py-2 text-center">Actions</th>
+                      <th className="px-4 py-2 text-left text-xs uppercase text-gray-500">#</th>
+                      <th className="px-4 py-2 text-left text-xs uppercase text-gray-500">Cover</th>
+                      <th className="px-4 py-2 text-left text-xs uppercase text-gray-500">Title</th>
+                      <th className="px-4 py-2 text-left text-xs uppercase text-gray-500">Author</th>
+                      {selectedTab === "digital" && (
+                        <>
+                          <th className="px-4 py-2 text-left text-xs uppercase text-gray-500">Gutenberg ID</th>
+                        </>
+                      )}
+                      <th className="px-4 py-2 text-left text-xs uppercase text-gray-500">Price</th>
+                      <th className="px-4 py-2 text-center text-xs uppercase text-gray-500">Status</th>
+                      <th className="px-4 py-2 text-center text-xs uppercase text-gray-500">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {searchedBooks.map((book, index) => (
-                      <tr key={book._id} className={(index + 1) % 2 === 0 ? "bg-gray-50" : ""}>
-                        <td className="px-4 py-2">{index + 1}</td>
+                      <tr key={book._id} className={(index + 1) % 2 === 0 ? "bg-gray-50 hover:bg-gray-100 transition-colors" : "hover:bg-gray-100 transition-colors"}>
+                        <td className="px-4 py-2 text-sm text-gray-500">{index + 1}</td>
                         <td className="px-4 py-2">
                           <img
-                            src={book.coverImageUrl || "https://via.placeholder.com/40x50?text=N/A"}
+                            src={(selectedTab === "physical" ? book.coverImageUrl : book.coverImage) || "https://via.placeholder.com/40x50?text=N/A"}
                             alt={book.title}
-                            className="h-12 w-9 object-cover rounded"
+                            className="h-12 w-9 object-cover rounded shadow-sm"
                           />
                         </td>
-                        <td className="px-4 py-2 font-semibold">{book.title}</td>
-                        <td className="px-4 py-2 text-gray-600">{book.author}</td>
-                        <td className="px-4 py-2">${book.price}</td>
                         <td className="px-4 py-2">
+                          <div className="font-semibold text-gray-900 line-clamp-1 max-w-[200px]" title={book.title}>
+                            {book.title}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 text-sm text-gray-600">{book.author}</td>
+                        {selectedTab === "digital" && (
+                          <>
+                            <td className="px-4 py-2 text-xs font-mono text-gray-500">#{book.gutenbergId || "N/A"}</td>
+                          </>
+                        )}
+                        <td className="px-4 py-2 font-medium text-gray-900">${book.price}</td>
+                        <td className="px-4 py-2 text-center">
                           <span
-                            className={`text-xs px-2 py-1 rounded-full font-medium ${book.availability
+                            className={`text-xs px-2 py-1 rounded-full font-medium ${selectedTab === "digital" || book.availability
                               ? "bg-green-100 text-green-700"
                               : "bg-red-100 text-red-700"
                               }`}
                           >
-                            {book.availability ? "Available" : "Unavailable"}
+                            {selectedTab === "digital" || book.availability ? "Available" : "Unavailable"}
                           </span>
                         </td>
                         <td className="px-4 py-2">
                           <div className="flex items-center justify-center gap-3">
-                            {book.pdfUrl && (
+                            {selectedTab === "physical" && book.pdfUrl && (
                               <button
                                 onClick={() => navigate(`/read-book/${book._id}`)}
                                 title="Read PDF"
-                                className="text-blue-600 hover:text-blue-800"
+                                className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
                               >
                                 <ExternalLink size={17} />
                               </button>
                             )}
-                            <BookA
-                              size={17}
+                            {selectedTab === "digital" && book.htmlLink && (
+                              <a
+                                href={book.htmlLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Open Source"
+                                className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                              >
+                                <ExternalLink size={17} />
+                              </a>
+                            )}
+                            <button
                               onClick={() => openReadPopup(book._id)}
-                              className="hover:cursor-pointer text-indigo-600 hover:text-indigo-800"
+                              className="p-1.5 hover:bg-indigo-50 text-indigo-600 rounded-lg transition-colors"
                               title="Book details"
-                            />
-                            <NotebookPen
-                              size={17}
-                              onClick={() => openRecordBookPopup(book._id)}
-                              className="hover:cursor-pointer text-green-600 hover:text-green-800"
-                              title="Record borrow"
-                            />
-                            <Trash2
-                              size={17}
-                              onClick={() => handleDeleteBook(book._id)}
-                              className="hover:cursor-pointer text-red-600 hover:text-red-800"
-                              title="Delete book"
-                            />
+                            >
+                              <BookA size={17} />
+                            </button>
+                            <button
+                              onClick={() => selectedTab === "physical" ? handleDeleteBook(book._id) : handleDeleteDigitalBook(book._id)}
+                              className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                              title={`Delete ${selectedTab} book`}
+                            >
+                              <Trash2 size={17} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -275,7 +346,9 @@ const BookManagement = () => {
                 </table>
               </div>
             ) : (
-              <h3 className="text-3xl mt-5 font-medium">No books found in the library!</h3>
+              <div className="flex flex-col items-center justify-center h-64 bg-white rounded-md shadow-inner mt-2 border-2 border-dashed border-gray-100">
+                <p className="text-xl font-medium text-gray-400">No {selectedTab} books found in the library!</p>
+              </div>
             )}
           </>
         )}
@@ -356,13 +429,14 @@ const BookManagement = () => {
                               })()}
                             </button>
                           )}
-                          <button
+                          <Button
                             onClick={() => handleBorrowBook(book._id)}
+                            loading={loading}
                             disabled={!book.availability || alreadyBorrowed}
                             className="py-2 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {alreadyBorrowed ? "Already Borrowed" : "Borrow"}
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </div>

@@ -23,6 +23,7 @@ import { motion } from "framer-motion";
 import { fadeIn, staggerContainer, cardHover, pageTransition } from "../utils/animations";
 import { Link, useNavigate } from "react-router-dom";
 import { BookA, BookOpen, Search, Library } from "lucide-react";
+import Button from "./ui/Button";
 import { useDispatch } from "react-redux";
 import { fetchAllDigitalBooks, borrowDigitalBook } from "../store/slices/digitalSlice";
 import { fetchAllBooks } from "../store/slices/bookSlice";
@@ -262,12 +263,12 @@ const UserDashboard = () => {
                 <div className="p-4 flex-1 flex flex-col">
                   <h4 className="font-bold text-gray-800 line-clamp-1 mb-1">{book.title}</h4>
                   <p className="text-xs text-gray-500 mb-3 truncate">{book.author}</p>
-                  <button
+                  <Button
                     onClick={() => navigate("/digital-library")}
                     className="mt-auto w-full bg-black text-white text-xs py-2 rounded-lg hover:bg-gray-800 transition-colors"
                   >
                     Details
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             ))
@@ -315,13 +316,13 @@ const UserDashboard = () => {
                     </span>
                   </div>
                   {book.pdfUrl && (
-                    <button
+                    <Button
                       onClick={() => navigate(`/read-book/${book._id}`)}
                       className="mt-auto w-full flex items-center justify-center gap-1 bg-black text-white text-xs py-2 rounded-lg hover:bg-gray-800 transition-colors mt-3"
                     >
                       <BookOpen size={13} />
                       Read Book
-                    </button>
+                    </Button>
                   )}
                 </div>
               </motion.div>

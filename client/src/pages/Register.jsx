@@ -3,12 +3,17 @@ import logo from "../assets/black-logo.png";
 import logo_with_title from "../assets/logo-with-title.png";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate, Link } from "react-router-dom";
-import { register, resetAuthSlice } from "../store/slices/authSlice";
+import { register, googleLogin, resetAuthSlice } from "../store/slices/authSlice";
+import { auth, googleProvider } from "../firebase";
+import { signInWithPopup } from "firebase/auth";
 import { toast } from "react-toastify";
+import { Eye, EyeOff } from "lucide-react";
+import Button from "../components/ui/Button";
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -33,6 +38,20 @@ const Register = () => {
     }
 
     dispatch(register({ name, email, password }));
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      dispatch(googleLogin({
+        name: user.displayName,
+        email: user.email,
+        uid: user.uid
+      }));
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
 
@@ -105,24 +124,46 @@ const Register = () => {
                 required
               />
             </div>
-            <div className="mb-2">
+            <div className="mb-2 relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                className="w-full px-4 py-3 border border-black rounded-md focus:outline-none pr-12"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={loading}
+              loading={loading}
               className="border-2 mt-5 border-black w-full font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
             >
-              {loading ? "PROCESSING..." : "SIGN UP"}
-            </button>
+              SIGN UP
+            </Button>
+
+            <div className="flex items-center my-4">
+              <hr className="flex-grow border-gray-300" />
+              <span className="px-3 text-gray-500 text-sm">OR</span>
+              <hr className="flex-grow border-gray-300" />
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="border-2 border-gray-300 w-full font-bold bg-white text-black py-2 rounded-lg hover:border-black transition"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="google" className="h-5 w-5" />
+              CONTINUE WITH GOOGLE
+            </Button>
           </form>
 
 

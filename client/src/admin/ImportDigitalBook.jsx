@@ -4,6 +4,7 @@ import { searchGutenbergBooks, importGutenbergBook, resetDigitalSlice } from "..
 import { toast } from "react-toastify";
 import Header from "../layout/Header";
 import { Search, Loader2, Import } from "lucide-react";
+import Button from "../components/ui/Button";
 
 const ImportDigitalBook = () => {
     const [title, setTitle] = useState("");
@@ -170,13 +171,14 @@ const ImportDigitalBook = () => {
                                     <p className="text-sm text-gray-600 mb-2 truncate">{book.author}</p>
                                     <p className="text-xs text-gray-400 mb-4 line-clamp-2">{book.description}</p>
                                     <div className="mt-auto">
-                                        <button
+                                        <Button
                                             onClick={() => handleImport(book)}
+                                            loading={loading}
                                             className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors font-bold"
                                         >
                                             <Import size={18} />
                                             Import to Library
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             </div>

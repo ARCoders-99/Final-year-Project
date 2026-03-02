@@ -4,10 +4,13 @@ import logo_with_title from "../assets/logo-with-title.png";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { Eye, EyeOff } from "lucide-react";
 import { login, resetMessageErrorAction } from "../store/slices/authSlice";
+import Button from "../components/ui/Button";
 const AdminLogin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
 
     const navigateTo = useNavigate();
@@ -82,18 +85,25 @@ const AdminLogin = () => {
                                     required
                                 />
                             </div>
-                            <div className="mb-6">
+                            <div className="mb-6 relative">
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Password"
-                                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none pr-12"
                                     required
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-600 transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
                             </div>
 
-                            <div className="flex items-center mb-8">
+                            <div className="flex justify-between items-center mb-8">
                                 <div className="flex items-center gap-2">
                                     <input
                                         type="checkbox"
@@ -104,15 +114,16 @@ const AdminLogin = () => {
                                     />
                                     <label htmlFor="adminRememberMe" className="text-sm font-bold cursor-pointer">Remember Me</label>
                                 </div>
+                                <Link to={"/admin/password/forgot"} className="text-sm font-bold hover:underline text-red-600">Forgot Password?</Link>
                             </div>
 
-                            <button
+                            <Button
                                 type="submit"
-                                disabled={loading}
+                                loading={loading}
                                 className="border-2 border-red-600 w-full font-bold bg-red-600 text-white py-2 rounded-lg hover:bg-white hover:text-red-600 transition"
                             >
-                                {loading ? "AUTHENTICATING..." : "ADMIN LOGIN"}
-                            </button>
+                                ADMIN LOGIN
+                            </Button>
                         </form>
                     </div>
                 </div>

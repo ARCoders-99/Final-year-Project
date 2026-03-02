@@ -95,6 +95,7 @@ const Catalog = () => {
                     {activeTab === "physical" ? "Due Date" : "Expiry Date"}
                   </th>
                   <th className="px-4 py-2 text-left">Borrow Date</th>
+                  <th className="px-4 py-2 text-left">Status</th>
                 </tr>
               </thead>
 
@@ -111,6 +112,11 @@ const Catalog = () => {
                       <td className="px-4 py-2">{record?.user?.email}</td>
                       <td className="px-4 py-2">{formatDate(record.dueDate)}</td>
                       <td className="px-4 py-2">{formatDateTime(record.createdAt)}</td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${record.returnDate ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                          {record.returnDate ? "Returned" : "Borrowed"}
+                        </span>
+                      </td>
                     </tr>
                   ))
                 ) : (
@@ -125,6 +131,11 @@ const Catalog = () => {
                       <td className="px-4 py-2">{record?.user?.email}</td>
                       <td className="px-4 py-2">{formatDate(record.expiryDate)}</td>
                       <td className="px-4 py-2">{formatDateTime(record.createdAt)}</td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${record.returned ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                          {record.returned ? "Returned" : "Borrowed"}
+                        </span>
+                      </td>
                     </tr>
                   ))
                 )}

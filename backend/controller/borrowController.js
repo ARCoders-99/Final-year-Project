@@ -144,6 +144,18 @@ export const returnBorrowBook = async (req, res, next) => {
   borrowedBook.returnDate = new Date();
   borrowedBook.fine = calculateFine(borrowedBook.dueDate);
 
+  // Update original Borrow record
+  const borrowRecord = await Borrow.findOne({
+    "user.id": user._id,
+    book: borrowedBook.bookId,
+    returnDate: null
+  });
+  if (borrowRecord) {
+    borrowRecord.returnDate = borrowedBook.returnDate;
+    borrowRecord.fine = borrowedBook.fine;
+    await borrowRecord.save();
+  }
+
   // Update book availability
   const book = await Book.findById(borrowedBook.bookId);
   if (book) book.availability = true;

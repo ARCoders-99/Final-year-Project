@@ -4,13 +4,16 @@ import logo_with_title from "../assets/logo-with-title.png";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { Eye, EyeOff } from "lucide-react";
 import { login, googleLogin, resetMessageErrorAction } from "../store/slices/authSlice";
 import { auth, googleProvider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
+import Button from "../components/ui/Button";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
   const navigateTo = useNavigate();
@@ -103,15 +106,22 @@ const Login = () => {
                   required
                 />
               </div>
-              <div className="mb-4">
+              <div className="mb-4 relative">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
-                  className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                  className="w-full px-4 py-3 border border-black rounded-md focus:outline-none pr-12"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
 
               <div className="flex justify-between items-center mb-8">
@@ -128,13 +138,13 @@ const Login = () => {
                 <Link to={"/password/forgot"} className="font-bold text-sm hover:underline">Forgot Password?</Link>
               </div>
 
-              <button
+              <Button
                 type="submit"
-                disabled={loading}
+                loading={loading}
                 className="border-2 border-black w-full font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
               >
-                {loading ? "AUTHENTICATING..." : "SIGN IN"}
-              </button>
+                SIGN IN
+              </Button>
 
               <div className="flex items-center my-4">
                 <hr className="flex-grow border-gray-300" />
@@ -142,14 +152,14 @@ const Login = () => {
                 <hr className="flex-grow border-gray-300" />
               </div>
 
-              <button
+              <Button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="flex items-center justify-center gap-2 border-2 border-gray-300 w-full font-bold bg-white text-black py-2 rounded-lg hover:border-black transition"
+                className="border-2 border-gray-300 w-full font-bold bg-white text-black py-2 rounded-lg hover:border-black transition"
               >
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="google" className="h-5 w-5" />
                 CONTINUE WITH GOOGLE
-              </button>
+              </Button>
             </form>
 
 

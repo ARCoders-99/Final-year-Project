@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchMyDigitalBorrows } from "../store/slices/digitalSlice";
+import { fetchMyDigitalBorrows, fetchAllDigitalBooks } from "../store/slices/digitalSlice";
 import { ArrowLeft, Clock, Loader2 } from "lucide-react";
 import Header from "../layout/Header";
 
@@ -9,20 +9,35 @@ const ReaderPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { myDigitalBorrows, loading } = useSelector((state) => state.digital);
+    const { myDigitalBorrows, digitalBooks, loading } = useSelector((state) => state.digital);
+    const { user } = useSelector((state) => state.auth);
     const [borrowRecord, setBorrowRecord] = useState(null);
     const [timeLeft, setTimeLeft] = useState("");
 
     useEffect(() => {
         dispatch(fetchMyDigitalBorrows());
-    }, [dispatch]);
+        if (user?.role === "Admin") {
+            dispatch(fetchAllDigitalBooks());
+        }
+    }, [dispatch, user]);
 
     useEffect(() => {
-        const record = myDigitalBorrows.find(
+        let record = myDigitalBorrows.find(
             (b) => b.book._id === id && !b.returned && new Date(b.expiryDate) > new Date()
         );
+
+        if (!record && user?.role === "Admin") {
+            const book = digitalBooks.find(b => b._id === id);
+            if (book) {
+                record = {
+                    book,
+                    expiryDate: new Date(Date.now() + 86400000), // Dummy 24h for admin
+                    isAdminPreview: true
+                };
+            }
+        }
         setBorrowRecord(record);
-    }, [myDigitalBorrows, id]);
+    }, [myDigitalBorrows, digitalBooks, id, user]);
 
     useEffect(() => {
         if (!borrowRecord) return;
@@ -30,6 +45,11 @@ const ReaderPage = () => {
         const expiry = new Date(borrowRecord.expiryDate).getTime();
 
         const tick = () => {
+            if (borrowRecord.isAdminPreview) {
+                setTimeLeft("Unlimited (Admin Preview)");
+                return;
+            }
+
             const now = Date.now();
             const diff = expiry - now;
 
@@ -94,9 +114,9 @@ const ReaderPage = () => {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-2 rounded-full border border-amber-200">
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${borrowRecord.isAdminPreview ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                     <Clock size={18} />
-                    <span className="text-sm font-semibold">Expires: {timeLeft}</span>
+                    <span className="text-sm font-semibold">{borrowRecord.isAdminPreview ? timeLeft : `Expires: ${timeLeft}`}</span>
                 </div>
             </nav>
 
@@ -104,7 +124,7 @@ const ReaderPage = () => {
             <div className="flex-1 relative overflow-hidden">
                 {/* Iframe with basic context menu blocking */}
                 <iframe
-                    src={`http://localhost:4000/api/v1/digital/read/${id}`}
+                    src={`${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/read/${id}`}
                     className="w-full h-full border-none"
                     title="Book Reader"
                     onContextMenu={(e) => e.preventDefault()}

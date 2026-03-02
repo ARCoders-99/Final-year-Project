@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PaymentPopup from "../popups/PaymentPopup";
 import { AnimatePresence } from "framer-motion";
+import Button from "./ui/Button";
 
 const DigitalLibrary = () => {
     const dispatch = useDispatch();
@@ -42,19 +43,23 @@ const DigitalLibrary = () => {
         if (!book) return;
 
         if (book.price > 0) {
+            // Open popup instantly with book data, but no clientSecret yet
+            setPaymentData({
+                clientSecret: "",
+                bookId: book._id,
+                bookTitle: book.title,
+                price: book.price
+            });
+            setIsPaymentPopupOpen(true);
+
             try {
                 const clientSecret = await dispatch(createPaymentIntent(id));
                 if (clientSecret) {
-                    setPaymentData({
-                        clientSecret,
-                        bookId: book._id,
-                        bookTitle: book.title,
-                        price: book.price
-                    });
-                    setIsPaymentPopupOpen(true);
+                    setPaymentData(prev => ({ ...prev, clientSecret }));
                 }
             } catch (err) {
                 toast.error(err || "Failed to initiate payment");
+                setIsPaymentPopupOpen(false); // Close if fetching fails
             }
             return;
         }
@@ -118,9 +123,6 @@ const DigitalLibrary = () => {
                                             alt={book.title}
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                         />
-                                        <div className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm">
-                                            {book.language}
-                                        </div>
                                         {user?.role === "Admin" && (
                                             <button
                                                 onClick={() => handleDelete(book._id)}
@@ -159,16 +161,17 @@ const DigitalLibrary = () => {
                                         </div>
 
                                         <div className="mt-auto flex gap-2">
-                                            <button
+                                            <Button
                                                 onClick={() => handleBorrow(book._id)}
-                                                disabled={loading || borrowed}
+                                                loading={loading}
+                                                disabled={borrowed}
                                                 className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors text-sm font-bold ${borrowed
                                                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                                     : "bg-black text-white hover:bg-gray-800"
                                                     }`}
                                             >
                                                 {borrowed ? "Borrowed" : "Borrow"}
-                                            </button>
+                                            </Button>
 
                                             {borrowed && (
                                                 <button

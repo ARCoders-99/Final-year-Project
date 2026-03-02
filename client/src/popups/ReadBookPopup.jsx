@@ -62,7 +62,7 @@ const ReadBookPopup = ({ book }) => {
               </div>
               <div>
                 <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Format</p>
-                <p className="font-bold text-gray-800">PDF Document</p>
+                <p className="font-bold text-gray-800">{book.gutenbergId ? "Digital (Web/HTML)" : "Physical (PDF/Print)"}</p>
               </div>
             </div>
 
@@ -86,6 +86,15 @@ const ReadBookPopup = ({ book }) => {
               </div>
             </div>
           </div>
+
+          {book.description && (
+            <div className="mt-8 border-t pt-6">
+              <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-2">Description</p>
+              <div className="text-sm text-gray-600 leading-relaxed max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                {book.description}
+              </div>
+            </div>
+          )}
 
           <div className="mt-8 flex justify-end">
             <button

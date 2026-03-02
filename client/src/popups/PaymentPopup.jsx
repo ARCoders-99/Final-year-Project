@@ -128,7 +128,7 @@ const PaymentPopup = ({ isOpen, onClose, clientSecret, bookId, bookTitle, price,
                         <X size={24} />
                     </button>
 
-                    <h2 className="text-2xl font-bold mb-2">Complete Borrow</h2>
+                    <h2 className="text-2xl font-bold mb-2">Secure Payment</h2>
                     <p className="text-gray-400 text-sm font-medium">
                         Please enter your card details to borrow <span className="text-white font-bold">"{bookTitle}"</span>.
                     </p>
@@ -140,15 +140,22 @@ const PaymentPopup = ({ isOpen, onClose, clientSecret, bookId, bookTitle, price,
                 </div>
 
                 <div className="p-8">
-                    <Elements stripe={stripePromise}>
-                        <CheckoutForm
-                            clientSecret={clientSecret}
-                            bookId={bookId}
-                            onClose={onClose}
-                            onSuccess={onSuccess}
-                            recordPaidBorrowThunk={recordPaidBorrowThunk}
-                        />
-                    </Elements>
+                    {clientSecret ? (
+                        <Elements stripe={stripePromise}>
+                            <CheckoutForm
+                                clientSecret={clientSecret}
+                                bookId={bookId}
+                                onClose={onClose}
+                                onSuccess={onSuccess}
+                                recordPaidBorrowThunk={recordPaidBorrowThunk}
+                            />
+                        </Elements>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-12 gap-4">
+                            <Loader2 className="animate-spin text-black" size={40} />
+                            <p className="text-gray-500 font-medium animate-pulse">Initializing secure checkout...</p>
+                        </div>
+                    )}
                 </div>
             </motion.div>
         </div>

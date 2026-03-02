@@ -2,13 +2,17 @@ import { useState, useEffect } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { Eye, EyeOff } from "lucide-react";
 import logo from "../assets/black-logo.png";
 import logo_with_title from "../assets/logo-with-title.png";
+import Button from "../components/ui/Button";
 import { resetPassword, resetAuthSlice } from "../store/slices/authSlice";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { token } = useParams();
   const dispatch = useDispatch();
@@ -21,13 +25,15 @@ const ResetPassword = () => {
   const handleResetPassword = (e) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append("password", password);
-    formData.append("confirmPassword", confirmPassword);
-    dispatch(resetPassword(formData, token));
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+
+    dispatch(resetPassword({ password, confirmPassword }, token));
   };
   useEffect(() => {
-    if (message) {
+    if (message === "Password Reset Successfully") {
       toast.success(message);
       dispatch(resetAuthSlice());
       navigateTo("/login");
@@ -37,8 +43,7 @@ const ResetPassword = () => {
       toast.error(error);
       dispatch(resetAuthSlice());
     }
-  }, [dispatch, message, error, loading]);
-
+  }, [dispatch, message, error, navigateTo]);
 
   return (
     <>
@@ -84,33 +89,47 @@ const ResetPassword = () => {
                 Please Enter Your New Password
               </p>
               <form onSubmit={handleResetPassword}>
-                <div className="mb-4">
+                <div className="mb-4 relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter New Password"
-                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none pr-12"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
                 </div>
-                <div className="mb-4">
+                <div className="mb-4 relative">
                   <input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm New Password"
-                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none"
+                    className="w-full px-4 py-3 border border-black rounded-md focus:outline-none pr-12"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
                 </div>
-                <button
+                <Button
                   type="submit"
+                  loading={loading}
                   className="border-2 mt-5 border-black w-full font-bold bg-black text-white py-2 rounded-lg hover:bg-white hover:text-black transition"
-                  disabled={loading ? true : false}
                 >
                   Reset Password
-                </button>
+                </Button>
               </form>
             </div>
           </div>

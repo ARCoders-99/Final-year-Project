@@ -2,13 +2,17 @@ import { useState, useEffect } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { Eye, EyeOff } from "lucide-react";
 import logo from "../assets/black-logo.png";
 import logo_with_title from "../assets/logo-with-title.png";
+import Button from "../components/ui/Button";
 import { resetPassword, resetAuthSlice } from "../store/slices/authSlice";
 
 const AdminResetPassword = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const { token } = useParams();
     const dispatch = useDispatch();
@@ -27,7 +31,7 @@ const AdminResetPassword = () => {
         dispatch(resetPassword(formData, token));
     };
     useEffect(() => {
-        if (message) {
+        if (message === "Password Reset Successfully") {
             toast.success(message);
             dispatch(resetAuthSlice());
             navigateTo("/admin-login");
@@ -84,33 +88,47 @@ const AdminResetPassword = () => {
                                 Please Enter Your New Admin Password
                             </p>
                             <form onSubmit={handleResetPassword}>
-                                <div className="mb-4">
+                                <div className="mb-4 relative">
                                     <input
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Enter New Password"
-                                        className="w-full px-4 py-3 border border-black rounded-md focus:outline-none focus:border-red-600"
+                                        className="w-full px-4 py-3 border border-black rounded-md focus:outline-none focus:border-red-600 pr-12"
                                         required
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-600 transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
                                 </div>
-                                <div className="mb-4">
+                                <div className="mb-4 relative">
                                     <input
-                                        type="password"
+                                        type={showConfirmPassword ? "text" : "password"}
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                         placeholder="Confirm New Password"
-                                        className="w-full px-4 py-3 border border-black rounded-md focus:outline-none focus:border-red-600"
+                                        className="w-full px-4 py-3 border border-black rounded-md focus:outline-none focus:border-red-600 pr-12"
                                         required
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-600 transition-colors"
+                                    >
+                                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
                                 </div>
-                                <button
+                                <Button
                                     type="submit"
+                                    loading={loading}
                                     className="border-2 mt-5 border-red-600 w-full font-bold bg-red-600 text-white py-2 rounded-lg hover:bg-white hover:text-red-600 transition"
-                                    disabled={loading ? true : false}
                                 >
                                     Reset Password
-                                </button>
+                                </Button>
                             </form>
                         </div>
                     </div>

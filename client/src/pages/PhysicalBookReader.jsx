@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -19,6 +20,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.vers
 const PhysicalBookReader = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useSelector((state) => state.auth);
 
     const [book, setBook] = useState(null);
     const [fetchError, setFetchError] = useState("");
@@ -38,6 +40,11 @@ const PhysicalBookReader = () => {
                     `${import.meta.env.VITE_BACKEND_URL}/api/v1/book/${id}`,
                     { withCredentials: true }
                 );
+
+                if (user?.role === "Admin") {
+                    setBook(data.book);
+                    return;
+                }
 
                 // Find the borrow record for this book in user's borrowed books
                 const userResponse = await axios.get(

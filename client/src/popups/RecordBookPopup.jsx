@@ -4,6 +4,7 @@ import { recordBorrowBook, fetchUserBorrowedBooks } from "../store/slices/borrow
 import { toggleRecordBookPopup } from "../store/slices/popUpSlice";
 import { fetchAllBooks } from "../store/slices/bookSlice";
 import { Loader2, X, User, Mail } from "lucide-react";
+import Button from "../components/ui/Button";
 import { motion } from "framer-motion";
 import { popupVariants, backdropVariants } from "../utils/animations";
 
@@ -72,19 +73,13 @@ const RecordBookPopup = ({ bookId }) => {
               />
             </div>
 
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full bg-black text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-800 disabled:opacity-60 transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+              loading={loading}
+              className="w-full bg-black text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
             >
-              {loading ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" /> Recording...
-                </>
-              ) : (
-                "Record Borrow"
-              )}
-            </button>
+              Record Borrow
+            </Button>
           </form>
         </div>
       </motion.div>

@@ -4,6 +4,7 @@ import logo_with_title from "../assets/logo-with-title.png";
 import { useDispatch, useSelector } from "react-redux";
 import { forgotPassword, resetAuthSlice } from "../store/slices/authSlice";
 import { toast } from "react-toastify";
+import Button from "../components/ui/Button";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 
 const AdminForgotPassword = () => {
@@ -89,13 +90,13 @@ const AdminForgotPassword = () => {
                                         required
                                     />
                                 </div>
-                                <button
+                                <Button
                                     type="submit"
+                                    loading={loading}
                                     className="border-2 mt-5 border-red-600 w-full font-bold bg-red-600 text-white py-2 rounded-lg hover:bg-white hover:text-red-600 transition"
-                                    disabled={loading ? true : false}
                                 >
-                                    Reset Password
-                                </button>
+                                    Send OTP
+                                </Button>
                             </form>
                         </div>
                     </div>

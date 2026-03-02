@@ -26,6 +26,9 @@ import ImportDigitalBook from "./admin/ImportDigitalBook";
 import ReaderPage from "./pages/ReaderPage";
 import PhysicalBookReader from "./pages/PhysicalBookReader";
 import Payments from "./admin/Payments";
+import AdminForgotPassword from "./admin/AdminForgotPassword";
+import AdminForgotPasswordOTP from "./admin/AdminForgotPasswordOTP";
+import AdminResetPassword from "./admin/AdminResetPassword";
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, initLoading, user } = useSelector((state) => state.auth);
@@ -93,6 +96,9 @@ const App = () => {
         <Route path="/admin/catalog" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/import-digital" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/password/forgot/otp/:email" element={<ForgotPasswordOTP />} />
+        <Route path="/admin/password/forgot" element={<AdminForgotPassword />} />
+        <Route path="/admin/password/forgot/otp/:email" element={<AdminForgotPasswordOTP />} />
+        <Route path="/admin/password/reset/:token" element={<AdminResetPassword />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
