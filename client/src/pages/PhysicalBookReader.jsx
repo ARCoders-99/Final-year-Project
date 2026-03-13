@@ -5,6 +5,9 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { AnimatePresence } from "framer-motion";
+import AIAssistantMenu from "../components/AIAssistantMenu";
 import {
     ChevronLeft,
     ChevronRight,
@@ -12,7 +15,11 @@ import {
     ZoomOut,
     ArrowLeft,
     Loader2,
+    Volume2,
+    X,
+    Sparkles,
 } from "lucide-react";
+import StoryAnalyzer from "../components/StoryAnalyzer";
 
 // Use the bundled worker via CDN to avoid build-config changes
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -31,6 +38,170 @@ const PhysicalBookReader = () => {
     const [pdfLoading, setPdfLoading] = useState(true);
     const [accessExpired, setAccessExpired] = useState(false);
     const [expiryDate, setExpiryDate] = useState(null);
+    const [selection, setSelection] = useState(null);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
+    const [pdfInstance, setPdfInstance] = useState(null);
+    const [isAnalyzerOpen, setIsAnalyzerOpen] = useState(false);
+    const [analysisText, setAnalysisText] = useState("");
+
+    const handleAnalyzeStory = async () => {
+        if (!pdfInstance) return;
+
+        try {
+            const page = await pdfInstance.getPage(pageNumber);
+            const textContent = await page.getTextContent();
+            const fullText = textContent.items.map(item => item.str).join(" ");
+
+            if (fullText.trim()) {
+                setAnalysisText(fullText);
+                setIsAnalyzerOpen(true);
+            } else {
+                toast.info("No text found on this page to analyze.");
+            }
+        } catch (error) {
+            console.error("Analysis extraction error:", error);
+            toast.error("Failed to extract text for analysis.");
+        }
+    };
+
+    const handleReadAloudPage = async () => {
+        if (isSpeaking) {
+            if (isPaused) {
+                window.speechSynthesis.resume();
+                setIsPaused(false);
+            } else {
+                window.speechSynthesis.pause();
+                setIsPaused(true);
+            }
+            return;
+        }
+
+        if (!pdfInstance) return;
+
+        try {
+            setIsSpeaking(true);
+            setIsPaused(false);
+            const page = await pdfInstance.getPage(pageNumber);
+            const textContent = await page.getTextContent();
+
+            // Map text items to their spans in the DOM
+            const items = textContent.items;
+            const fullText = items.map(item => item.str).join(" ");
+
+            if (fullText.trim()) {
+                const utterance = new SpeechSynthesisUtterance(fullText);
+
+                utterance.onboundary = (event) => {
+                    if (event.name === 'word') {
+                        triggerHighlight(event.charIndex, items);
+                    }
+                };
+
+                utterance.onend = () => {
+                    setIsSpeaking(false);
+                    setIsPaused(false);
+                    document.querySelectorAll('.pdf-highlight').forEach(el => {
+                        el.style.backgroundColor = 'transparent';
+                        el.classList.remove('pdf-highlight');
+                    });
+                };
+                utterance.onerror = () => {
+                    setIsSpeaking(false);
+                    setIsPaused(false);
+                };
+                window.speechSynthesis.speak(utterance);
+            } else {
+                toast.info("No text found on this page to read.");
+                setIsSpeaking(false);
+                setIsPaused(false);
+            }
+        } catch (error) {
+            console.error("Speech error:", error);
+            setIsSpeaking(false);
+            setIsPaused(false);
+        }
+    };
+
+    const triggerHighlight = (charIndex, items) => {
+        // Find which item this charIndex belongs to
+        let currentLen = 0;
+        let itemIndex = -1;
+        for (let i = 0; i < items.length; i++) {
+            const nextLen = currentLen + items[i].str.length + 1; // +1 for the join space
+            if (charIndex >= currentLen && charIndex < nextLen) {
+                itemIndex = i;
+                break;
+            }
+            currentLen = nextLen;
+        }
+
+        if (itemIndex !== -1) {
+            const textLayer = document.querySelector('.react-pdf__Page__textContent');
+            if (textLayer) {
+                const spans = textLayer.querySelectorAll('span');
+                const targetText = items[itemIndex].str.trim();
+                if (targetText) {
+                    document.querySelectorAll('.pdf-highlight').forEach(el => {
+                        el.style.backgroundColor = 'transparent';
+                        el.classList.remove('pdf-highlight');
+                    });
+
+                    for (let span of spans) {
+                        if (span.textContent.includes(targetText)) {
+                            span.style.backgroundColor = '#fef08a';
+                            span.style.color = '#000';
+                            span.classList.add('pdf-highlight');
+                            span.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    const stopReading = (e) => {
+        if (e) e.stopPropagation();
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+        setIsPaused(false);
+        document.querySelectorAll('.pdf-highlight').forEach(el => {
+            el.style.backgroundColor = 'transparent';
+            el.classList.remove('pdf-highlight');
+        });
+    };
+
+    useEffect(() => {
+        const handleListenHighlight = async (event) => {
+            const { charIndex, text } = event.detail;
+            if (charIndex === -1) {
+                document.querySelectorAll('.pdf-highlight').forEach(el => {
+                    el.style.backgroundColor = 'transparent';
+                    el.classList.remove('pdf-highlight');
+                });
+                return;
+            }
+
+            if (!pdfInstance) return;
+            const page = await pdfInstance.getPage(pageNumber);
+            const textContent = await page.getTextContent();
+            const items = textContent.items;
+
+            // The text read from AIAssistantMenu is just a snippet.
+            // We need to find where that snippet starts in the full page text.
+            const pageFullText = items.map(item => item.str).join(" ");
+            const snippetStartInPage = pageFullText.indexOf(text);
+
+            if (snippetStartInPage !== -1) {
+                // Adjust charIndex to be relative to the whole page
+                triggerHighlight(snippetStartInPage + charIndex, items);
+            }
+        };
+
+        document.addEventListener('AI_LISTEN_HIGHLIGHT', handleListenHighlight);
+        return () => document.removeEventListener('AI_LISTEN_HIGHLIGHT', handleListenHighlight);
+    }, [pdfInstance, pageNumber]);
 
     // Fetch book metadata from backend (keeps PDF URL server-side)
     useEffect(() => {
@@ -87,15 +258,27 @@ const PhysicalBookReader = () => {
     useEffect(() => {
         if (!expiryDate) return;
         const msLeft = expiryDate.getTime() - Date.now();
-        if (msLeft <= 0) { setAccessExpired(true); return; }
-        const timer = setTimeout(() => setAccessExpired(true), msLeft);
+        if (msLeft <= 0) {
+            setAccessExpired(true);
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+            setSelection(null);
+            return;
+        }
+        const timer = setTimeout(() => {
+            setAccessExpired(true);
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+            setSelection(null);
+        }, msLeft);
         return () => clearTimeout(timer);
     }, [expiryDate]);
 
-    const onDocumentLoadSuccess = useCallback(({ numPages }) => {
-        setNumPages(numPages);
+    const onDocumentLoadSuccess = useCallback((pdf) => {
+        setNumPages(pdf.numPages);
         setPageNumber(1);
         setPdfLoading(false);
+        setPdfInstance(pdf);
     }, []);
 
     const onDocumentLoadError = useCallback((err) => {
@@ -110,6 +293,24 @@ const PhysicalBookReader = () => {
         setPageNumber((prev) => Math.min(prev + 1, numPages));
     const zoomIn = () => setScale((s) => Math.min(s + 0.2, 2.5));
     const zoomOut = () => setScale((s) => Math.max(s - 0.2, 0.5));
+
+    const handleMouseUp = () => {
+        const sel = window.getSelection();
+        const text = sel.toString().trim();
+        if (text) {
+            const range = sel.getRangeAt(0);
+            const rect = range.getBoundingClientRect();
+            setSelection({
+                text,
+                rect: {
+                    top: rect.top,
+                    left: rect.left,
+                    width: rect.width,
+                    height: rect.height,
+                }
+            });
+        }
+    };
 
     // Real-time access expired overlay
     if (accessExpired) {
@@ -156,8 +357,8 @@ const PhysicalBookReader = () => {
 
     return (
         <div
-            className="min-h-screen bg-gray-900 flex flex-col select-none"
-            onContextMenu={(e) => e.preventDefault()}
+            className="min-h-screen bg-gray-900 flex flex-col"
+            onMouseUp={handleMouseUp}
         >
             {/* Top Bar */}
             <header className="sticky top-0 z-20 bg-gray-800 shadow-lg px-4 py-3 flex items-center justify-between gap-4">
@@ -177,26 +378,65 @@ const PhysicalBookReader = () => {
                 </div>
 
                 {/* Controls */}
-                <div className="flex items-center gap-2 shrink-0">
-                    <button
-                        onClick={zoomOut}
-                        disabled={scale <= 0.5}
-                        title="Zoom out"
-                        className="p-1.5 rounded-md bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40 transition-colors"
-                    >
-                        <ZoomOut size={16} />
-                    </button>
-                    <span className="text-gray-300 text-xs w-12 text-center">
-                        {Math.round(scale * 100)}%
-                    </span>
-                    <button
-                        onClick={zoomIn}
-                        disabled={scale >= 2.5}
-                        title="Zoom in"
-                        className="p-1.5 rounded-md bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40 transition-colors"
-                    >
-                        <ZoomIn size={16} />
-                    </button>
+                <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-2">
+                        {pdfLoading ? (
+                            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-gray-600 text-gray-400 bg-gray-700/50">
+                                <Loader2 size={16} className="animate-spin" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider">Loading Reader...</span>
+                            </div>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={handleAnalyzeStory}
+                                    className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-purple-500 bg-purple-600 text-white hover:bg-purple-500 transition-all group"
+                                    title="Analyze Characters & Themes"
+                                >
+                                    <Sparkles size={16} className="group-hover:animate-pulse" />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Analyze</span>
+                                </button>
+                                <button
+                                    onClick={handleReadAloudPage}
+                                    className={`flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all ${isSpeaking ? 'bg-purple-600 text-white border-purple-500' : 'bg-purple-600 text-white border-purple-500 hover:bg-purple-500'}`}
+                                >
+                                    <Volume2 size={16} className={isSpeaking && !isPaused ? "animate-pulse" : ""} />
+                                    <span className="text-xs font-bold uppercase tracking-wider">
+                                        {isSpeaking ? (isPaused ? "Resume" : "Pause") : "Read Aloud"}
+                                    </span>
+                                </button>
+                                {isSpeaking && (
+                                    <button
+                                        onClick={stopReading}
+                                        className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                                        title="Stop Reading"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                )}
+                            </>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={zoomOut}
+                            disabled={scale <= 0.5}
+                            title="Zoom out"
+                            className="p-1.5 rounded-md bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40 transition-colors"
+                        >
+                            <ZoomOut size={16} />
+                        </button>
+                        <span className="text-gray-300 text-xs w-10 text-center">
+                            {Math.round(scale * 100)}%
+                        </span>
+                        <button
+                            onClick={zoomIn}
+                            disabled={scale >= 2.5}
+                            title="Zoom in"
+                            className="p-1.5 rounded-md bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40 transition-colors"
+                        >
+                            <ZoomIn size={16} />
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -215,9 +455,9 @@ const PhysicalBookReader = () => {
                 ) : (
                     <>
                         {pdfLoading && (
-                            <div className="flex flex-col items-center gap-3 mt-16">
-                                <Loader2 className="text-white animate-spin" size={40} />
-                                <p className="text-gray-400 text-sm">Loading book…</p>
+                            <div className="flex flex-col items-center justify-center min-h-[400px] w-full gap-3">
+                                <Loader2 className="text-gray-400 animate-spin" size={32} />
+                                <p className="text-gray-400 text-sm font-medium">Loading PDF...</p>
                             </div>
                         )}
 
@@ -231,8 +471,8 @@ const PhysicalBookReader = () => {
                             <Page
                                 pageNumber={pageNumber}
                                 scale={scale}
-                                renderTextLayer={false}
-                                renderAnnotationLayer={false}
+                                renderTextLayer={true}
+                                renderAnnotationLayer={true}
                                 className="shadow-2xl rounded-sm"
                             />
                         </Document>
@@ -264,6 +504,22 @@ const PhysicalBookReader = () => {
                     </button>
                 </footer>
             )}
+
+            <AnimatePresence>
+                {selection && (
+                    <AIAssistantMenu
+                        text={selection.text}
+                        position={selection.rect}
+                        onClear={() => setSelection(null)}
+                    />
+                )}
+            </AnimatePresence>
+
+            <StoryAnalyzer
+                isOpen={isAnalyzerOpen}
+                onClose={() => setIsAnalyzerOpen(false)}
+                textToAnalyze={analysisText}
+            />
         </div>
     );
 };

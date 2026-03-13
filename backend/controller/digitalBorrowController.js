@@ -153,10 +153,124 @@ export const getDigitalReaderContent = catchAsyncErrors(async (req, res, next) =
         if (!response.ok) {
             throw new Error(`Failed to fetch Gutenberg content: ${response.statusText}`);
         }
-        const html = await response.text();
+        let html = await response.text();
 
-        // Basic anti-download/direct link measure: inject a script to block right-click if needed
-        // or just return the HTML and let frontend handle basic UI restrictions.
+        // Inject selection helper script
+        const selectionScript = `
+            <script>
+                document.addEventListener('mouseup', () => {
+                    const selection = window.getSelection().toString().trim();
+                    if (selection) {
+                        const range = window.getSelection().getRangeAt(0);
+                        const rect = range.getBoundingClientRect();
+                        window.parent.postMessage({
+                            type: 'TEXT_SELECTION',
+                            text: selection,
+                            rect: {
+                                top: rect.top,
+                                left: rect.left,
+                                width: rect.width,
+                                height: rect.height
+                            }
+                        }, '*');
+                    } else {
+                        window.parent.postMessage({ type: 'CLEAR_SELECTION' }, '*');
+                    }
+                });
+
+                window.addEventListener('message', (event) => {
+                    if (event.data.type === 'GET_FULL_TEXT') {
+                        // Extract text from the whole body, stripping scripts and styles
+                        const body = document.body.cloneNode(true);
+                        const scripts = body.getElementsByTagName('script');
+                        while (scripts[0]) scripts[0].parentNode.removeChild(scripts[0]);
+                        const styles = body.getElementsByTagName('style');
+                        while (styles[0]) styles[0].parentNode.removeChild(styles[0]);
+                        
+                        window.parent.postMessage({
+                            type: 'FULL_TEXT_CONTENT',
+                            text: body.innerText || body.textContent
+                        }, '*');
+                    } else if (event.data.type === 'GET_TEXT_FOR_ANALYSIS') {
+                        // Extract a substantial chunk for analysis (up to 10000 chars)
+                        const body = document.body.cloneNode(true);
+                        const scripts = body.getElementsByTagName('script');
+                        while (scripts[0]) scripts[0].parentNode.removeChild(scripts[0]);
+                        const styles = body.getElementsByTagName('style');
+                        while (styles[0]) styles[0].parentNode.removeChild(styles[0]);
+                        
+                        const fullText = body.innerText || body.textContent;
+                        const snippet = fullText.slice(0, 10000); // Get first 10k chars for representative analysis
+                        
+                        window.parent.postMessage({
+                            type: 'TEXT_FOR_ANALYSIS_CONTENT',
+                            text: snippet
+                        }, '*');
+                    } else if (event.data.type === 'SET_HIGHLIGHT') {
+                        const { charIndex, length } = event.data;
+                        if (charIndex === -1) {
+                            const old = document.querySelector('.ai-highlight');
+                            if (old) old.outerHTML = old.innerHTML;
+                            return;
+                        }
+
+                        // Simple highlighting strategy: find node by offset
+                        // This is a complex task for cross-node text, but for simple books:
+                        const selection = window.getSelection();
+                        const range = document.createRange();
+                        let currentOffset = 0;
+                        let startNode, startOffset, endNode, endOffset;
+
+                        function traverse(node) {
+                            if (node.nodeType === 3) { // Text node
+                                const nextOffset = currentOffset + node.length;
+                                if (!startNode && charIndex >= currentOffset && charIndex < nextOffset) {
+                                    startNode = node;
+                                    startOffset = charIndex - currentOffset;
+                                }
+                                if (startNode && charIndex + length <= nextOffset) {
+                                    endNode = node;
+                                    endOffset = (charIndex + length) - currentOffset;
+                                    return true;
+                                }
+                                currentOffset = nextOffset;
+                            } else {
+                                for (let i = 0; i < node.childNodes.length; i++) {
+                                    if (traverse(node.childNodes[i])) return true;
+                                }
+                            }
+                            return false;
+                        }
+
+                        traverse(document.body);
+
+                        if (startNode && endNode) {
+                            range.setStart(startNode, startOffset);
+                            range.setEnd(endNode, endOffset);
+                            
+                            // Remove old highlight
+                            const old = document.querySelector('.ai-highlight');
+                            if (old) {
+                                const parent = old.parentNode;
+                                while(old.firstChild) parent.insertBefore(old.firstChild, old);
+                                parent.removeChild(old);
+                                parent.normalize();
+                            }
+
+                            const span = document.createElement('span');
+                            span.className = 'ai-highlight';
+                            span.style.backgroundColor = '#fef08a';
+                            span.style.color = '#000';
+                            span.style.transition = 'background-color 0.2s';
+                            range.surroundContents(span);
+                            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                });
+            </script>
+        `;
+        html = html.replace('</body>', `${selectionScript}</body>`);
+
         res.setHeader("Content-Type", "text/html");
         res.status(200).send(html);
     } catch (error) {

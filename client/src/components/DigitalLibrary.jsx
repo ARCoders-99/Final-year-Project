@@ -4,7 +4,7 @@ import { fetchAllDigitalBooks, borrowDigitalBook, resetDigitalSlice, fetchMyDigi
 import { createPaymentIntent } from "../store/slices/borrowSlice";
 import { toast } from "react-toastify";
 import Header from "../layout/Header";
-import { BookA, Loader2, BookOpen, Clock, Trash2, CreditCard } from "lucide-react";
+import { BookA, Loader2, BookOpen, Clock, Trash2, CreditCard, Sparkles, X } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -21,6 +21,12 @@ const DigitalLibrary = () => {
     const { user } = useSelector((state) => state.auth);
     const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
     const [paymentData, setPaymentData] = useState({ clientSecret: "", bookId: "", bookTitle: "", price: 0 });
+
+    // AI & Filter States (Preserving clean UI)
+    const [searchedKeyword, setSearchedKeyword] = useState("");
+    const [isAiMode, setIsAiMode] = useState(false);
+    const [isAiSearching, setIsAiSearching] = useState(false);
+    const [aiResult, setAiResult] = useState(null);
 
     useEffect(() => {
         dispatch(fetchAllDigitalBooks());
@@ -87,6 +93,57 @@ const DigitalLibrary = () => {
         }
     };
 
+    const handleSearch = (e) => {
+        setSearchedKeyword(e.target.value.toLowerCase());
+        if (aiResult) {
+            setAiResult(null);
+            setIsAiMode(false);
+        }
+    };
+
+    const handleAiSearch = async () => {
+        if (!searchedKeyword.trim()) {
+            toast.warn("Describe your mood or what you want to read.");
+            return;
+        }
+
+        setIsAiSearching(true);
+        try {
+            const { data } = await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/api/v1/ai/recommend-by-mood`,
+                { query: searchedKeyword, books: digitalBooks },
+                { withCredentials: true }
+            );
+
+            if (data.success) {
+                setAiResult({
+                    detectedMood: data.detectedMood,
+                    recommendedIds: data.recommendedIds,
+                    explanation: data.explanation
+                });
+                setIsAiMode(true);
+            }
+        } catch (err) {
+            console.error("AI Search error:", err);
+            const errorMessage = err.response?.data?.message || "AI Search is currently unavailable.";
+            toast.error(errorMessage);
+        } finally {
+            setIsAiSearching(false);
+        }
+    };
+
+    const clearAiMode = () => {
+        setIsAiMode(false);
+        setAiResult(null);
+    };
+
+    const searchedBooks = digitalBooks.filter((book) => {
+        if (isAiMode && aiResult) {
+            return aiResult.recommendedIds.includes(book._id);
+        }
+        return book.title.toLowerCase().includes(searchedKeyword);
+    });
+
     const isAlreadyBorrowed = (bookId) => {
         return myDigitalBorrows.some(
             (b) => b.book._id === bookId && !b.returned && new Date(b.expiryDate) > new Date()
@@ -101,6 +158,32 @@ const DigitalLibrary = () => {
                     <BookA size={28} />
                     Digital Library
                 </h2>
+                <div className="relative w-full sm:w-64">
+                    <input
+                        type="text"
+                        placeholder={isAiMode ? "AI Search active..." : "Search by title or mood..."}
+                        className="w-full border p-2 pr-10 border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-black outline-none transition-all"
+                        value={searchedKeyword}
+                        onChange={handleSearch}
+                        onKeyDown={(e) => e.key === 'Enter' && (isAiMode ? clearAiMode() : handleAiSearch())}
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        {isAiMode ? (
+                            <button onClick={clearAiMode} className="p-1 hover:bg-gray-100 rounded text-gray-500 transition-colors">
+                                <X size={16} />
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleAiSearch}
+                                disabled={isAiSearching}
+                                className={`p-1 rounded transition-colors ${isAiSearching ? 'text-gray-300' : 'text-gray-400 hover:text-black'}`}
+                                title="AI Mood Search"
+                            >
+                                {isAiSearching ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                            </button>
+                        )}
+                    </div>
+                </div>
             </header>
 
             {loading && digitalBooks.length === 0 ? (
@@ -109,8 +192,8 @@ const DigitalLibrary = () => {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {digitalBooks.length > 0 ? (
-                        digitalBooks.map((book) => {
+                    {searchedBooks.length > 0 ? (
+                        searchedBooks.map((book) => {
                             const borrowed = isAlreadyBorrowed(book._id);
                             return (
                                 <div

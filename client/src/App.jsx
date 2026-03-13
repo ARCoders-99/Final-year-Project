@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -33,7 +34,13 @@ import AdminResetPassword from "./admin/AdminResetPassword";
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, initLoading, user } = useSelector((state) => state.auth);
 
-  if (initLoading) return null;
+  if (initLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="animate-spin text-purple-600" size={48} />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to={adminOnly ? "/admin-login" : "/login"} replace />;

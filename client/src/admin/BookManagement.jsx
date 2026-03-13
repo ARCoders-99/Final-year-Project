@@ -1,4 +1,4 @@
-import { BookOpen, NotebookPen, ExternalLink, BookA, Loader2, Trash2 } from "lucide-react";
+import { BookOpen, NotebookPen, ExternalLink, BookA, Loader2, Trash2, Sparkles, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   toggleAddBookPopup,
@@ -49,6 +49,11 @@ const BookManagement = () => {
   const [searchedKeyword, setSearchedKeyword] = useState("");
   const [selectedTab, setSelectedTab] = useState("physical"); // 'physical' or 'digital'
   const navigate = useNavigate();
+
+  // AI Search States (Preserving existing UI)
+  const [isAiMode, setIsAiMode] = useState(false);
+  const [isAiSearching, setIsAiSearching] = useState(false);
+  const [aiResult, setAiResult] = useState(null);
 
   // Open book popup
   const openReadPopup = (id) => {
@@ -178,11 +183,55 @@ const BookManagement = () => {
 
   const handleSearch = (e) => {
     setSearchedKeyword(e.target.value.toLowerCase());
+    if (aiResult) {
+      setAiResult(null);
+      setIsAiMode(false);
+    }
   };
 
-  const searchedBooks = (selectedTab === "physical" ? books : digitalBooks).filter((book) =>
-    book.title.toLowerCase().includes(searchedKeyword)
-  );
+  const handleAiSearch = async () => {
+    if (!searchedKeyword.trim()) {
+      toast.warn("Please enter a mood or title to search with AI.");
+      return;
+    }
+
+    setIsAiSearching(true);
+    try {
+      const currentList = selectedTab === "physical" ? books : digitalBooks;
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/ai/recommend-by-mood`,
+        { query: searchedKeyword, books: currentList },
+        { withCredentials: true }
+      );
+
+      if (data.success) {
+        setAiResult({
+          detectedMood: data.detectedMood,
+          recommendedIds: data.recommendedIds,
+          explanation: data.explanation
+        });
+        setIsAiMode(true);
+      }
+    } catch (err) {
+      console.error("AI Search error:", err);
+      const errorMessage = err.response?.data?.message || "AI Search failed. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setIsAiSearching(false);
+    }
+  };
+
+  const clearAiMode = () => {
+    setIsAiMode(false);
+    setAiResult(null);
+  };
+
+  const searchedBooks = (selectedTab === "physical" ? books : digitalBooks).filter((book) => {
+    if (isAiMode && aiResult) {
+      return aiResult.recommendedIds.includes(book._id);
+    }
+    return book.title.toLowerCase().includes(searchedKeyword);
+  });
 
   const isAdmin = user?.role === "Admin";
 
@@ -237,13 +286,32 @@ const BookManagement = () => {
               </Button>
             )}
 
-            <input
-              type="text"
-              placeholder={`Search ${selectedTab === "physical" ? "physical" : "digital"} books...`}
-              className="w-full sm:w-52 border p-2 border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-black outline-none transition-all"
-              value={searchedKeyword}
-              onChange={handleSearch}
-            />
+            <div className="relative w-full sm:w-52">
+              <input
+                type="text"
+                placeholder={isAiMode ? "AI Search active..." : `Search ${selectedTab === "physical" ? "physical" : "digital"} books...`}
+                className="w-full border p-2 pr-10 border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-black outline-none transition-all"
+                value={searchedKeyword}
+                onChange={handleSearch}
+                onKeyDown={(e) => e.key === 'Enter' && (isAiMode ? clearAiMode() : handleAiSearch())}
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {isAiMode ? (
+                  <button onClick={clearAiMode} className="p-1 hover:bg-gray-100 rounded text-gray-500 transition-colors">
+                    <X size={16} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleAiSearch}
+                    disabled={isAiSearching}
+                    className={`p-1 rounded transition-colors ${isAiSearching ? 'text-gray-300' : 'text-gray-400 hover:text-black'}`}
+                    title="AI Mood Search"
+                  >
+                    {isAiSearching ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </header>
 

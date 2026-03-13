@@ -10,6 +10,7 @@ import userRoutes from "./Routes/userRoutes.js";
 import borrowRoutes from "./Routes/borrowRoutes.js";
 import digitalRoutes from "./Routes/digitalRoutes.js";
 import paymentRoutes from "./Routes/paymentRouter.js";
+import aiRoutes from "./Routes/aiRoutes.js";
 import expressFileUpload from "express-fileupload";
 import { notifyUsers } from "./services/notifyUsers.js";
 import { removeUnverifiedAccounts } from "./services/removeUnverifiedAccounts.js";
@@ -42,6 +43,7 @@ app.use("/api/v1/borrow", borrowRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/digital", digitalRoutes);
 app.use("/api/v1/payment", paymentRoutes);
+app.use("/api/v1/ai", aiRoutes);
 
 (async () => {
   await connectDB(); // ✅ just await it
