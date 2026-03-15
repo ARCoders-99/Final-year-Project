@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
+import Groq from "groq-sdk";
 import nlp from "compromise";
 import { catchAsyncErrors } from "../middlewares/catchAsyncErrors.js";
 import ErrorHandler from "../middlewares/errorMiddlewares.js";
@@ -33,37 +34,49 @@ export const processText = catchAsyncErrors(async (req, res, next) => {
             return next(new ErrorHandler("Invalid action specified", 400));
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-flash-latest"];
-
     let resultText = "";
     let lastError = null;
 
-    for (const modelName of modelsToTry) {
+    // 1. Try Groq AI (Llama 3)
+    if (process.env.GROQ_API_KEY) {
         try {
-            console.log(`Attempting AI request with model: ${modelName}`);
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            resultText = response.text();
-
-            if (resultText) break;
+            const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+            const chatCompletion = await groq.chat.completions.create({
+                messages: [{ role: "user", content: prompt }],
+                model: "llama-3.3-70b-versatile",
+                max_tokens: 500,
+            });
+            resultText = chatCompletion.choices[0]?.message?.content || "";
+            if (resultText) {
+                return res.status(200).json({ success: true, result: resultText });
+            }
         } catch (error) {
-            console.warn(`Model ${modelName} failed:`, error.message);
             lastError = error;
-            if (error.message?.includes("404")) continue; // Try next model if 404
         }
     }
 
-    if (resultText) {
-        res.status(200).json({
-            success: true,
-            result: resultText,
-        });
-    } else {
-        console.error("All AI models failed. Last error:", lastError);
-        return next(new ErrorHandler(`AI Error: ${lastError?.message || "All models failed"}`, 500));
+    // 2. Fallback to Gemini AI
+    if (process.env.GEMINI_API_KEY) {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"];
+
+        for (const modelName of modelsToTry) {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                resultText = response.text();
+
+                if (resultText) {
+                    return res.status(200).json({ success: true, result: resultText });
+                }
+            } catch (error) {
+                lastError = error;
+            }
+        }
     }
+
+    return next(new ErrorHandler(`AI Error: ${lastError?.message || "All models failed"}`, 500));
 });
 
 const cleanStoryText = (text) => {
@@ -77,18 +90,18 @@ const cleanStoryText = (text) => {
         .replace(/[,—‘’]/g, " ")
         .replace(/\s+/g, " ")
         .trim();
-    
+
     return cleaned.length > 50 ? cleaned : text.trim();
 };
 
 const offlineStoryAnalyzer = (storyText) => {
     const cleanedText = cleanStoryText(storyText);
     const doc = nlp(cleanedText);
-    
+
     // 1. Detect People (Characters)
     const people = doc.people().out('array');
     const blacklist = [
-        "Woman", "Man", "Boy", "Girl", "Club", "Society", "School", "University", 
+        "Woman", "Man", "Boy", "Girl", "Club", "Society", "School", "University",
         "State", "Country", "City", "Street", "House", "Room", "Door", "Window",
         "Chapter", "Page", "Book", "Author", "Gutenberg", "Project", "License",
         "Street", "Avenue", "Road", "Park", "General", "Major", "Captain", "Private"
@@ -99,18 +112,18 @@ const offlineStoryAnalyzer = (storyText) => {
         let cleanedName = name.replace(/[.,;?!—:]+$/g, "").trim();
         let normalizedForMapping = cleanedName.replace(/^(Mr|Ms|Mrs|Dr|Sir|Lady|Colonel|Major)\.?\s+/i, "").trim();
         const isBlacklisted = blacklist.some(term => cleanedName.toLowerCase().includes(term.toLowerCase()));
-        
+
         if (normalizedForMapping.length > 2 && !isBlacklisted &&
             !["I", "You", "He", "She", "They", "Them", "The", "And", "Mrs", "Sir"].includes(normalizedForMapping)) {
             const key = normalizedForMapping.toLowerCase();
             if (!nameMap.has(key) || cleanedName.length > nameMap.get(key).length) {
-                nameMap.set(key, cleanedName); 
+                nameMap.set(key, cleanedName);
             }
         }
     });
 
     const characters = Array.from(nameMap.values()).slice(0, 6);
-        
+
     // 2. Detect Themes
     const keywords = {
         "Romance/Love": ["love", "marriage", "heart", "passion", "feeling", "kiss", "lover", "darling", "wed", "bride"],
@@ -120,7 +133,7 @@ const offlineStoryAnalyzer = (storyText) => {
         "Drama/Family": ["family", "mother", "father", "son", "daughter", "tears", "emotional", "home", "parent"],
         "Supernatural": ["magic", "ghost", "darkness", "power", "spirit", "ancient", "spell", "witch", "beast"]
     };
-    
+
     const themes = [];
     Object.entries(keywords).forEach(([theme, words]) => {
         if (words.some(word => cleanedText.toLowerCase().includes(word))) {
@@ -141,7 +154,7 @@ const offlineStoryAnalyzer = (storyText) => {
                 for (let j = i + 1; j < characters.length; j++) {
                     const p1 = characters[i].replace(/^(Mr|Ms|Mrs|Dr|Sir|Lady|Colonel|Major)\.?/i, "").trim().toLowerCase();
                     const p2 = characters[j].replace(/^(Mr|Ms|Mrs|Dr|Sir|Lady|Colonel|Major)\.?/i, "").trim().toLowerCase();
-                    
+
                     if (lowerSentence.includes(p1) && lowerSentence.includes(p2)) {
                         const key = [characters[i], characters[j]].sort().join(" & ");
                         interactionMap.set(key, (interactionMap.get(key) || 0) + 1);
@@ -194,12 +207,83 @@ export const analyzeStory = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Text is required for analysis", 400));
     }
 
-    const analysis = offlineStoryAnalyzer(text);
-    
+    let aIAnalysis = null;
+    let lastError = null;
+
+    // 1. Try Groq AI (Primary for deep analysis)
+    if (process.env.GROQ_API_KEY) {
+        try {
+            const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+            const prompt = `Analyze the following story text and provide a structured JSON response.
+            
+            Text: "${text.substring(0, 5000)}" 
+            
+            Tasks:
+            1. Identify the main characters.
+            2. Describe key relationships between them.
+            3. Identify the primary themes.
+            4. Provide a concise narrative summary (approx 150 words).
+            
+            Return ONLY the following JSON format:
+            {
+              "characters": ["Name1", "Name2", "..."],
+              "relationships": ["Desc1", "Desc2", "..."],
+              "themes": ["Theme1", "Theme2", "..."],
+              "summary": "The narrative summary text"
+            }
+            Do not include any text outside the JSON block.`;
+
+            const chatCompletion = await groq.chat.completions.create({
+                messages: [{ role: "user", content: prompt }],
+                model: "llama-3.3-70b-versatile",
+                response_format: { type: "json_object" },
+            });
+
+            const content = chatCompletion.choices[0]?.message?.content;
+            if (content) {
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) aIAnalysis = JSON.parse(jsonMatch[0]);
+            }
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    // 2. Fallback to Gemini AI
+    if (!aIAnalysis && process.env.GEMINI_API_KEY) {
+        try {
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+            const prompt = `Analyze this story and return JSON:
+            {
+              "characters": ["Name1", "..."],
+              "relationships": ["..."],
+              "themes": ["..."],
+              "summary": "..."
+            }
+            Story text: "${text.substring(0, 3000)}"`;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const content = response.text();
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (jsonMatch) aIAnalysis = JSON.parse(jsonMatch[0]);
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    // 3. Fallback to Offline rule-based analyzer
+    if (!aIAnalysis) {
+        aIAnalysis = offlineStoryAnalyzer(text);
+    }
+
     res.status(200).json({
         success: true,
-        analysis,
-        isOffline: true
+        analysis: aIAnalysis,
+        isAI: !!(aIAnalysis && !aIAnalysis.isOffline) // Metadata for frontend
     });
 });
 
@@ -214,10 +298,6 @@ export const recommendBooksByMood = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Books list is required for recommendation", 400));
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-        return next(new ErrorHandler("AI feature is not configured.", 500));
-    }
-
     const bookListString = books.map(b => `ID: ${b._id}, Title: ${b.title}, Author: ${b.author}`).join("\n");
 
     const prompt = `You are a helpful library assistant. A user is looking for books and says: "${query}"
@@ -226,60 +306,62 @@ export const recommendBooksByMood = catchAsyncErrors(async (req, res, next) => {
     ${bookListString}
     
     Tasks:
-    1. Detect the user's mood or intent from their query (e.g., "Sad", "Adventurous", "Curious", "Spooky").
-    2. Select up to 10 books from the list that best match this mood or any keywords in the query.
+    1. Understand the user's intent (could be a mood, a specific author, a genre, or a topic).
+    2. Select up to 10 books from the list that best match this intent.
     3. Return your response ONLY in the following JSON format:
     {
-      "detectedMood": "The Mood Label",
+      "detectedMood": "A short descriptive label of their intent/mood",
       "recommendedIds": ["id1", "id2", "..."],
-      "explanation": "A very brief explanation of why these books match (max 15 words)"
+      "explanation": "A very brief explanation of why these match (max 15 words)"
     }
-    
-    If no matches are found, return empty recommendedIds. Do not provide any text outside the JSON block.`;
-
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest"];
+    Do not provide any text outside the JSON block.`;
 
     let resultText = "";
     let lastError = null;
 
-    for (const modelName of modelsToTry) {
+    // 1. Try Groq AI
+    if (process.env.GROQ_API_KEY) {
         try {
-            console.log(`Attempting AI Mood Search with model: ${modelName}`);
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            resultText = response.text();
-
-            if (resultText) break;
+            const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+            const chatCompletion = await groq.chat.completions.create({
+                messages: [{ role: "user", content: prompt }],
+                model: "llama-3.3-70b-versatile",
+                response_format: { type: "json_object" }
+            });
+            resultText = chatCompletion.choices[0]?.message?.content || "";
+            if (resultText) {
+                const recommendations = JSON.parse(resultText.match(/\{[\s\S]*\}/)[0]);
+                return res.status(200).json({ success: true, ...recommendations });
+            }
         } catch (error) {
-            console.warn(`Model ${modelName} failed for mood search:`, error.message);
             lastError = error;
+        }
+    }
 
-            if (error.message?.includes("429") || error.status === 429) {
-                console.error("Gemini Rate Limit/Quota Hit:", error.message);
-                const message = error.message?.toLowerCase().includes("quota")
-                    ? "AI Quota reached or billing issue. Please check your Gemini API Dashboard (Quota exceeded for today)."
-                    : "AI is currently busy (Rate Limit). Please wait a few seconds and try again.";
-                return next(new ErrorHandler(message, 429));
+    // 2. Fallback to Gemini
+    if (process.env.GEMINI_API_KEY) {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash"];
+
+        for (const modelName of modelsToTry) {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                resultText = response.text();
+
+                if (resultText) {
+                    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const recommendations = JSON.parse(jsonMatch[0]);
+                        return res.status(200).json({ success: true, ...recommendations });
+                    }
+                }
+            } catch (error) {
+                lastError = error;
             }
         }
     }
 
-    if (!resultText) {
-        return next(new ErrorHandler(`AI Mood Search Error: ${lastError?.message || "All models failed"}`, 500));
-    }
-
-    try {
-        const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) throw new Error("Invalid AI response format");
-        const recommendations = JSON.parse(jsonMatch[0]);
-
-        res.status(200).json({
-            success: true,
-            ...recommendations
-        });
-    } catch (error) {
-        return next(new ErrorHandler(`AI Recommendation Error: ${error.message}`, 500));
-    }
+    return next(new ErrorHandler(`AI Mood Search Error: ${lastError?.message || "All providers failed"}`, 500));
 });

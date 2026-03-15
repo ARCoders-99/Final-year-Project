@@ -110,7 +110,7 @@ const StoryAnalyzer = ({ isOpen, onClose, textToAnalyze }) => {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-gray-800 text-lg">Analyzing Story</h3>
-                                        <p className="text-gray-500 text-sm max-w-[240px]">Advanced NLP is identifying characters and themes from the current content...</p>
+                                        <p className="text-gray-500 text-sm max-w-[240px]">Groq AI is identifying characters and themes from the current content...</p>
                                     </div>
                                 </div>
                             ) : (
@@ -127,7 +127,7 @@ const StoryAnalyzer = ({ isOpen, onClose, textToAnalyze }) => {
                         {/* Footer */}
                         <div className="p-6 border-t border-gray-100 bg-gray-50">
                             <p className="text-[10px] text-center text-gray-400 font-medium uppercase tracking-widest">
-                                Powered by Advanced Local NLP
+                                Powered by Groq AI
                             </p>
                         </div>
                     </motion.div>

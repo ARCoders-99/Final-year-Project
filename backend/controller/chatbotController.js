@@ -47,7 +47,6 @@ export const chatWithLibrarian = catchAsyncErrors(async (req, res, next) => {
     let lastError = null;
 
     try {
-        console.log("Attempting Chatbot request with Groq AI (llama-3.3-70b-versatile)");
         const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
         const groqHistory = (history || []).map(msg => ({
@@ -67,13 +66,11 @@ export const chatWithLibrarian = catchAsyncErrors(async (req, res, next) => {
 
         replyText = chatCompletion.choices[0]?.message?.content || "";
     } catch (error) {
-        console.error("Groq AI failed:", error.message);
         lastError = error;
     }
 
     // Keyword-based Search Fallback if Groq fails
     if (!replyText) {
-        console.log("Groq AI failed. Using keyword-based fallback.");
         const keywords = message.toLowerCase().split(/\s+/).filter(w => w.length > 3);
         const allBooks = [
             ...physicalBooks.map(b => ({ ...b.toObject(), type: 'physical' })),

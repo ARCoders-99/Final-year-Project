@@ -17,8 +17,8 @@ import { removeUnverifiedAccounts } from "./services/removeUnverifiedAccounts.js
 import { errorMiddleware } from "./middlewares/errorMiddlewares.js";
 
 export const app = express();
-config({ path: "./config/config.env" });
-config(); // This will load .env from the root of the backend directory if path is not specified
+config(); // Load local .env first (secrets)
+config({ path: "./config/config.env" }); // Load defaults second (non-sensitive)
 app.use(
   cors({
     origin: process.env.FRONTEND_URL, // Remove the array brackets

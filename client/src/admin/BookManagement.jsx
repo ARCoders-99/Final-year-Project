@@ -191,7 +191,7 @@ const BookManagement = () => {
 
   const handleAiSearch = async () => {
     if (!searchedKeyword.trim()) {
-      toast.warn("Please enter a mood or title to search with AI.");
+      toast.warn("Please enter a mood, author, or title to search with AI.");
       return;
     }
 
@@ -214,7 +214,7 @@ const BookManagement = () => {
       }
     } catch (err) {
       console.error("AI Search error:", err);
-      const errorMessage = err.response?.data?.message || "AI Search failed. Please try again.";
+      const errorMessage = err.response?.data?.message || "AI Smart Search failed. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsAiSearching(false);
@@ -289,7 +289,7 @@ const BookManagement = () => {
             <div className="relative w-full sm:w-52">
               <input
                 type="text"
-                placeholder={isAiMode ? "AI Search active..." : `Search ${selectedTab === "physical" ? "physical" : "digital"} books...`}
+                placeholder={isAiMode ? "AI Smart Search active..." : `Search ${selectedTab === "physical" ? "physical" : "digital"} books...`}
                 className="w-full border p-2 pr-10 border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-black outline-none transition-all"
                 value={searchedKeyword}
                 onChange={handleSearch}
@@ -305,7 +305,7 @@ const BookManagement = () => {
                     onClick={handleAiSearch}
                     disabled={isAiSearching}
                     className={`p-1 rounded transition-colors ${isAiSearching ? 'text-gray-300' : 'text-gray-400 hover:text-black'}`}
-                    title="AI Mood Search"
+                    title="AI Smart Search"
                   >
                     {isAiSearching ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
                   </button>

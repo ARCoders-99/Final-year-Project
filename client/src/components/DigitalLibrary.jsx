@@ -125,7 +125,7 @@ const DigitalLibrary = () => {
             }
         } catch (err) {
             console.error("AI Search error:", err);
-            const errorMessage = err.response?.data?.message || "AI Search is currently unavailable.";
+            const errorMessage = err.response?.data?.message || "AI Smart Search is currently unavailable.";
             toast.error(errorMessage);
         } finally {
             setIsAiSearching(false);
@@ -161,7 +161,7 @@ const DigitalLibrary = () => {
                 <div className="relative w-full sm:w-64">
                     <input
                         type="text"
-                        placeholder={isAiMode ? "AI Search active..." : "Search by title or mood..."}
+                        placeholder={isAiMode ? "AI Smart Search active..." : "Search by title, author or mood..."}
                         className="w-full border p-2 pr-10 border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-black outline-none transition-all"
                         value={searchedKeyword}
                         onChange={handleSearch}
@@ -177,7 +177,7 @@ const DigitalLibrary = () => {
                                 onClick={handleAiSearch}
                                 disabled={isAiSearching}
                                 className={`p-1 rounded transition-colors ${isAiSearching ? 'text-gray-300' : 'text-gray-400 hover:text-black'}`}
-                                title="AI Mood Search"
+                                title="AI Smart Search"
                             >
                                 {isAiSearching ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
                             </button>
