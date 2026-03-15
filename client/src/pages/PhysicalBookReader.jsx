@@ -294,6 +294,35 @@ const PhysicalBookReader = () => {
     const zoomIn = () => setScale((s) => Math.min(s + 0.2, 2.5));
     const zoomOut = () => setScale((s) => Math.max(s - 0.2, 0.5));
 
+    const [containerWidth, setContainerWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const container = document.querySelector('.pdf-container');
+            if (container) {
+                setContainerWidth(container.clientWidth);
+            } else {
+                setContainerWidth(window.innerWidth);
+            }
+        };
+
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        // Auto-scale PDF on mobile or small containers
+        if (containerWidth < 768) {
+            // Roughly fit the page to width (react-pdf Page scale 1.0 is ~612pt wide)
+            // A conservative approach for 100% width on small screens
+            const newScale = (containerWidth - 48) / 600; // 48px for padding
+            setScale(Math.max(0.5, Math.min(newScale, 2.0)));
+        } else {
+            setScale(1.1); // Default for desktop
+        }
+    }, [containerWidth]);
+
     const handleMouseUp = () => {
         const sel = window.getSelection();
         const text = sel.toString().trim();
@@ -357,31 +386,34 @@ const PhysicalBookReader = () => {
 
     return (
         <div
-            className="min-h-screen bg-gray-900 flex flex-col"
+            className="min-h-[100dvh] bg-gray-900 flex flex-col"
             onMouseUp={handleMouseUp}
         >
             {/* Top Bar */}
-            <header className="sticky top-0 z-20 bg-gray-800 shadow-lg px-4 py-3 flex items-center justify-between gap-4">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-1.5 text-white hover:text-gray-300 transition-colors shrink-0"
-                >
-                    <ArrowLeft size={18} />
-                    <span className="hidden sm:inline text-sm font-medium">Back</span>
-                </button>
+            <header className="sticky top-0 z-20 bg-gray-800 shadow-lg px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
+                {/* Row 1: Back button and Title/Author */}
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-1.5 text-white hover:text-gray-300 transition-colors shrink-0"
+                    >
+                        <ArrowLeft size={18} />
+                        <span className="hidden sm:inline text-sm font-medium">Back</span>
+                    </button>
 
-                <div className="flex flex-col items-center min-w-0">
-                    <h1 className="text-white font-semibold text-sm sm:text-base truncate max-w-[260px] sm:max-w-[400px]">
-                        {book.title}
-                    </h1>
-                    <p className="text-gray-400 text-xs truncate">{book.author}</p>
+                    <div className="flex flex-col min-w-0 flex-1">
+                        <h1 className="text-white font-semibold text-sm sm:text-base leading-tight">
+                            {book.title}
+                        </h1>
+                        <p className="text-gray-400 text-[10px] md:text-xs mt-0.5">{book.author}</p>
+                    </div>
                 </div>
 
-                {/* Controls */}
-                <div className="flex items-center gap-3 shrink-0">
-                    <div className="flex items-center gap-2">
+                {/* Row 2: Reading Actions and Zoom Controls */}
+                <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 px-1 overflow-x-auto no-scrollbar py-1">
+                    <div className="flex items-center gap-2 shrink-0">
                         {pdfLoading ? (
-                            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-gray-600 text-gray-400 bg-gray-700/50">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-600 text-gray-400 bg-gray-700/50">
                                 <Loader2 size={16} className="animate-spin" />
                                 <span className="text-[10px] font-bold uppercase tracking-wider">Loading Reader...</span>
                             </div>
@@ -389,25 +421,25 @@ const PhysicalBookReader = () => {
                             <>
                                 <button
                                     onClick={handleAnalyzeStory}
-                                    className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-purple-500 bg-purple-600 text-white hover:bg-purple-500 transition-all group"
+                                    className="flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full border border-purple-500 bg-purple-600 text-white hover:bg-purple-500 transition-all group shrink-0"
                                     title="Analyze Characters & Themes"
                                 >
                                     <Sparkles size={16} className="group-hover:animate-pulse" />
-                                    <span className="text-[10px] font-bold uppercase tracking-wider">Analyze</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wider hidden min-[461px]:inline">Analyze Story</span>
                                 </button>
                                 <button
                                     onClick={handleReadAloudPage}
-                                    className={`flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all ${isSpeaking ? 'bg-purple-600 text-white border-purple-500' : 'bg-purple-600 text-white border-purple-500 hover:bg-purple-500'}`}
+                                    className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full border transition-all shrink-0 ${isSpeaking ? 'bg-purple-600 text-white border-purple-500' : 'bg-purple-600 text-white border-purple-500 hover:bg-purple-500'}`}
                                 >
                                     <Volume2 size={16} className={isSpeaking && !isPaused ? "animate-pulse" : ""} />
-                                    <span className="text-xs font-bold uppercase tracking-wider">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider hidden min-[461px]:inline">
                                         {isSpeaking ? (isPaused ? "Resume" : "Pause") : "Read Aloud"}
                                     </span>
                                 </button>
                                 {isSpeaking && (
                                     <button
                                         onClick={stopReading}
-                                        className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                                        className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shrink-0"
                                         title="Stop Reading"
                                     >
                                         <X size={16} />
@@ -416,23 +448,24 @@ const PhysicalBookReader = () => {
                             </>
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
+
+                    <div className="flex items-center gap-1.5 bg-gray-700/50 p-1.5 rounded-full px-3 shrink-0">
                         <button
                             onClick={zoomOut}
                             disabled={scale <= 0.5}
                             title="Zoom out"
-                            className="p-1.5 rounded-md bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40 transition-colors"
+                            className="p-1 rounded-full text-white hover:bg-gray-600 disabled:opacity-40 transition-colors"
                         >
                             <ZoomOut size={16} />
                         </button>
-                        <span className="text-gray-300 text-xs w-10 text-center">
+                        <span className="text-gray-300 text-[10px] sm:text-xs font-bold w-10 text-center">
                             {Math.round(scale * 100)}%
                         </span>
                         <button
                             onClick={zoomIn}
                             disabled={scale >= 2.5}
                             title="Zoom in"
-                            className="p-1.5 rounded-md bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40 transition-colors"
+                            className="p-1 rounded-full text-white hover:bg-gray-600 disabled:opacity-40 transition-colors"
                         >
                             <ZoomIn size={16} />
                         </button>
@@ -461,21 +494,23 @@ const PhysicalBookReader = () => {
                             </div>
                         )}
 
-                        <Document
-                            file={book.pdfUrl}
-                            onLoadSuccess={onDocumentLoadSuccess}
-                            onLoadError={onDocumentLoadError}
-                            loading={null}
-                            className={pdfLoading ? "hidden" : ""}
-                        >
-                            <Page
-                                pageNumber={pageNumber}
-                                scale={scale}
-                                renderTextLayer={true}
-                                renderAnnotationLayer={true}
-                                className="shadow-2xl rounded-sm"
-                            />
-                        </Document>
+                        <div className="pdf-container w-full flex flex-col items-center">
+                            <Document
+                                file={book.pdfUrl}
+                                onLoadSuccess={onDocumentLoadSuccess}
+                                onLoadError={onDocumentLoadError}
+                                loading={null}
+                                className={pdfLoading ? "hidden" : ""}
+                            >
+                                <Page
+                                    pageNumber={pageNumber}
+                                    scale={scale}
+                                    renderTextLayer={true}
+                                    renderAnnotationLayer={true}
+                                    className="shadow-2xl rounded-sm max-w-full"
+                                />
+                            </Document>
+                        </div>
                     </>
                 )}
             </main>

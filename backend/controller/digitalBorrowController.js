@@ -160,11 +160,12 @@ export const getDigitalReaderContent = catchAsyncErrors(async (req, res, next) =
         // Strip Gutenberg postamble (everything from *** END OF *** line onwards)
         html = html.replace(/\*{3}\s*END OF (THE |THIS )?PROJECT GUTENBERG[\s\S]*/i, "");
 
-        // Inject <base> tag so relative image paths resolve against the mirror
+        // Inject <meta viewport> and <base> tag
+        const metaViewport = '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
         if (/<head>/i.test(html)) {
-            html = html.replace(/<head>/i, `<head><base href="${baseUrl}">`);
+            html = html.replace(/<head>/i, `<head>${metaViewport}<base href="${baseUrl}">`);
         } else {
-            html = `<base href="${baseUrl}">${html}`;
+            html = `${metaViewport}<base href="${baseUrl}">${html}`;
         }
 
         // Inject reader styles: centered layout, padding, hide cover image
@@ -172,14 +173,23 @@ export const getDigitalReaderContent = catchAsyncErrors(async (req, res, next) =
         <style>
             /* Layout */
             body {
-                max-width: 780px !important;
+                width: 100% !important;
+                max-width: 800px !important;
                 margin: 0 auto !important;
-                padding: 0 !important;
+                padding: 1rem !important;
+                box-sizing: border-box !important;
                 font-family: Georgia, 'Times New Roman', serif !important;
-                font-size: 1.05rem !important;
-                line-height: 1.85 !important;
+                font-size: 1.1rem !important;
+                line-height: 1.7 !important;
                 color: #1a1a1a !important;
                 background: #fff !important;
+                overflow-x: hidden !important;
+            }
+            @media (min-width: 768px) {
+                body {
+                    padding: 2rem 3rem !important;
+                    font-size: 1.2rem !important;
+                }
             }
             /* Hide Gutenberg cover image (common patterns) */
             .cover, #cover, figure.cover, div.cover,

@@ -249,69 +249,79 @@ const ReaderPage = () => {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-white">
+        <div className="flex flex-col h-[100dvh] bg-white">
             {/* Reader Navbar */}
-            <nav className="bg-white border-b border-gray-100 px-6 py-3.5 flex items-center justify-between shadow-sm z-10">
-                <div className="flex items-center gap-4">
+            <nav className="bg-white border-b border-gray-100 px-4 md:px-6 py-2.5 md:py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-0 shadow-sm z-10">
+                {/* Left Section: Back button and Title/Author */}
+                <div className="flex items-start gap-4 flex-1 min-w-0">
                     <button
                         onClick={() => navigate(-1)}
-                        className="p-2 hover:bg-gray-50 rounded-full transition-colors text-gray-600"
+                        className="p-2 hover:bg-gray-50 rounded-full transition-colors text-gray-600 shrink-0 mt-0.5"
                     >
                         <ArrowLeft size={22} />
                     </button>
-                    <div>
-                        <h1 className="font-bold text-base text-gray-900 truncate max-w-[200px] md:max-w-md">
+
+                    <div className="min-w-0">
+                        <h1 className="font-bold text-sm md:text-base text-gray-900 leading-tight">
                             {borrowRecord?.book.title}
                         </h1>
-                        <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                        <p className="text-[10px] md:text-[11px] uppercase font-bold text-gray-400 tracking-wider mt-0.5">
                             By {borrowRecord?.book.author}
                         </p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                {/* Right Section: AI Controls + Timer */}
+                <div className="flex items-center justify-end gap-2 md:gap-3 shrink-0 px-1 md:px-0">
                     {!isIframeLoaded ? (
-                        <div className="flex items-center gap-2 px-3 py-1.5 text-gray-400">
+                        <div className="flex items-center gap-2 text-gray-400">
                             <Loader2 size={16} className="animate-spin" />
-                            <span className="text-xs font-medium italic">Loading...</span>
+                            <span className="text-xs font-medium italic">Loading content...</span>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 md:gap-3 md:w-auto mt-1 md:mt-0">
                             {/* Story Analyzer Button */}
                             <button
                                 onClick={openStoryAnalyzer}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 transition-all group"
+                                className="flex items-center justify-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 transition-all group shrink-0"
                                 title="Analyze Characters & Themes"
                             >
-                                <Sparkles size={18} className="group-hover:animate-pulse" />
-                                <span className="text-sm font-semibold hidden md:inline">Story Analyzer</span>
+                                <Sparkles size={14} md:size={18} className="group-hover:animate-pulse" />
+                                <span className="text-[10px] sm:text-sm font-semibold hidden min-[461px]:inline">Story Analyzer</span>
                             </button>
 
                             {/* Read Aloud All */}
-                            <div className="relative flex items-center gap-2">
+                            <div className="relative flex items-center gap-1.5 sm:gap-2 shrink-0">
                                 <button
                                     onClick={handleReadAloud}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${isSpeaking ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-200' : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300 hover:text-purple-700'}`}
+                                    className={`flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full border transition-all ${isSpeaking ? 'bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-200' : 'bg-white text-gray-700 border-gray-200 hover:border-purple-300 hover:text-purple-700'} shrink-0`}
                                 >
-                                    <Volume2 size={18} className={isSpeaking && !isPaused ? "animate-pulse" : ""} />
-                                    <span className="text-sm font-semibold">
+                                    <Volume2 size={14} md:size={18} className={isSpeaking && !isPaused ? "animate-pulse" : ""} />
+                                    <span className="text-[10px] sm:text-sm font-semibold hidden min-[461px]:inline">
                                         {isSpeaking ? (isPaused ? "Resume" : "Pause") : "Read Aloud"}
                                     </span>
                                 </button>
                                 {isSpeaking && (
                                     <button
                                         onClick={stopReading}
-                                        className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md shadow-red-100"
+                                        className="p-1.5 sm:p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-md shadow-red-100"
                                         title="Stop Reading"
                                     >
-                                        <X size={18} />
+                                        <X size={14} md:size={18} />
                                     </button>
                                 )}
+                            </div>
+
+                            {/* Timer on Mobile (positioned next to features) */}
+                            <div className={`md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white shrink-0 ${borrowRecord.isAdminPreview ? 'text-blue-700 border-blue-200' : 'text-amber-700 border-amber-200'}`}>
+                                <Clock size={14} />
+                                <span className="text-[10px] font-bold">{borrowRecord.isAdminPreview ? "Admin" : timeLeft}</span>
                             </div>
                         </div>
                     )}
 
-                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${borrowRecord.isAdminPreview ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                    {/* Timer on Desktop */}
+                    <div className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-full border ${borrowRecord.isAdminPreview ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                         <Clock size={16} />
                         <span className="text-[11px] font-bold">{borrowRecord.isAdminPreview ? "Admin Mode" : timeLeft}</span>
                     </div>
@@ -333,7 +343,7 @@ const ReaderPage = () => {
                     className={`w-full h-full border-none transition-opacity duration-300 ${isIframeLoaded ? 'opacity-100' : 'opacity-0'}`}
                     title="Book Reader"
                 />
-            </div>
+            </div >
 
             <StoryAnalyzer
                 isOpen={isAnalyzerOpen}
@@ -358,7 +368,7 @@ const ReaderPage = () => {
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
             `}</style>
-        </div>
+        </div >
     );
 };
 

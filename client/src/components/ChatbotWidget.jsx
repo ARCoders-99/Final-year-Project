@@ -68,7 +68,12 @@ const ChatbotWidget = () => {
             )}
 
             {isOpen && (
-                <div className="chat-panel">
+                <div className="chat-panel" style={{
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                }}>
                     <div className="chat-header">
                         <div className="flex items-center gap-2">
                             <Bot size={20} className="text-purple-400" />
