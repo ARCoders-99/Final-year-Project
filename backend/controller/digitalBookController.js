@@ -2,6 +2,7 @@ import { catchAsyncErrors } from "../middlewares/catchAsyncErrors.js";
 import ErrorHandler from "../middlewares/errorMiddlewares.js";
 import { searchGutenbergBooks } from "../services/gutenbergService.js";
 import { DigitalBook } from "../models/digitalBookModel.js";
+import { DigitalBorrow } from "../models/digitalBorrowModel.js";
 import { digitalImportSchema } from "../utils/validationSchema.js";
 
 // Search Gutenberg Books (Public API)
@@ -94,6 +95,10 @@ export const deleteDigitalBook = catchAsyncErrors(async (req, res, next) => {
     if (!book) {
         return next(new ErrorHandler("Digital book not found.", 404));
     }
+
+    // Cascade delete related borrows
+    await DigitalBorrow.deleteMany({ book: id });
+
     res.status(200).json({
         success: true,
         message: "Digital book deleted successfully.",

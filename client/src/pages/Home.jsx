@@ -12,6 +12,7 @@ import Users from "../admin/Users";
 import ImportDigitalBook from "../admin/ImportDigitalBook";
 import DigitalLibrary from "../components/DigitalLibrary";
 import Payments from "../admin/Payments";
+import ChatbotWidget from "../components/ChatbotWidget";
 
 const Home = () => {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
@@ -72,6 +73,7 @@ const Home = () => {
 
         {/* Main Content */}
         <div className="flex-1 p-4">{renderComponent()}</div>
+        <ChatbotWidget />
       </div>
     </>
   );

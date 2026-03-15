@@ -37,11 +37,20 @@ const ReaderPage = () => {
         }
 
         const iframe = document.querySelector('iframe');
-        if (iframe) {
-            iframe.contentWindow.postMessage({ type: 'GET_FULL_TEXT' }, '*');
-            setIsSpeaking(true);
-            setIsPaused(false);
-        }
+        if (!iframe) return;
+
+        // IMPORTANT: speechSynthesis.speak() must be called within the user gesture
+        // window. We prime it immediately with a silent utterance so the browser
+        // unlocks speech, then swap in the real text when it arrives from the iframe.
+        window.speechSynthesis.cancel();
+        const primer = new SpeechSynthesisUtterance('\u200B'); // zero-width space
+        primer.volume = 0;
+        primer.rate = 10;
+        window.speechSynthesis.speak(primer);
+
+        iframe.contentWindow.postMessage({ type: 'GET_FULL_TEXT' }, '*');
+        setIsSpeaking(true);
+        setIsPaused(false);
     };
 
     const stopReading = (e) => {
@@ -137,52 +146,57 @@ const ReaderPage = () => {
                 setSelection(null);
             } else if (event.data.type === 'FULL_TEXT_CONTENT') {
                 const text = event.data.text;
-                if (text) {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    const iframe = document.querySelector('iframe');
+                if (!text) { setIsSpeaking(false); return; }
 
-                    utterance.onboundary = (event) => {
-                        if (event.name === 'word' && iframe) {
+                // Cancel primer, then speak the real text
+                window.speechSynthesis.cancel();
+
+                const iframe = document.querySelector('iframe');
+
+                // Split into chunks to avoid Chrome's ~15s utterance timeout bug
+                const chunkSize = 2000;
+                const chunks = [];
+                for (let i = 0; i < text.length; i += chunkSize) {
+                    chunks.push(text.slice(i, i + chunkSize));
+                }
+
+                let chunkIndex = 0;
+                const speakNext = () => {
+                    if (chunkIndex >= chunks.length) {
+                        setIsSpeaking(false);
+                        setIsPaused(false);
+                        if (iframe) iframe.contentWindow.postMessage({ type: 'SET_HIGHLIGHT', charIndex: -1 }, '*');
+                        return;
+                    }
+                    const utterance = new SpeechSynthesisUtterance(chunks[chunkIndex]);
+                    utterance.onboundary = (ev) => {
+                        if (ev.name === 'word' && iframe) {
+                            const globalIndex = chunkIndex * chunkSize + ev.charIndex;
                             iframe.contentWindow.postMessage({
                                 type: 'SET_HIGHLIGHT',
-                                charIndex: event.charIndex,
-                                length: event.charLength || 0
+                                charIndex: globalIndex,
+                                length: ev.charLength || 0
                             }, '*');
                         }
                     };
-
-                    utterance.onend = () => {
-                        setIsSpeaking(false);
-                        if (iframe) iframe.contentWindow.postMessage({ type: 'SET_HIGHLIGHT', charIndex: -1 }, '*');
-                    };
+                    utterance.onend = () => { chunkIndex++; speakNext(); };
                     utterance.onerror = () => {
                         setIsSpeaking(false);
+                        setIsPaused(false);
                         if (iframe) iframe.contentWindow.postMessage({ type: 'SET_HIGHLIGHT', charIndex: -1 }, '*');
                     };
-
                     window.speechSynthesis.speak(utterance);
-                } else {
-                    setIsSpeaking(false);
-                }
+                };
+
+                speakNext();
             } else if (event.data.type === 'TEXT_FOR_ANALYSIS_CONTENT') {
                 setAnalysisText(event.data.text);
                 setIsAnalyzerOpen(true);
-            } else if (event.data.type === 'AI_LISTEN_HIGHLIGHT') {
-                // Highlighting for the "Listen" feature from AIAssistantMenu
-                const iframe = document.querySelector('iframe');
-                if (iframe) {
-                    iframe.contentWindow.postMessage({
-                        type: 'SET_HIGHLIGHT',
-                        charIndex: event.detail.charIndex,
-                        textSnippet: event.detail.text
-                    }, '*');
-                }
             }
         };
 
         window.addEventListener('message', handleMessage);
 
-        // Listener for custom AI events
         const customEventListener = (e) => {
             if (e.type === 'AI_LISTEN_HIGHLIGHT') {
                 const iframe = document.querySelector('iframe');
@@ -200,9 +214,13 @@ const ReaderPage = () => {
         return () => {
             window.removeEventListener('message', handleMessage);
             document.removeEventListener('AI_LISTEN_HIGHLIGHT', customEventListener);
-            window.speechSynthesis.cancel();
         };
-    }, [isSpeaking]);
+    }, []); // stable — never re-creates, no race condition
+
+    // Cancel speech when component unmounts
+    useEffect(() => {
+        return () => { window.speechSynthesis.cancel(); };
+    }, []);
 
     if (digitalLoading && !borrowRecord) {
         return (

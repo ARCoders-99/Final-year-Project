@@ -146,7 +146,7 @@ const DigitalLibrary = () => {
 
     const isAlreadyBorrowed = (bookId) => {
         return myDigitalBorrows.some(
-            (b) => b.book._id === bookId && !b.returned && new Date(b.expiryDate) > new Date()
+            (b) => b.book?._id === bookId && !b.returned && new Date(b.expiryDate) > new Date()
         );
     };
 
