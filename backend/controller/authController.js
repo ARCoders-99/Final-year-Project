@@ -140,10 +140,15 @@ export const login = catchAsyncErrors(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("Invalid email or password.", 400));
   }
+  
   const isPasswordMatched = await bcrypt.compare(password, user.password);
+  
   if (!isPasswordMatched) {
     return next(new ErrorHandler("Invalid email or password.", 400));
   }
+
+  // Remove password before sending user object in response
+  user.password = undefined;
 
   sendToken(user, 200, "Logged in successfully.", res);
 });

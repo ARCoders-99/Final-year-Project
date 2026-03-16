@@ -5,9 +5,11 @@ class ErrorHandler extends Error {
   }
 }
 
+
 export const errorMiddleware = (err, req, res, next) => {
   err.message = err.message || "Interal Server Error";
   err.statusCode = err.statusCode || 500;
+
 
   if (err.name === "ZodError") {
     const statusCode = 400;

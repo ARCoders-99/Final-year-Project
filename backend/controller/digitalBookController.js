@@ -3,6 +3,7 @@ import ErrorHandler from "../middlewares/errorMiddlewares.js";
 import { searchGutenbergBooks } from "../services/gutenbergService.js";
 import { DigitalBook } from "../models/digitalBookModel.js";
 import { DigitalBorrow } from "../models/digitalBorrowModel.js";
+import { v2 as cloudinary } from "cloudinary";
 import { digitalImportSchema } from "../utils/validationSchema.js";
 
 // Search Gutenberg Books (Public API)
@@ -59,12 +60,29 @@ export const importBook = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Book already imported.", 400));
     }
 
+    // Cache cover image in Cloudinary if it exists
+    let cloudinaryCoverUrl = coverImage;
+    if (coverImage && coverImage.includes("gutenberg.org")) {
+        try {
+            const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(coverImage)}`;
+            const uploadResult = await cloudinary.uploader.upload(proxyUrl, {
+                folder: "LIBRARY_MANAGEMENT_SYSTEM_BOOK_COVERS",
+            });
+            if (uploadResult && uploadResult.secure_url) {
+                cloudinaryCoverUrl = uploadResult.secure_url;
+            }
+        } catch (error) {
+            console.error("Failed to cache digital book cover:", error);
+            // Fallback to original URL if proxy upload fails
+        }
+    }
+
     book = await DigitalBook.create({
         gutenbergId,
         title,
         author,
         description,
-        coverImage,
+        coverImage: cloudinaryCoverUrl,
         htmlLink,
         borrowLimitDays: borrowLimitDays !== undefined ? Number(borrowLimitDays) : 0,
         borrowLimitHours: borrowLimitHours !== undefined ? Number(borrowLimitHours) : 0,
