@@ -232,6 +232,27 @@ export const login = (data) => async (dispatch) => {
   }
 };
 
+export const adminLogin = (data) => async (dispatch) => {
+  dispatch(authSlice.actions.loginRequest());
+  try {
+    const res = await axios.post(
+      "http://localhost:4000/api/v1/auth/admin-login",
+      data,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    dispatch(authSlice.actions.loginSuccess(res.data));
+  } catch (error) {
+    dispatch(
+      authSlice.actions.loginFailed(
+        error.response?.data?.message || error.message
+      )
+    );
+  }
+};
+
 export const googleLogin = (data) => async (dispatch) => {
   dispatch(authSlice.actions.loginRequest());
   try {
@@ -371,11 +392,10 @@ export const updateCredentials = (data) => async (dispatch) => {
   dispatch(authSlice.actions.updateProfileRequest());
   try {
     const res = await axios.put(
-      "http://localhost:4000/api/v1/auth/update/profile",
+      "http://localhost:4000/api/v1/auth/profile/update",
       data,
       {
         withCredentials: true,
-        headers: { "Content-Type": "application/json" },
       }
     );
     dispatch(authSlice.actions.updateProfileSuccess(res.data));
@@ -385,6 +405,29 @@ export const updateCredentials = (data) => async (dispatch) => {
         error.response?.data?.message || error.message
       )
     );
+  }
+};
+
+export const uploadAvatarAction = (formData) => async (dispatch) => {
+  dispatch(authSlice.actions.updateProfileRequest());
+  try {
+    const { data } = await axios.post("http://localhost:4000/api/v1/auth/avatar", formData, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    dispatch(authSlice.actions.updateProfileSuccess({ message: data.message, user: data.user }));
+    // Refresh user data is not strictly necessary as the backend could return the updated user object
+    // but the slice handles it by updating state.user if provided.
+    // The backend returns { success, message, avatar }, let's make sure we update it.
+    dispatch(getUser()); 
+    return data;
+  } catch (error) {
+    dispatch(
+      authSlice.actions.updateProfileFailed(
+        error.response?.data?.message || "Failed to upload avatar"
+      )
+    );
+    throw error;
   }
 };
 

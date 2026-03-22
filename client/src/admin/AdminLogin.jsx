@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Eye, EyeOff } from "lucide-react";
-import { login, resetMessageErrorAction } from "../store/slices/authSlice";
+import { adminLogin, resetMessageErrorAction } from "../store/slices/authSlice";
 import Button from "../components/ui/Button";
 const AdminLogin = () => {
     const [email, setEmail] = useState("");
@@ -37,7 +37,7 @@ const AdminLogin = () => {
             localStorage.removeItem("rememberedAdminEmail");
         }
 
-        dispatch(login({ email, password }));
+        dispatch(adminLogin({ email, password }));
     };
 
     useEffect(() => {

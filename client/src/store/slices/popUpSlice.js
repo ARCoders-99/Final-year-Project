@@ -9,6 +9,7 @@ const popupSlice = createSlice({
     recordBookPopup: false,
     returnBookPopup: false,
     addNewAdminPopup: false,
+    messagingOpen: false,
     bookId: null, // ✅ added to store bookId
   },
   reducers: {
@@ -37,6 +38,9 @@ const popupSlice = createSlice({
     toggleReturnBookPopup(state) {
       state.returnBookPopup = !state.returnBookPopup;
     },
+    toggleMessagingPopup(state) {
+      state.messagingOpen = !state.messagingOpen;
+    },
     closeAllPopup(state) {
       state.addBookPopup = false;
       state.addNewAdminPopup = false;
@@ -44,6 +48,7 @@ const popupSlice = createSlice({
       state.recordBookPopup = false;
       state.returnBookPopup = false;
       state.settingPopup = false;
+      state.messagingOpen = false;
       state.bookId = null; // ✅ reset bookId when all popups close
     },
   },
@@ -57,6 +62,7 @@ export const {
   toggleRecordBookPopup,
   toggleReturnBookPopup,
   toggleSettingPopup,
+  toggleMessagingPopup,
 } = popupSlice.actions;
 
 export default popupSlice.reducer;

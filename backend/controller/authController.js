@@ -8,6 +8,7 @@ import { generateForgotPasswordEmailTemplate, generateForgotPasswordOtpEmailTemp
 import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto";
 import { loginSchema, registerSchema, updatePasswordSchema, updateProfileSchema } from "../utils/validationSchema.js";
+import { v2 as cloudinary } from "cloudinary"; // Added this import based on the provided "Code Edit" snippet
 
 // Social Login
 export const socialLogin = catchAsyncErrors(async (req, res, next) => {
@@ -140,16 +141,43 @@ export const login = catchAsyncErrors(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("Invalid email or password.", 400));
   }
-  
+
+  // Block admins from using the user login route
+  if (user.role === "Admin") {
+    return next(new ErrorHandler("Admin must login from the admin login page.", 403));
+  }
+
   const isPasswordMatched = await bcrypt.compare(password, user.password);
-  
   if (!isPasswordMatched) {
     return next(new ErrorHandler("Invalid email or password.", 400));
   }
 
-  // Remove password before sending user object in response
   user.password = undefined;
+  sendToken(user, 200, "Logged in successfully.", res);
+});
 
+export const adminLogin = catchAsyncErrors(async (req, res, next) => {
+  const { email, password } = loginSchema.parse(req.body);
+
+  const user = await User.findOne({ email, accountVerified: true }).select(
+    "+password"
+  );
+
+  if (!user) {
+    return next(new ErrorHandler("Invalid email or password.", 400));
+  }
+
+  // Block non-admins from using the admin login route
+  if (user.role !== "Admin") {
+    return next(new ErrorHandler("Access denied. This login page is for administrators only.", 403));
+  }
+
+  const isPasswordMatched = await bcrypt.compare(password, user.password);
+  if (!isPasswordMatched) {
+    return next(new ErrorHandler("Invalid email or password.", 400));
+  }
+
+  user.password = undefined;
   sendToken(user, 200, "Logged in successfully.", res);
 });
 
@@ -349,11 +377,88 @@ export const updateProfile = catchAsyncErrors(async (req, res, next) => {
     user.password = await bcrypt.hash(newPassword, 10);
   }
 
+  // Handle avatar update within profile update
+  if (req.files && req.files.avatar) {
+    const { avatar } = req.files;
+    const allowedFormats = ["image/png", "image/jpeg", "image/webp"];
+    if (!allowedFormats.includes(avatar.mimetype)) {
+      return next(new ErrorHandler("Avatar format not supported. Please upload a PNG, JPEG or WEBP image.", 400));
+    }
+
+    // Delete old avatar if exists
+    if (user.avatar && user.avatar.public_id) {
+      await cloudinary.uploader.destroy(user.avatar.public_id);
+    }
+
+    // Upload new one
+    const cloudinaryResponse = await cloudinary.uploader.upload(avatar.tempFilePath, {
+      folder: "avatars",
+    });
+
+    if (cloudinaryResponse && !cloudinaryResponse.error) {
+      user.avatar = {
+        public_id: cloudinaryResponse.public_id,
+        url: cloudinaryResponse.secure_url,
+      };
+    }
+  }
+
   await user.save();
 
   res.status(200).json({
     success: true,
     message: "Profile updated successfully.",
-    user,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      accountVerified: user.accountVerified,
+    },
+  });
+});
+
+export const uploadAvatar = catchAsyncErrors(async (req, res, next) => {
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return next(new ErrorHandler("Avatar file is required.", 400));
+  }
+
+  const { avatar } = req.files;
+
+  // Validate file type
+  const allowedFormats = ["image/png", "image/jpeg", "image/webp"];
+  if (!allowedFormats.includes(avatar.mimetype)) {
+    return next(new ErrorHandler("File format not supported. Please upload a PNG, JPEG or WEBP image.", 400));
+  }
+
+  const user = await User.findById(req.user._id);
+
+  // If user already has an avatar, delete it from cloudinary
+  if (user.avatar && user.avatar.public_id) {
+    await cloudinary.uploader.destroy(user.avatar.public_id);
+  }
+
+  // Upload new avatar to cloudinary
+  const cloudinaryResponse = await cloudinary.uploader.upload(avatar.tempFilePath, {
+    folder: "avatars",
+  });
+
+  if (!cloudinaryResponse || cloudinaryResponse.error) {
+    console.error("Cloudinary Error:", cloudinaryResponse.error || "Unknown error");
+    return next(new ErrorHandler("Failed to upload avatar to Cloudinary.", 500));
+  }
+
+  user.avatar = {
+    public_id: cloudinaryResponse.public_id,
+    url: cloudinaryResponse.secure_url,
+  };
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Avatar uploaded successfully.",
+    avatar: user.avatar,
   });
 });

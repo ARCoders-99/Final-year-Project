@@ -3,7 +3,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { updateCredentials, resetAuthSlice } from "../store/slices/authSlice";
 import { toggleSettingPopup } from "../store/slices/popUpSlice";
 import { toast } from "react-toastify";
-import { Loader2, X, Lock, Mail, User, Eye, EyeOff } from "lucide-react";
+import { Loader2, X, Lock, Mail, User, Eye, EyeOff, Camera, Upload } from "lucide-react";
+import { uploadAvatarAction } from "../store/slices/authSlice";
 import Button from "../components/ui/Button";
 import { motion } from "framer-motion";
 import { popupVariants, backdropVariants } from "../utils/animations";
@@ -18,6 +19,8 @@ const SettingPopup = () => {
   const [newPassword, setNewPassword] = useState("");
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [avatar, setAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
 
   const handleClose = () => {
     dispatch(toggleSettingPopup());
@@ -35,8 +38,6 @@ const SettingPopup = () => {
       return toast.error("Please enter a valid email address.");
     }
 
-    const updateData = { name, email };
-
     if (!oldPassword || !newPassword) {
       return toast.error("Both old and new password are required to save changes.");
     }
@@ -46,10 +47,29 @@ const SettingPopup = () => {
     if (newPassword.length < 8 || newPassword.length > 16) {
       return toast.error("New password must be between 8 and 16 characters.");
     }
-    updateData.oldPassword = oldPassword;
-    updateData.newPassword = newPassword;
 
-    dispatch(updateCredentials(updateData));
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("email", email);
+    formData.append("oldPassword", oldPassword);
+    formData.append("newPassword", newPassword);
+    if (avatar) {
+      formData.append("avatar", avatar);
+    }
+
+    dispatch(updateCredentials(formData));
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatar(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   useEffect(() => {
@@ -95,6 +115,24 @@ const SettingPopup = () => {
             <button onClick={handleClose} className="text-gray-400 hover:text-black transition-colors">
               <X size={24} />
             </button>
+          </div>
+
+          <div className="flex flex-col items-center mb-8">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100 shadow-inner bg-gray-50 flex items-center justify-center">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : user?.avatar?.url ? (
+                  <img src={user.avatar.url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={40} className="text-gray-300" />
+                )}
+              </div>
+              <label className="absolute bottom-0 right-0 p-2 bg-black text-white rounded-full cursor-pointer hover:scale-110 transition-transform shadow-lg">
+                <Camera size={16} />
+                <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
+              </label>
+            </div>
           </div>
 
           <form onSubmit={handleUpdateCredentials} className="flex flex-col gap-5">

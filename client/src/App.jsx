@@ -30,6 +30,9 @@ import Payments from "./admin/Payments";
 import AdminForgotPassword from "./admin/AdminForgotPassword";
 import AdminForgotPasswordOTP from "./admin/AdminForgotPasswordOTP";
 import AdminResetPassword from "./admin/AdminResetPassword";
+import ChatWidget from "./components/ChatWidget.jsx";
+import ChatbotWidget from "./components/ChatbotWidget.jsx";
+import { fetchConversations } from "./store/slices/messageSlice";
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, initLoading, user } = useSelector((state) => state.auth);
@@ -67,6 +70,7 @@ const App = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
     dispatch(fetchAllBooks());
+    dispatch(fetchConversations());
     if (user?.role === "User") {
       dispatch(fetchUserBorrowedBooks());
       dispatch(fetchAllDigitalBooks());
@@ -102,6 +106,7 @@ const App = () => {
         <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/catalog" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/admin/import-digital" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
+        <Route path="/admin/payments" element={<ProtectedRoute adminOnly={true}><Home /></ProtectedRoute>} />
         <Route path="/password/forgot/otp/:email" element={<ForgotPasswordOTP />} />
         <Route path="/admin/password/forgot" element={<AdminForgotPassword />} />
         <Route path="/admin/password/forgot/otp/:email" element={<AdminForgotPasswordOTP />} />
@@ -111,6 +116,12 @@ const App = () => {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastContainer theme="dark" position="top-right" />
+      {isAuthenticated && (
+        <>
+          <ChatWidget />
+          {user?.role !== "Admin" && <ChatbotWidget />}
+        </>
+      )}
     </Router>
   );
 };

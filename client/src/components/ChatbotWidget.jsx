@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { MessageCircle, Send, X, Bot, User } from 'lucide-react';
 import './ChatbotWidget.css';
@@ -11,6 +12,8 @@ const ChatbotWidget = () => {
     ]);
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
+
+    const { messagingOpen } = useSelector((state) => state.popup);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,6 +61,8 @@ const ChatbotWidget = () => {
         { label: "🔍 Search Authors", query: "Who are your most popular authors?" },
         { label: "💡 How to borrow?", query: "How do I borrow a book from this library?" },
     ];
+
+    if (messagingOpen) return null;
 
     return (
         <div className="chatbot-widget">

@@ -69,3 +69,16 @@ export const registerNewAdmin = catchAsyncErrors(async (req, res, next) => {
     admin,
   });
 });
+
+export const getAdmin = catchAsyncErrors(async (req, res, next) => {
+  const admin = await User.findOne({ role: "Admin" }).select("name email avatar isOnline lastSeen");
+
+  if (!admin) {
+    return next(new ErrorHandler("Admin not found.", 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    admin,
+  });
+});

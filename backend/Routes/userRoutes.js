@@ -2,6 +2,7 @@ import express from "express";
 import {
   getAllUsers,
   registerNewAdmin,
+  getAdmin,
 } from "../controller/userController.js";
 import {
   isAuthenticated,
@@ -17,4 +18,5 @@ router.post(
   isAuthorized("Admin"),
   registerNewAdmin
 );
+router.get("/admin", isAuthenticated, getAdmin);
 export default router;

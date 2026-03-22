@@ -1,9 +1,11 @@
 // top of file
 import express from "express";
+import path from "path";
 import { config } from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { connectDB } from "./database/db.js";
+import fs from "fs";
 import authRoutes from "./Routes/authRoutes.js";
 import bookRoutes from "./Routes/bookRouter.js";
 import userRoutes from "./Routes/userRoutes.js";
@@ -11,6 +13,7 @@ import borrowRoutes from "./Routes/borrowRoutes.js";
 import digitalRoutes from "./Routes/digitalRoutes.js";
 import paymentRoutes from "./Routes/paymentRouter.js";
 import aiRoutes from "./Routes/aiRoutes.js";
+import messageRoutes from "./Routes/messageRoutes.js"; // Added this line
 import expressFileUpload from "express-fileupload";
 import { notifyUsers } from "./services/notifyUsers.js";
 import { removeUnverifiedAccounts } from "./services/removeUnverifiedAccounts.js";
@@ -44,9 +47,18 @@ app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/digital", digitalRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/ai", aiRoutes);
+app.use("/api/v1/messages", messageRoutes); // Added this line
+app.use("/uploads", express.static(path.join(path.resolve(), "uploads")));
 
 (async () => {
   await connectDB(); // ✅ just await it
+
+  // Ensure uploads directory exists
+  const uploadsDir = path.join(process.cwd(), "uploads", "chat");
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log("✅ Created uploads/chat directory.");
+  }
 
   console.log("✅ Database connected successfully.");
   notifyUsers();
