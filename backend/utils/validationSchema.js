@@ -14,9 +14,14 @@ export const loginSchema = z.object({
 export const updateProfileSchema = z.object({
     name: z.string().min(3, "Name must be at least 3 characters").max(30, "Name cannot exceed 30 characters").optional(),
     email: z.string().email("Invalid email format").optional(),
-    oldPassword: z.string().min(8, "Old password must be at least 8 characters").max(16, "Old password cannot exceed 16 characters"),
-    newPassword: z.string().min(8, "New password must be at least 8 characters").max(16, "New password cannot exceed 16 characters"),
-}).refine(data => data.oldPassword !== data.newPassword, {
+    oldPassword: z.string().min(8, "Old password must be at least 8 characters").max(16, "Old password cannot exceed 16 characters").optional(),
+    newPassword: z.string().min(8, "New password must be at least 8 characters").max(16, "New password cannot exceed 16 characters").optional(),
+}).refine(data => {
+    if (data.oldPassword || data.newPassword) {
+        return data.oldPassword !== data.newPassword;
+    }
+    return true;
+}, {
     message: "New password cannot be the same as the old password",
     path: ["newPassword"],
 });

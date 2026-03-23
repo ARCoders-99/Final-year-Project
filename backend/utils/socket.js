@@ -41,12 +41,44 @@ export const initSocket = (server) => {
           fileName: fileName || null,
         });
 
-        // Emit to the receiver's room (all their tabs)
-        io.to(receiverId).emit("newMessage", newMessage);
-        console.log(`Emitted newMessage to room: ${receiverId}`);
+        const populatedMessage = await Message.findById(newMessage._id)
+          .populate("sender", "name avatar role")
+          .populate("receiver", "name avatar role");
+
+        const sender = await User.findById(senderId);
+        const receiver = await User.findById(receiverId);
+
+        // --- Admin Assignment Logic ---
+        if (sender && sender.role === "Admin" && receiver && receiver.role === "User") {
+          if (!receiver.assignedAdmin) {
+            // Auto-assign first admin who replies
+            await User.findByIdAndUpdate(receiverId, { assignedAdmin: senderId });
+            io.emit("adminAssigned", { userId: receiverId, admin: { _id: sender._id, name: sender.name } });
+            console.log(`Auto-assigned Admin ${sender.name} to User ${receiver.name}`);
+          } else if (String(receiver.assignedAdmin) !== String(senderId)) {
+            // Block messages from non-assigned admins
+            console.warn(`Admin ${sender.name} tried to message a user assigned to someone else.`);
+            socket.emit("error", { message: "You are not assigned to this chat. Take over first." });
+            return;
+          }
+        }
+        // ------------------------------
+
+        if (receiver && receiver.role === "Admin") {
+          // If message is to an admin, broadcast to ALL admins
+          const allAdmins = await User.find({ role: "Admin" });
+          allAdmins.forEach(admin => {
+            io.to(String(admin._id)).emit("newMessage", populatedMessage);
+          });
+          console.log(`Emitted newMessage to ALL admins`);
+        } else {
+          // Normal user-to-user or admin-to-user message
+          io.to(receiverId).emit("newMessage", populatedMessage);
+          console.log(`Emitted newMessage to room: ${receiverId}`);
+        }
 
         // Emit back to sender's room (all their tabs)
-        io.to(senderId).emit("messageSent", newMessage);
+        io.to(senderId).emit("messageSent", populatedMessage);
         console.log(`Emitted messageSent to room: ${senderId}`);
       } catch (error) {
         console.error("Error sending message:", error);
@@ -63,15 +95,31 @@ export const initSocket = (server) => {
           { _id: messageId, sender: senderId }, // Security check: must be sender
           { content: newContent, isEdited: true },
           { new: true }
-        );
+        ).populate("sender", "name avatar").populate("receiver", "name avatar");
 
         if (updatedMessage) {
-          // Broadcast update to both rooms based on the message record
           const sId = String(updatedMessage.sender);
           const rId = String(updatedMessage.receiver);
-          io.to(sId).emit("messageUpdated", updatedMessage);
-          io.to(rId).emit("messageUpdated", updatedMessage);
-          console.log(`BACKEND: Emitted messageUpdated for ${messageId} to rooms ${sId} and ${rId}`);
+
+          const sender = await User.findById(sId);
+          const receiver = await User.findById(rId);
+          const allAdmins = await User.find({ role: "Admin" });
+          const adminIds = allAdmins.map(a => String(a._id));
+
+          // Broadcast to sender
+          if (sender && sender.role === "Admin") {
+            adminIds.forEach(id => io.to(id).emit("messageUpdated", updatedMessage));
+          } else {
+            io.to(sId).emit("messageUpdated", updatedMessage);
+          }
+
+          // Broadcast to receiver
+          if (receiver && receiver.role === "Admin") {
+            adminIds.forEach(id => io.to(id).emit("messageUpdated", updatedMessage));
+          } else {
+            io.to(rId).emit("messageUpdated", updatedMessage);
+          }
+          console.log(`BACKEND: Emitted messageUpdated for ${messageId}`);
         } else {
           console.warn(`BACKEND: Message ${messageId} not found or user ${senderId} is not the sender`);
         }
@@ -93,6 +141,17 @@ export const initSocket = (server) => {
 
         // Notify the sender that their messages were read
         io.to(senderId).emit("messagesRead", { readerId: receiverId });
+
+        // Also notify other admins if the reader is an admin
+        const reader = await User.findById(receiverId);
+        if (reader && reader.role === "Admin") {
+          const allAdmins = await User.find({ role: "Admin" });
+          allAdmins.forEach(admin => {
+            if (String(admin._id) !== String(receiverId)) {
+              io.to(String(admin._id)).emit("messagesReadByOtherAdmin", { readerId: receiverId, senderId });
+            }
+          });
+        }
       } catch (error) {
         console.error("Error marking messages as read:", error);
       }
@@ -120,7 +179,7 @@ export const initSocket = (server) => {
           if (isSender && diff < 15) {
             msg.deletedForEveryone = true;
             await msg.save();
-            
+
             // Broadcast to both participants
             const sId = String(msg.sender);
             const rId = String(msg.receiver);
@@ -137,8 +196,17 @@ export const initSocket = (server) => {
             msg.hiddenFor.push(userId);
             await msg.save();
           }
-          // Only notify the user who deleted it (to update their local state)
-          io.to(String(userId)).emit("messageDeleted", { messageId, mode: "me", userId });
+
+          const user = await User.findById(userId);
+          if (user && user.role === "Admin") {
+            // If an admin deletes for themselves, should it hide for all admins?
+            // Usually yes, or just for that admin. User says "it should receive all admins"
+            // but for deletion, "me" usually means "me".
+            // However, to keep it simple and consistent with shared inbox:
+            io.to(String(userId)).emit("messageDeleted", { messageId, mode: "me", userId });
+          } else {
+            io.to(String(userId)).emit("messageDeleted", { messageId, mode: "me", userId });
+          }
           console.log(`BACKEND: Emitted messageDeleted (me) to room ${userId}`);
         }
       } catch (error) {
@@ -150,7 +218,7 @@ export const initSocket = (server) => {
       console.log(`User disconnected: ${userId}`);
       if (userId && userId !== "undefined") {
         userSocketMap[userId]--;
-        
+
         if (userSocketMap[userId] <= 0) {
           delete userSocketMap[userId];
           // Only update status to offline if NO sessions remain

@@ -11,6 +11,7 @@ const messageSlice = createSlice({
     unreadCount: 0,
     currentUserId: null,
     activeChatId: null,
+    activeChatAssignedAdmin: null,
   },
   reducers: {
     setMessages: (state, action) => {
@@ -32,10 +33,10 @@ const messageSlice = createSlice({
         const conv = state.conversations[convIndex];
         conv.lastMessage = message.content;
         conv.lastMessageTime = message.createdAt;
-        
+
         // If it's an incoming message and not from the current active chat handled in components
         if (String(message.receiver) === String(state.currentUserId) && String(message.sender) !== String(state.activeChatId)) {
-             conv.unreadCount = (conv.unreadCount || 0) + 1;
+          conv.unreadCount = (conv.unreadCount || 0) + 1;
         }
 
         // Move to top
@@ -88,7 +89,7 @@ const messageSlice = createSlice({
     handleReadMessage: (state, action) => {
       const userId = action.payload;
       const convIndex = state.conversations.findIndex((c) => String(c._id) === String(userId));
-      
+
       if (convIndex !== -1) {
         const conv = state.conversations[convIndex];
         state.unreadCount = Math.max(0, state.unreadCount - (conv.unreadCount || 0));
@@ -132,11 +133,21 @@ const messageSlice = createSlice({
       }
 
       // Also Update conversation summary if needed
-      const convIndex = state.conversations.findIndex(c => 
+      const convIndex = state.conversations.findIndex(c =>
         state.messages.some(m => String(m._id) === String(messageId) && (String(m.sender) === String(c._id) || String(m.receiver) === String(c._id)))
       );
       if (convIndex !== -1 && mode === "everyone") {
-          state.conversations[convIndex].lastMessage = "This message was deleted";
+        state.conversations[convIndex].lastMessage = "This message was deleted";
+      }
+    },
+    updateAssignment: (state, action) => {
+      const { userId, admin } = action.payload;
+      if (String(state.activeChatId) === String(userId)) {
+        state.activeChatAssignedAdmin = admin;
+      }
+      const conv = state.conversations.find(c => String(c._id) === String(userId));
+      if (conv) {
+        conv.userInfo.assignedAdmin = admin;
       }
     },
   },
@@ -159,6 +170,7 @@ export const {
   resetAllUnread,
   setActiveChatId,
   deleteMessageLocally,
+  updateAssignment,
 } = messageSlice.actions;
 
 export const fetchMessages = (userId) => async (dispatch) => {
@@ -168,6 +180,7 @@ export const fetchMessages = (userId) => async (dispatch) => {
       withCredentials: true,
     });
     dispatch(setMessages(data.messages));
+    dispatch(updateAssignment({ userId, admin: data.assignedAdmin }));
   } catch (error) {
     dispatch(setError(error.response?.data?.message || "Failed to fetch messages"));
   } finally {
@@ -196,7 +209,7 @@ export const markMessagesAsRead = (senderId) => async (dispatch, getState) => {
     if (socket && user?._id) {
       socket.emit("markAsRead", { senderId, receiverId: user._id });
     }
-    
+
     await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/v1/messages/read/${senderId}`, {}, {
       withCredentials: true,
     });

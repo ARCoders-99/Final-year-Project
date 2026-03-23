@@ -115,7 +115,7 @@ const App = () => {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <ToastContainer theme="dark" position="top-right" />
+      <ToastContainer theme="colored" position="top-right" />
       {isAuthenticated && (
         <>
           <ChatWidget />

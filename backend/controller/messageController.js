@@ -6,48 +6,94 @@ import ErrorHandler from "../middlewares/errorMiddlewares.js";
 import { v2 as cloudinary } from "cloudinary";
 import path from "path";
 import fs from "fs";
+import { getIO } from "../utils/socket.js";
 
 // Fetch conversation between two users
 export const getMessages = catchAsyncErrors(async (req, res, next) => {
   const { userId } = req.params;
   const currentUserId = req.user._id;
 
+  // Fetch the other user to check assignment
+  const targetUser = await User.findById(userId).populate("assignedAdmin", "name avatar");
+  const assignedAdmin = targetUser ? targetUser.assignedAdmin : null;
+
+  const adminsList = await User.find({ role: "Admin" }).select("_id");
+  const adminIdsList = adminsList.map(a => a._id);
+
   // Automatically mark those messages as read when fetching them
-  await Message.updateMany(
-    { 
-      sender: new mongoose.Types.ObjectId(userId), 
-      receiver: new mongoose.Types.ObjectId(currentUserId), 
-      isRead: false 
-    },
-    { $set: { isRead: true } }
-  );
+  const currentUser = await User.findById(currentUserId);
+  if (currentUser && currentUser.role === "Admin") {
+    await Message.updateMany(
+      {
+        sender: new mongoose.Types.ObjectId(userId),
+        receiver: { $in: adminIdsList },
+        isRead: false
+      },
+      { $set: { isRead: true } }
+    );
+  } else {
+    await Message.updateMany(
+      {
+        sender: new mongoose.Types.ObjectId(userId),
+        receiver: new mongoose.Types.ObjectId(currentUserId),
+        isRead: false
+      },
+      { $set: { isRead: true } }
+    );
+  }
+
+  const user = await User.findById(currentUserId);
+  const isAdmin = user && user.role === "Admin";
+
+  let query;
+  if (isAdmin) {
+    // If current user is admin, they should see messages between ANY admin and this user
+    const admins = await User.find({ role: "Admin" }).select("_id");
+    const adminIds = admins.map(a => a._id);
+    query = {
+      $or: [
+        { sender: { $in: adminIds }, receiver: userId },
+        { sender: userId, receiver: { $in: adminIds } },
+      ],
+    };
+  } else {
+    // Normal user sees conversation with a specific party
+    query = {
+      $or: [
+        { sender: currentUserId, receiver: userId },
+        { sender: userId, receiver: currentUserId },
+      ],
+    };
+  }
 
   const messages = await Message.find({
-    $or: [
-      { sender: currentUserId, receiver: userId },
-      { sender: userId, receiver: currentUserId },
-    ],
+    ...query,
     deletedForEveryone: false,
     hiddenFor: { $ne: currentUserId },
-  }).sort({ createdAt: 1 });
+  })
+    .sort({ createdAt: 1 })
+    .populate("sender", "name avatar role")
+    .populate("receiver", "name avatar role");
 
   res.status(200).json({
     success: true,
     messages,
+    assignedAdmin,
   });
 });
 
 // Admin: Get all users who have messaged the admin
 export const getConversationsCount = catchAsyncErrors(async (req, res, next) => {
-  const adminId = new mongoose.Types.ObjectId(req.user._id);
+  const admins = await User.find({ role: "Admin" }).select("_id");
+  const adminIds = admins.map(a => a._id);
 
-  // Find all messages involving the admin
+  // Find all messages involving ANY admin
   const contacts = await Message.aggregate([
     {
       $match: {
-        $or: [{ sender: adminId }, { receiver: adminId }],
+        $or: [{ sender: { $in: adminIds } }, { receiver: { $in: adminIds } }],
         deletedForEveryone: false,
-        hiddenFor: { $ne: adminId },
+        hiddenFor: { $ne: req.user._id }, // currentAdminId context for hiddenFor
       },
     },
     {
@@ -57,7 +103,7 @@ export const getConversationsCount = catchAsyncErrors(async (req, res, next) => 
       $group: {
         _id: {
           $cond: [
-            { $eq: ["$sender", adminId] },
+            { $in: ["$sender", adminIds] },
             "$receiver",
             "$sender",
           ],
@@ -69,7 +115,7 @@ export const getConversationsCount = catchAsyncErrors(async (req, res, next) => 
             $cond: [
               {
                 $and: [
-                  { $eq: ["$receiver", adminId] },
+                  { $in: ["$receiver", adminIds] },
                   { $eq: ["$isRead", false] },
                 ],
               },
@@ -102,6 +148,26 @@ export const getConversationsCount = catchAsyncErrors(async (req, res, next) => 
         "userInfo.avatar": 1,
         "userInfo.isOnline": 1,
         "userInfo.lastSeen": 1,
+        "userInfo.assignedAdmin": 1,
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "userInfo.assignedAdmin",
+        foreignField: "_id",
+        as: "assignedAdminInfo",
+      },
+    },
+    {
+      $addFields: {
+        "userInfo.assignedAdmin": { $arrayElemAt: ["$assignedAdminInfo", 0] },
+      },
+    },
+    {
+      $project: {
+        assignedAdminInfo: 0,
+        "userInfo.assignedAdmin.password": 0,
       },
     },
   ]);
@@ -112,23 +178,81 @@ export const getConversationsCount = catchAsyncErrors(async (req, res, next) => 
   });
 });
 
+// Assign admin to a user conversation (Take Over)
+export const assignAdmin = catchAsyncErrors(async (req, res, next) => {
+  const { userId } = req.params;
+  const adminId = req.user._id;
+
+  if (req.user.role !== "Admin") {
+    return next(new ErrorHandler("Only admins can take over chats.", 403));
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return next(new ErrorHandler("User not found.", 404));
+  }
+
+  user.assignedAdmin = adminId;
+  await user.save();
+
+  // Populate assigned admin name for response
+  const updatedUser = await User.findById(userId).populate("assignedAdmin", "name avatar");
+
+  // Notify all admins via socket
+  try {
+    const io = getIO();
+    io.emit("adminAssigned", {
+      userId,
+      admin: {
+        _id: updatedUser.assignedAdmin._id,
+        name: updatedUser.assignedAdmin.name,
+        avatar: updatedUser.assignedAdmin.avatar
+      }
+    });
+  } catch (err) {
+    console.error("Socket emit failed in assignAdmin:", err);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Chat assigned successfully.",
+    assignedAdmin: updatedUser.assignedAdmin,
+  });
+});
+
 // Mark messages as read
 export const markAsRead = catchAsyncErrors(async (req, res, next) => {
   const { senderId } = req.params;
   const receiverId = req.user._id;
 
+  const currentUser = await User.findById(receiverId);
+  const isAdmin = currentUser && currentUser.role === "Admin";
+
+  let query;
+  if (isAdmin) {
+    const adminsList = await User.find({ role: "Admin" }).select("_id");
+    const adminIdsList = adminsList.map(a => a._id);
+    query = {
+      sender: new mongoose.Types.ObjectId(senderId),
+      receiver: { $in: adminIdsList },
+      isRead: false
+    };
+  } else {
+    query = {
+      sender: new mongoose.Types.ObjectId(senderId),
+      receiver: new mongoose.Types.ObjectId(receiverId),
+      isRead: false
+    };
+  }
+
   const result = await Message.updateMany(
-    { 
-      sender: new mongoose.Types.ObjectId(senderId), 
-      receiver: new mongoose.Types.ObjectId(receiverId), 
-      isRead: false 
-    },
+    query,
     { $set: { isRead: true } }
   );
 
   res.status(200).json({
     success: true,
-    message: "Messages marked as read",
+    message: isAdmin ? "Messages marked as read for all admins" : "Messages marked as read",
     updatedCount: result.modifiedCount
   });
 });
@@ -158,13 +282,13 @@ export const uploadImage = catchAsyncErrors(async (req, res, next) => {
     }
 
     const filePath = path.join(uploadDir, fileName);
-    
+
     await file.mv(filePath);
-    
+
     // Construct local URL - use req.headers.host for reliability
     const host = req.headers.host;
     uploadUrl = `${req.protocol}://${host}/uploads/chat/${fileName}`;
-    
+
     console.log("PDF Saved Locally:", filePath);
     console.log("PDF URL Generated:", uploadUrl);
   } else {

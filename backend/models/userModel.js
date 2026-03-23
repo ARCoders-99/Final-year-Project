@@ -67,6 +67,11 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    assignedAdmin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   {
     timestamps: true,

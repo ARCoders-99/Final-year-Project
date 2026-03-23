@@ -31,21 +31,21 @@ const Header = () => {
     : "U";
 
   return (
-    <header className="absolute top-0 bg-white dark:bg-gray-900 w-full h-16 px-6 left-0 shadow-sm border-b border-gray-100 dark:border-gray-800 flex justify-between items-center z-10 transition-colors">
+    <header className="absolute top-0 bg-white w-full h-16 px-6 left-0 shadow-sm border-b border-gray-100 flex justify-between items-center z-10 transition-colors">
       {/* LEFT SIDE */}
       <div className="flex items-center gap-3">
         <div className="relative">
-          <div className="w-10 h-10 rounded-2xl bg-black dark:bg-gray-800 flex items-center justify-center overflow-hidden border-2 border-white dark:border-gray-700 shadow-md">
+          <div className="w-10 h-10 rounded-2xl bg-black flex items-center justify-center overflow-hidden border-2 border-white shadow-md">
             {user?.avatar?.url ? (
               <img src={user.avatar.url} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <span className="text-white text-xs font-black">{initials}</span>
             )}
           </div>
-          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white dark:border-gray-900 shadow-sm" />
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow-sm" />
         </div>
         <div className="flex flex-col">
-          <span className="text-[15px] font-black text-gray-900 dark:text-white leading-tight">
+          <span className="text-[15px] font-black text-gray-900 leading-tight">
             {user?.name || "Welcome"}
           </span>
           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
@@ -57,10 +57,10 @@ const Header = () => {
       {/* RIGHT SIDE */}
       <div className="flex items-center gap-4">
         {/* Clock Pill */}
-        <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-inner">
+        <div className="hidden lg:flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl border border-gray-100 shadow-inner">
           <Clock size={14} className="text-gray-400" />
           <div className="flex flex-col items-end leading-none">
-            <span className="text-xs font-black text-gray-800 dark:text-gray-200">{currentTime}</span>
+            <span className="text-xs font-black text-gray-800">{currentTime}</span>
             <span className="text-[10px] font-bold text-gray-400 mt-0.5">{currentDate}</span>
           </div>
         </div>
@@ -68,24 +68,23 @@ const Header = () => {
         {/* Action Icons */}
         <div className="flex items-center gap-1">
           {/* Chat Icon - opens ChatWidget */}
-          <button 
+          <button
             onClick={() => dispatch(toggleMessagingPopup())}
-            className={`p-2.5 rounded-xl transition-all relative ${
-              unreadCount > 0 && !messagingOpen ? "text-black dark:text-white bg-gray-100 dark:bg-gray-800" : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-black dark:hover:text-white"
-            }`}
+            className={`p-2.5 rounded-xl transition-all relative ${unreadCount > 0 && !messagingOpen ? "text-black bg-gray-100" : "text-gray-500 hover:bg-gray-100 hover:text-black"
+              }`}
             title="Messages"
           >
             <MessageCircle size={20} />
             {unreadCount > 0 && !messagingOpen && (
-              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center border-2 border-white dark:border-gray-900 shadow-sm">
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center border-2 border-white shadow-sm">
                 {unreadCount}
               </span>
             )}
           </button>
 
-          <button 
+          <button
             onClick={() => dispatch(toggleSettingPopup())}
-            className="p-2.5 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-black dark:hover:text-white transition-all"
+            className="p-2.5 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-black transition-all"
             title="Settings"
           >
             <Settings size={20} />

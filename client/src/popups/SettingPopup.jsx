@@ -38,21 +38,23 @@ const SettingPopup = () => {
       return toast.error("Please enter a valid email address.");
     }
 
-    if (!oldPassword || !newPassword) {
-      return toast.error("Both old and new password are required to save changes.");
+    if ((oldPassword && !newPassword) || (!oldPassword && newPassword)) {
+      return toast.error("Both old and new password are required if you want to change your password.");
     }
-    if (oldPassword === newPassword) {
-      return toast.error("New password cannot be the same as the old password.");
-    }
-    if (newPassword.length < 8 || newPassword.length > 16) {
-      return toast.error("New password must be between 8 and 16 characters.");
+    if (oldPassword && newPassword) {
+      if (oldPassword === newPassword) {
+        return toast.error("New password cannot be the same as the old password.");
+      }
+      if (newPassword.length < 8 || newPassword.length > 16) {
+        return toast.error("New password must be between 8 and 16 characters.");
+      }
     }
 
     const formData = new FormData();
     formData.append("name", name);
     formData.append("email", email);
-    formData.append("oldPassword", oldPassword);
-    formData.append("newPassword", newPassword);
+    if (oldPassword) formData.append("oldPassword", oldPassword);
+    if (newPassword) formData.append("newPassword", newPassword);
     if (avatar) {
       formData.append("avatar", avatar);
     }
