@@ -57,11 +57,15 @@ export const getMessages = catchAsyncErrors(async (req, res, next) => {
       ],
     };
   } else {
-    // Normal user sees conversation with a specific party
+    // For a regular user, fetch all messages between them and ANY admin.
+    // This ensures messages from multiple admins all show up in their chat.
+    const adminIds = adminIdsList;
     query = {
       $or: [
-        { sender: currentUserId, receiver: userId },
-        { sender: userId, receiver: currentUserId },
+        // User sent a message to any admin
+        { sender: currentUserId, receiver: { $in: adminIds } },
+        // Any admin sent a message to the user
+        { sender: { $in: adminIds }, receiver: currentUserId },
       ],
     };
   }
@@ -307,5 +311,45 @@ export const uploadImage = catchAsyncErrors(async (req, res, next) => {
     success: true,
     url: uploadUrl,
     originalName: file.name,
+  });
+});
+
+// Clear Chat (Hide for current user)
+export const clearChat = catchAsyncErrors(async (req, res, next) => {
+  const { userId } = req.params;
+  const currentUserId = req.user._id;
+  const isAdmin = req.user.role === "Admin";
+
+  let query;
+  if (isAdmin) {
+    // If Admin, clear messages between this user and any admin
+    const admins = await User.find({ role: "Admin" }).select("_id");
+    const adminIds = admins.map(a => a._id);
+    query = {
+      $or: [
+        { sender: { $in: adminIds }, receiver: userId },
+        { sender: userId, receiver: { $in: adminIds } },
+      ],
+    };
+  } else {
+    // If User, clear messages between them and any admin
+    const admins = await User.find({ role: "Admin" }).select("_id");
+    const adminIds = admins.map(a => a._id);
+    query = {
+      $or: [
+        { sender: currentUserId, receiver: { $in: adminIds } },
+        { sender: { $in: adminIds }, receiver: currentUserId },
+      ],
+    };
+  }
+
+  // Update all these messages to include currentUserId in hiddenFor array
+  await Message.updateMany(query, {
+    $addToSet: { hiddenFor: currentUserId }
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Chat history cleared successfully for you.",
   });
 });

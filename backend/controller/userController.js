@@ -71,7 +71,13 @@ export const registerNewAdmin = catchAsyncErrors(async (req, res, next) => {
 });
 
 export const getAdmin = catchAsyncErrors(async (req, res, next) => {
-  const admin = await User.findOne({ role: "Admin" }).select("name email avatar isOnline lastSeen");
+  // Find an online admin first
+  let admin = await User.findOne({ role: "Admin", isOnline: true }).select("name email avatar isOnline lastSeen");
+
+  // Fallback to any admin if none are online
+  if (!admin) {
+    admin = await User.findOne({ role: "Admin" }).select("name email avatar isOnline lastSeen");
+  }
 
   if (!admin) {
     return next(new ErrorHandler("Admin not found.", 404));
@@ -80,5 +86,29 @@ export const getAdmin = catchAsyncErrors(async (req, res, next) => {
   res.status(200).json({
     success: true,
     admin,
+  });
+});
+
+// Search users for admin chat
+export const searchUsers = catchAsyncErrors(async (req, res, next) => {
+  const { query } = req.query;
+
+  if (!query || query.trim() === "") {
+    return res.status(200).json({ success: true, users: [] });
+  }
+
+  // Find users whose name or email matches the query, excluding admins
+  const users = await User.find({
+    role: "User",
+    accountVerified: true,
+    $or: [
+      { name: { $regex: query, $options: "i" } },
+      { email: { $regex: query, $options: "i" } },
+    ],
+  }).select("name email avatar isOnline lastSeen _id");
+
+  res.status(200).json({
+    success: true,
+    users,
   });
 });

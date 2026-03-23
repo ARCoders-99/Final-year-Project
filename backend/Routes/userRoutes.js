@@ -3,6 +3,7 @@ import {
   getAllUsers,
   registerNewAdmin,
   getAdmin,
+  searchUsers,
 } from "../controller/userController.js";
 import {
   isAuthenticated,
@@ -19,4 +20,5 @@ router.post(
   registerNewAdmin
 );
 router.get("/admin", isAuthenticated, getAdmin);
+router.get("/search", isAuthenticated, isAuthorized("Admin"), searchUsers);
 export default router;

@@ -419,7 +419,7 @@ export const uploadAvatarAction = (formData) => async (dispatch) => {
     // Refresh user data is not strictly necessary as the backend could return the updated user object
     // but the slice handles it by updating state.user if provided.
     // The backend returns { success, message, avatar }, let's make sure we update it.
-    dispatch(getUser()); 
+    dispatch(getUser());
     return data;
   } catch (error) {
     dispatch(

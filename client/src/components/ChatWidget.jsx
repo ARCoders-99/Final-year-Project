@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { MessageCircle, X, Send, User as UserIcon, Circle, Image as ImageIcon, Pencil, ArrowLeft, FileText, Trash2, MoreVertical } from "lucide-react";
+import { MessageCircle, X, Send, User as UserIcon, Circle, Image as ImageIcon, Pencil, ArrowLeft, FileText, Trash2, MoreVertical, Search } from "lucide-react";
 import axios from "axios";
 import { initiateSocket, disconnectSocket, getSocket } from "../utils/socket";
-import { addMessage, fetchMessages, fetchConversations, markMessagesAsRead, updateUserStatus, clearMessages, incrementUnread, resetUnread, resetAllUnread, handleReadMessage, updateMessage, setCurrentUserId, setMessagesRead, setActiveChatId, deleteMessageLocally, updateAssignment } from "../store/slices/messageSlice";
+import { addMessage, fetchMessages, fetchConversations, markMessagesAsRead, updateUserStatus, clearMessages, incrementUnread, resetUnread, resetAllUnread, handleReadMessage, updateMessage, setCurrentUserId, setMessagesRead, setActiveChatId, deleteMessageLocally, updateAssignment, clearChatAction } from "../store/slices/messageSlice";
 import { toggleMessagingPopup } from "../store/slices/popUpSlice";
 import { format } from "date-fns";
 
@@ -13,9 +13,13 @@ const ChatWidget = () => {
   const [editingMessage, setEditingMessage] = useState(null);
   const [editContent, setEditContent] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const scrollRef = useRef();
   const imageInputRef = useRef();
   const pdfInputRef = useRef();
+  const searchTimeoutRef = useRef();
 
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -41,7 +45,10 @@ const ChatWidget = () => {
         }
 
         // Increment global unread if not the current active chat
-        if (String(newMessage.sender) !== String(activeChat?._id)) {
+        const incomingSenderId = String(newMessage.sender?._id || newMessage.sender);
+        const activeChatUserId = String(activeChat?._id || "");
+
+        if (incomingSenderId !== activeChatUserId) {
           dispatch(incrementUnread());
           playNotificationSound();
         } else {
@@ -96,9 +103,32 @@ const ChatWidget = () => {
         socket.off("messagesRead");
         socket.off("messageDeleted");
         socket.off("adminAssigned");
+        socket.off("adminStatusUpdate");
       };
     }
   }, [user?._id, activeChat?._id, isAdmin, conversations.length, dispatch]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket) {
+      socket.off("adminStatusUpdate");
+      socket.on("adminStatusUpdate", (data) => {
+        console.log("COLLECTIVE ADMIN STATUS UPDATE:", data);
+        if (!isAdmin) {
+          setActiveChat(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              userInfo: {
+                ...prev.userInfo,
+                isOnline: data.isOnline
+              }
+            };
+          });
+        }
+      });
+    }
+  }, [isAdmin]);
 
   const [activeMenu, setActiveMenu] = useState(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -115,7 +145,7 @@ const ChatWidget = () => {
 
     if (isAdmin && isOpen) {
       dispatch(fetchConversations());
-    } else if (!isAdmin && isOpen && !activeChat) {
+    } else if (!isAdmin && isOpen) {
       // Fetch admin info for the user
       const getAdminInfo = async () => {
         try {
@@ -124,9 +154,11 @@ const ChatWidget = () => {
           });
           if (data.success && data.admin) {
             console.log("Fetched Admin Info for User:", data.admin);
-            setActiveChat({ _id: data.admin._id, userInfo: data.admin });
-          } else if (data.success && !data.admin) {
-            console.error("No admin found in the system!");
+            // Only update if it's different to prevent loops
+            setActiveChat(prev => {
+              if (prev && prev.userInfo.isOnline === data.admin.isOnline) return prev;
+              return { _id: data.admin._id, userInfo: data.admin };
+            });
           }
         } catch (error) {
           console.error("Failed to fetch admin info:", error);
@@ -134,7 +166,7 @@ const ChatWidget = () => {
       };
       getAdminInfo();
     }
-  }, [isAdmin, isOpen, dispatch, activeChat]);
+  }, [isAdmin, isOpen, dispatch]);
 
   const activeChatId = activeChat?._id;
   useEffect(() => {
@@ -165,7 +197,7 @@ const ChatWidget = () => {
 
         // Instant focus for the admin
         setTimeout(() => {
-          const input = document.querySelector('textarea[placeholder="Type a message..."]');
+          const input = document.querySelector('input[placeholder="Type a message..."]');
           if (input) input.focus();
         }, 100);
       } else {
@@ -335,14 +367,65 @@ const ChatWidget = () => {
 
   const toggleChat = () => dispatch(toggleMessagingPopup());
 
+  const handleSearch = async (val) => {
+    setSearchTerm(val);
+    if (!val.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const { data } = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/v1/user/search?query=${val}`, {
+          withCredentials: true,
+        });
+        if (data.success) {
+          setSearchResults(data.users);
+        }
+      } catch (error) {
+        console.error("Search failed:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+  };
+
+  const startNewChat = (selectedUser) => {
+    // Check if conversation already exists in conversations list
+    const existingConv = conversations.find(c => String(c._id) === String(selectedUser._id));
+
+    if (existingConv) {
+      setActiveChat(existingConv);
+    } else {
+      // Create a mock conversation object to start chat
+      setActiveChat({
+        _id: selectedUser._id,
+        userInfo: {
+          _id: selectedUser._id,
+          name: selectedUser.name,
+          email: selectedUser.email,
+          avatar: selectedUser.avatar,
+          isOnline: selectedUser.isOnline,
+          lastSeen: selectedUser.lastSeen,
+          role: "User"
+        }
+      });
+    }
+    setSearchTerm("");
+    setSearchResults([]);
+  };
+
   if (!user) return null;
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-4">
         {/* Chat Window */}
         {isOpen && (
-          <div className="w-[380px] sm:w-[420px] h-[580px] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
+          <div className="w-[calc(100vw-2rem)] sm:w-[420px] h-[80vh] sm:h-[600px] bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
 
             {/* Header */}
             <div className="p-4 bg-black text-white flex items-center justify-between">
@@ -365,7 +448,7 @@ const ChatWidget = () => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-bold truncate">
-                    {activeChat ? activeChat.userInfo.name : "Direct Messaging"}
+                    {activeChat ? (isAdmin ? activeChat.userInfo.name : "Admin Support") : "Direct Messaging"}
                   </h3>
                   {isAdmin && activeChat && (
                     <div className="flex items-center gap-2 mt-0.5">
@@ -402,60 +485,141 @@ const ChatWidget = () => {
                   )}
                 </div>
               </div>
-              <button
-                onClick={toggleChat}
-                className="p-2 hover:bg-gray-800 rounded-xl transition-colors shrink-0"
-              >
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-1">
+                {activeChat && (
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to clear this chat history for yourself?")) {
+                        dispatch(clearChatAction(activeChat._id));
+                      }
+                    }}
+                    className="p-2 hover:bg-red-500/10 text-gray-400 hover:text-red-500 rounded-xl transition-colors shrink-0"
+                    title="Clear Chat"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+                <button
+                  onClick={toggleChat}
+                  className="p-2 hover:bg-gray-800 rounded-xl transition-colors shrink-0"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
               {isAdmin && !activeChat ? (
                 /* Conversation List for Admin */
-                <div className="space-y-2">
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 px-2">Active Conversations</p>
-                  {conversations.length === 0 ? (
-                    <div className="text-center py-10">
-                      <MessageCircle size={40} className="mx-auto text-gray-200 mb-2" />
-                      <p className="text-sm text-gray-500 font-bold">No messages yet</p>
+                <div className="space-y-4">
+                  {/* Admin Search Bar */}
+                  <div className="sticky top-0 z-10 bg-gray-50/80 backdrop-blur-sm -mx-4 -mt-4 p-4 border-b border-gray-100">
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search size={16} className={`${isSearching ? "animate-pulse text-blue-500" : "text-gray-400"} transition-colors`} />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search users by name or email..."
+                        value={searchTerm}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        className="w-full bg-white pl-10 pr-4 py-2.5 rounded-2xl border border-gray-200 outline-none focus:border-black text-sm font-semibold transition-all shadow-sm"
+                      />
+                      {searchTerm && (
+                        <button
+                          onClick={() => { setSearchTerm(""); setSearchResults([]); }}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        >
+                          <X size={14} className="text-gray-400 hover:text-black transition-colors" />
+                        </button>
+                      )}
                     </div>
-                  ) : (
-                    conversations.map((conv) => (
-                      <button
-                        key={conv._id}
-                        onClick={() => setActiveChat(conv)}
-                        className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white border border-gray-100 hover:border-black transition-all text-left shadow-sm group"
-                      >
-                        <div className="relative">
-                          <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
-                            {conv.userInfo.avatar?.url ? (
-                              <img src={conv.userInfo.avatar.url} alt="Avatar" className="w-full h-full object-cover" />
-                            ) : (
-                              <UserIcon size={22} className="text-gray-400" />
+                  </div>
+
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-2">
+                    {searchTerm ? `Search Results (${searchResults.length})` : "Active Conversations"}
+                  </p>
+
+                  {searchTerm.trim() !== "" ? (
+                    /* Search Result View */
+                    searchResults.length === 0 && !isSearching ? (
+                      <div className="text-center py-10 grayscale opacity-50">
+                        <UserIcon size={40} className="mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm font-bold">No users found</p>
+                      </div>
+                    ) : (
+                      searchResults.map((sr) => (
+                        <button
+                          key={sr._id}
+                          onClick={() => startNewChat(sr)}
+                          className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white border border-gray-100 hover:border-black hover:translate-x-1 transition-all text-left shadow-sm group"
+                        >
+                          <div className="relative">
+                            <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center overflow-hidden border border-blue-100 transition-colors group-hover:bg-blue-100">
+                              {sr.avatar?.url ? (
+                                <img src={sr.avatar.url} alt="Avatar" className="w-full h-full object-cover" />
+                              ) : (
+                                <UserIcon size={22} className="text-blue-400" />
+                              )}
+                            </div>
+                            {sr.isOnline && (
+                              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
                             )}
                           </div>
-                          {conv.userInfo.isOnline && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-gray-900 text-sm truncate">{sr.name}</h4>
+                            <p className="text-[10px] text-gray-400 truncate font-semibold">{sr.email}</p>
+                          </div>
+                          <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Send size={12} className="text-blue-500" />
+                          </div>
+                        </button>
+                      ))
+                    )
+                  ) : (
+                    /* Conversation List View (Default) */
+                    conversations.length === 0 ? (
+                      <div className="text-center py-10 grayscale opacity-50">
+                        <MessageCircle size={40} className="mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm font-bold">No messages yet</p>
+                      </div>
+                    ) : (
+                      conversations.map((conv) => (
+                        <button
+                          key={conv._id}
+                          onClick={() => setActiveChat(conv)}
+                          className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white border border-gray-100 hover:border-black transition-all text-left shadow-sm group"
+                        >
+                          <div className="relative">
+                            <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                              {conv.userInfo.avatar?.url ? (
+                                <img src={conv.userInfo.avatar.url} alt="Avatar" className="w-full h-full object-cover" />
+                              ) : (
+                                <UserIcon size={22} className="text-gray-400" />
+                              )}
+                            </div>
+                            {conv.userInfo.isOnline && (
+                              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start mb-0.5">
+                              <h4 className="font-bold text-gray-900 text-sm truncate">{conv.userInfo?.name || "Unknown User"}</h4>
+                              <span className="text-[10px] font-bold text-gray-400">
+                                {conv.lastMessageTime ? format(new Date(conv.lastMessageTime), "p") : ""}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 truncate font-semibold">{conv.lastMessage || "No messages yet"}</p>
+                          </div>
+                          {conv.unreadCount > 0 && (
+                            <div className="w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
+                              {conv.unreadCount}
+                            </div>
                           )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start mb-0.5">
-                            <h4 className="font-bold text-gray-900 text-sm truncate">{conv.userInfo?.name || "Unknown User"}</h4>
-                            <span className="text-[10px] font-bold text-gray-400">
-                              {conv.lastMessageTime ? format(new Date(conv.lastMessageTime), "p") : ""}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 truncate font-semibold">{conv.lastMessage || "No messages yet"}</p>
-                        </div>
-                        {conv.unreadCount > 0 && (
-                          <div className="w-5 h-5 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
-                            {conv.unreadCount}
-                          </div>
-                        )}
-                      </button>
-                    ))
+                        </button>
+                      ))
+                    )
                   )}
                 </div>
               ) : (
@@ -472,10 +636,13 @@ const ChatWidget = () => {
                   ) : (
                     messages
                       .filter(m => {
-                        const mSenderId = m.sender?._id || m.sender;
-                        const mReceiverId = m.receiver?._id || m.receiver;
-                        const activeId = activeChat?._id;
-                        return String(mSenderId) === String(activeId) || String(mReceiverId) === String(activeId);
+                        // For regular users: show ALL messages (backend already returns only user↔admin messages)
+                        if (!isAdmin) return true;
+                        // For admins: scope to the selected conversation's user
+                        const mSenderId = String(m.sender?._id || m.sender);
+                        const mReceiverId = String(m.receiver?._id || m.receiver);
+                        const activeId = String(activeChat?._id);
+                        return mSenderId === activeId || mReceiverId === activeId;
                       })
                       .map((msg, i) => {
                         const senderId = msg.sender?._id || msg.sender;
@@ -496,11 +663,22 @@ const ChatWidget = () => {
                             className={`flex flex-col ${isSameSide ? "items-end" : "items-start"} animate-in fade-in-0 slide-in-from-bottom-2 duration-300`}
                             style={{ animationDelay: `${Math.min(i * 20, 300)}ms`, animationFillMode: "both" }}
                           >
-                            {/* Admin Name Tag (only for admins) */}
+                            {/* Admin Name Tag — shows for ALL viewers so users know which admin replied */}
                             {isSenderAdmin && (
-                              <span className={`text-[10px] font-extrabold text-gray-400 mb-0.5 px-0.5 uppercase tracking-wide`}>
-                                {msg.sender?.name || "Support Admin"}
-                              </span>
+                              <div className={`flex items-center gap-1 mb-0.5 ${isSameSide ? "flex-row-reverse" : "flex-row"}`}>
+                                {isAdmin && (
+                                  <div className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border border-blue-200 shrink-0">
+                                    {msg.sender?.avatar?.url ? (
+                                      <img src={msg.sender.avatar.url} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <UserIcon size={8} className="text-blue-400" />
+                                    )}
+                                  </div>
+                                )}
+                                <span className="text-[10px] font-black text-blue-500 uppercase tracking-wider">
+                                  {isAdmin ? (msg.sender?.name || "Support") : "Admin"}
+                                </span>
+                              </div>
                             )}
                             {/* Row: bubble + action buttons side by side */}
                             <div className={`flex items-start gap-2.5 group ${isSameSide ? "flex-row-reverse" : "flex-row"} max-w-full`}>
@@ -641,12 +819,15 @@ const ChatWidget = () => {
 
             {/* Footer Input */}
             {(!isAdmin || activeChat) && (
-              <form onSubmit={handleSendMessage} className={`p-4 bg-white border-t border-gray-100 ${isAdmin && activeChatAssignedAdmin && activeChatAssignedAdmin._id !== user._id ? "opacity-50 grayscale pointer-events-none" : ""}`}>
+              <form onSubmit={handleSendMessage} className={`p-4 bg-white border-t border-gray-100 transition-all ${isAdmin && activeChatAssignedAdmin && String(activeChatAssignedAdmin._id) !== String(user._id) ? "opacity-40 pointer-events-none select-none" : ""}`}>
+                {isAdmin && activeChatAssignedAdmin && String(activeChatAssignedAdmin._id) !== String(user._id) && (
+                  <p className="text-[10px] text-center text-red-400 font-bold mb-2 uppercase tracking-wider">Click "Take Over" to reply</p>
+                )}
                 <div className="flex items-center gap-2 bg-gray-100 rounded-2xl px-3 py-2 border border-transparent focus-within:border-black transition-all">
                   <input
                     type="text"
-                    disabled={isAdmin && activeChatAssignedAdmin && activeChatAssignedAdmin._id !== user._id}
-                    placeholder={isAdmin && activeChatAssignedAdmin && activeChatAssignedAdmin._id !== user._id ? "Chat assigned to another admin" : "Type a message..."}
+                    disabled={isAdmin && activeChatAssignedAdmin && String(activeChatAssignedAdmin._id) !== String(user._id)}
+                    placeholder={isAdmin && activeChatAssignedAdmin && String(activeChatAssignedAdmin._id) !== String(user._id) ? "Take over to reply..." : "Type a message..."}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     className="flex-1 bg-transparent outline-none text-sm font-semibold"
@@ -670,7 +851,7 @@ const ChatWidget = () => {
                     <button
                       type="button"
                       onClick={() => imageInputRef.current?.click()}
-                      disabled={uploadingImage}
+                      disabled={uploadingImage || (isAdmin && activeChatAssignedAdmin && String(activeChatAssignedAdmin._id) !== String(user._id))}
                       className={`p-1.5 text-gray-400 hover:text-black transition-colors ${uploadingImage ? 'animate-pulse' : ''}`}
                       title="Send Image"
                     >
@@ -679,7 +860,7 @@ const ChatWidget = () => {
                     <button
                       type="button"
                       onClick={() => pdfInputRef.current?.click()}
-                      disabled={uploadingImage}
+                      disabled={uploadingImage || (isAdmin && activeChatAssignedAdmin && String(activeChatAssignedAdmin._id) !== String(user._id))}
                       className={`p-1.5 text-gray-400 hover:text-black transition-colors ${uploadingImage ? 'animate-pulse' : ''}`}
                       title="Send PDF"
                     >

@@ -218,4 +218,17 @@ export const markMessagesAsRead = (senderId) => async (dispatch, getState) => {
   }
 };
 
+export const clearChatAction = (userId) => async (dispatch) => {
+  try {
+    const { data } = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/v1/messages/clear/${userId}`, {}, {
+      withCredentials: true,
+    });
+    if (data.success) {
+      dispatch(clearMessages());
+    }
+  } catch (error) {
+    console.error("Failed to clear chat:", error);
+  }
+};
+
 export default messageSlice.reducer;
