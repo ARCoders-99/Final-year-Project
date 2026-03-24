@@ -57,10 +57,8 @@ app.use("/uploads", express.static(path.join(path.resolve(), "uploads")));
   const uploadsDir = path.join(process.cwd(), "uploads", "chat");
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
-    console.log("✅ Created uploads/chat directory.");
   }
 
-  console.log("✅ Database connected successfully.");
   notifyUsers();
   removeUnverifiedAccounts();
 })();

@@ -6,7 +6,6 @@ import { sendEmail } from "../utils/sendEmail.js";
 export const notifyUsers = () => {
   // Wait until DB connection is open before starting the cron
   mongoose.connection.once("open", () => {
-    console.log("⏰ notifyUsers cron started after DB connection");
 
     cron.schedule("*/30 * * * *", async () => {
       try {
@@ -27,11 +26,10 @@ export const notifyUsers = () => {
             });
             element.notified = true;
             await element.save();
-            console.log(`📧 Email sent to ${element.user.email}`);
           }
         }
       } catch (error) {
-        console.error("⚠️ Error while notifying users:", error);
+        // Error in notifyUsers cron
       }
     });
   });

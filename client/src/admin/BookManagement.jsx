@@ -213,7 +213,7 @@ const BookManagement = () => {
         setIsAiMode(true);
       }
     } catch (err) {
-      console.error("AI Search error:", err);
+      // AI Search error
       const errorMessage = err.response?.data?.message || "AI Smart Search failed. Please try again.";
       toast.error(errorMessage);
     } finally {

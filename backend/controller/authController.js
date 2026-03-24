@@ -445,7 +445,7 @@ export const uploadAvatar = catchAsyncErrors(async (req, res, next) => {
   });
 
   if (!cloudinaryResponse || cloudinaryResponse.error) {
-    console.error("Cloudinary Error:", cloudinaryResponse.error || "Unknown error");
+    // Cloudinary Error
     return next(new ErrorHandler("Failed to upload avatar to Cloudinary.", 500));
   }
 

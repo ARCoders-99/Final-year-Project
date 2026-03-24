@@ -16,10 +16,9 @@ const broadcastAdminStatus = async () => {
       io.emit("adminStatusUpdate", {
         isOnline: !!onlineAdmin,
       });
-      console.log(`Broadcasted collective admin status: ${!!onlineAdmin ? 'Online' : 'Offline'}`);
     }
   } catch (err) {
-    console.error("Error broadcasting admin status:", err);
+    // Error broadcasting admin status
   }
 };
 
@@ -33,7 +32,6 @@ export const initSocket = (server) => {
 
   io.on("connection", async (socket) => {
     const userId = socket.handshake.query.userId;
-    console.log(`User connected: ${userId} (Socket: ${socket.id})`);
 
     if (userId && userId !== "undefined") {
       socket.join(userId); // Join a room named after the userId
@@ -74,7 +72,7 @@ export const initSocket = (server) => {
         }
         io.to(senderId).emit("messageSent", populatedMessage);
       } catch (error) {
-        console.error("Error sending message:", error);
+        // Error sending message
       }
     });
 

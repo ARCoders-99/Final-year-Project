@@ -214,7 +214,7 @@ export const markMessagesAsRead = (senderId) => async (dispatch, getState) => {
       withCredentials: true,
     });
   } catch (error) {
-    console.error("Failed to mark messages as read:", error);
+    // Failed to mark messages as read
   }
 };
 
@@ -227,7 +227,7 @@ export const clearChatAction = (userId) => async (dispatch) => {
       dispatch(clearMessages());
     }
   } catch (error) {
-    console.error("Failed to clear chat:", error);
+    // Failed to clear chat
   }
 };
 

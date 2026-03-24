@@ -16,25 +16,19 @@ const testInImageFolder = async () => {
   try {
     const pdfPath = path.resolve("scripts", "sample.pdf");
     
-    console.log("Uploading to CHAT_IMAGES folder...");
     const uploadResponse = await cloudinary.uploader.upload(pdfPath, {
       folder: "CHAT_IMAGES",
       resource_type: "image", // Must be image to be in this folder usually
     });
 
-    console.log("Upload Success! URL:", uploadResponse.secure_url);
 
     https.get(uploadResponse.secure_url, (res) => {
-      console.log("Status Code:", res.statusCode);
       if (res.statusCode === 200) {
-        console.log("Success! PDF in CHAT_IMAGES is accessible.");
       } else {
-        console.log("Failed. Status:", res.statusCode);
       }
     });
 
   } catch (error) {
-    console.error("Test Failed:", error);
   }
 };
 

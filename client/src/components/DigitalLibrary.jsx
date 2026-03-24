@@ -124,7 +124,7 @@ const DigitalLibrary = () => {
                 setIsAiMode(true);
             }
         } catch (err) {
-            console.error("AI Search error:", err);
+            // AI Search error
             const errorMessage = err.response?.data?.message || "AI Smart Search is currently unavailable.";
             toast.error(errorMessage);
         } finally {
@@ -202,7 +202,11 @@ const DigitalLibrary = () => {
                                 >
                                     <div className="h-64 bg-gray-200 overflow-hidden relative group">
                                         <img
-                                            src={book.coverImage || "https://via.placeholder.com/150x200?text=No+Cover"}
+                                            src={
+                                                book.coverImage?.includes("gutenberg.org")
+                                                    ? `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/image-proxy?url=${encodeURIComponent(book.coverImage)}`
+                                                    : book.coverImage || "https://via.placeholder.com/150x200?text=No+Cover"
+                                            }
                                             alt={book.title}
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                         />

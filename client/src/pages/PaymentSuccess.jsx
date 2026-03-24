@@ -28,7 +28,7 @@ const PaymentSuccess = () => {
                 await dispatch(recordPaidBorrow(bookId, sessionId));
                 setStatus("success");
             } catch (err) {
-                console.error("Payment verification failed", err);
+                // Payment verification failed
                 setStatus("error");
             }
         };

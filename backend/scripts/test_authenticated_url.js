@@ -14,7 +14,6 @@ const testAuthenticatedUrl = async () => {
   try {
     const publicId = "CHAT_FILES_TEST/t84oodbnkwlunzvu2dlm"; 
     
-    console.log("Generating private download URL for publicId:", publicId);
     
     // For PDFs uploaded as image type
     const downloadUrl = cloudinary.utils.private_download_url(publicId, "pdf", {
@@ -22,19 +21,14 @@ const testAuthenticatedUrl = async () => {
       attachment: true
     });
 
-    console.log("Download URL:", downloadUrl);
 
     https.get(downloadUrl, (res) => {
-      console.log("Download URL Status Code:", res.statusCode);
       if (res.statusCode === 200 || res.statusCode === 302) {
-        console.log("Success! Authenticated URL works.");
       } else {
-        console.log("Failed. Status:", res.statusCode);
       }
     });
 
   } catch (error) {
-    console.error("Test Failed:", error);
   }
 };
 

@@ -43,10 +43,6 @@ export const registerNewAdmin = catchAsyncErrors(async (req, res, next) => {
   );
 
   if (!cloudinaryResponse || cloudinaryResponse.error) {
-    console.error(
-      "Cloudinary error:",
-      cloudinaryResponse.error || "Unknown Cloudinary Error"
-    );
     return next(
       new ErrorHandler("Failed to upload avatar to cloudinary.", 500)
     );

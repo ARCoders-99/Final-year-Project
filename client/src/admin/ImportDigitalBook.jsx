@@ -161,7 +161,11 @@ const ImportDigitalBook = () => {
                             <div key={book.gutenbergId} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
                                 <div className="h-64 bg-gray-200 overflow-hidden">
                                     <img
-                                        src={book.coverImage || "https://via.placeholder.com/150x200?text=No+Cover"}
+                                        src={
+                                            book.coverImage?.includes("gutenberg.org")
+                                                ? `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/image-proxy?url=${encodeURIComponent(book.coverImage)}`
+                                                : book.coverImage || "https://via.placeholder.com/150x200?text=No+Cover"
+                                        }
                                         alt={book.title}
                                         className="w-full h-full object-cover"
                                     />

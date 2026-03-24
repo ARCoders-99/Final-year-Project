@@ -16,7 +16,6 @@ const testSignedUrl = async () => {
     // URL was: https://res.cloudinary.com/dhdfnbof5/image/upload/v1773989584/CHAT_FILES_TEST/t84oodbnkwlunzvu2dlm.pdf
     const publicId = "CHAT_FILES_TEST/t84oodbnkwlunzvu2dlm"; 
     
-    console.log("Generating signed URL for publicId:", publicId);
     const signedUrl = cloudinary.url(publicId, {
       sign_url: true,
       secure: true,
@@ -24,19 +23,14 @@ const testSignedUrl = async () => {
       format: "pdf"
     });
 
-    console.log("Signed URL:", signedUrl);
 
     https.get(signedUrl, (res) => {
-      console.log("Signed URL Status Code:", res.statusCode);
       if (res.statusCode === 200) {
-        console.log("Success! Signed URL works.");
       } else {
-        console.log("Failed. Status:", res.statusCode);
       }
     });
 
   } catch (error) {
-    console.error("Test Failed:", error);
   }
 };
 

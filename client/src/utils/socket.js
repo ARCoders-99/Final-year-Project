@@ -9,16 +9,14 @@ export const initiateSocket = (userId) => {
     if (socket.io.opts.query.userId === userId) return socket;
     socket.disconnect();
   }
-  
+
   socket = io(SOCKET_URL, {
     query: { userId },
   });
-  console.log(`Connecting socket for user: ${userId}`);
   return socket;
 };
 
 export const disconnectSocket = () => {
-  console.log("Disconnecting socket...");
   if (socket) socket.disconnect();
 };
 

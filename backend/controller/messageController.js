@@ -214,7 +214,7 @@ export const assignAdmin = catchAsyncErrors(async (req, res, next) => {
       }
     });
   } catch (err) {
-    console.error("Socket emit failed in assignAdmin:", err);
+    // Socket emit failed
   }
 
   res.status(200).json({
@@ -293,8 +293,7 @@ export const uploadImage = catchAsyncErrors(async (req, res, next) => {
     const host = req.headers.host;
     uploadUrl = `${req.protocol}://${host}/uploads/chat/${fileName}`;
 
-    console.log("PDF Saved Locally:", filePath);
-    console.log("PDF URL Generated:", uploadUrl);
+    // PDF Saved Locally
   } else {
     // Upload image to Cloudinary
     const cloudinaryResponse = await cloudinary.uploader.upload(file.tempFilePath, {

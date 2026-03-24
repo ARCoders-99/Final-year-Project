@@ -35,12 +35,10 @@ const ChatWidget = () => {
 
       socket.off("newMessage");
       socket.on("newMessage", (newMessage) => {
-        console.log("RECEIVED NEW MESSAGE:", newMessage);
         dispatch(addMessage(newMessage));
 
         // If admin and message is from a new person, refresh conversations
         if (isAdmin && !conversations.some(c => c._id === newMessage.sender)) {
-          console.log("New conversation detected, fetching list...");
           dispatch(fetchConversations());
         }
 
@@ -60,38 +58,32 @@ const ChatWidget = () => {
 
       socket.off("messageSent");
       socket.on("messageSent", (newMessage) => {
-        console.log("MESSAGE SENT SUCCESSFULLY via Socket:", newMessage);
         dispatch(addMessage(newMessage));
       });
 
       socket.off("userStatusUpdate");
       socket.on("userStatusUpdate", (data) => {
-        console.log("USER STATUS UPDATE:", data);
         dispatch(updateUserStatus(data));
       });
 
       socket.off("messageUpdated");
       socket.on("messageUpdated", (updatedMessage) => {
-        console.log("MESSAGE UPDATED via Socket:", updatedMessage);
         dispatch(updateMessage(updatedMessage));
       });
 
       socket.off("messagesRead");
       socket.on("messagesRead", (data) => {
-        console.log("MESSAGES READ via Socket:", data);
         // If I am the sender, mark messages to this reader as read
         dispatch(setMessagesRead(data.readerId));
       });
 
       socket.off("messageDeleted");
       socket.on("messageDeleted", (data) => {
-        console.log("MESSAGE DELETED via Socket:", data);
         dispatch(deleteMessageLocally({ ...data, userId: user._id }));
       });
 
       socket.off("adminAssigned");
       socket.on("adminAssigned", (data) => {
-        console.log("ADMIN ASSIGNED via Socket:", data);
         dispatch(updateAssignment(data));
       });
 
@@ -113,7 +105,6 @@ const ChatWidget = () => {
     if (socket) {
       socket.off("adminStatusUpdate");
       socket.on("adminStatusUpdate", (data) => {
-        console.log("COLLECTIVE ADMIN STATUS UPDATE:", data);
         if (!isAdmin) {
           setActiveChat(prev => {
             if (!prev) return prev;
@@ -153,7 +144,6 @@ const ChatWidget = () => {
             withCredentials: true,
           });
           if (data.success && data.admin) {
-            console.log("Fetched Admin Info for User:", data.admin);
             // Only update if it's different to prevent loops
             setActiveChat(prev => {
               if (prev && prev.userInfo.isOnline === data.admin.isOnline) return prev;
@@ -161,7 +151,6 @@ const ChatWidget = () => {
             });
           }
         } catch (error) {
-          console.error("Failed to fetch admin info:", error);
         }
       };
       getAdminInfo();
@@ -205,7 +194,6 @@ const ChatWidget = () => {
         dispatch(updateAssignment({ userId: activeChat._id, admin: previousAdmin }));
       }
     } catch (error) {
-      console.error("Failed to take over chat:", error);
       // Rollback on error
       dispatch(updateAssignment({ userId: activeChat._id, admin: previousAdmin }));
     }
@@ -231,9 +219,8 @@ const ChatWidget = () => {
     try {
       const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3");
       audio.volume = 0.5;
-      audio.play().catch(e => console.log("Audio play blocked by browser:", e));
+      audio.play().catch(e => { });
     } catch (error) {
-      console.error("Error playing sound:", error);
     }
   };
 
@@ -246,12 +233,10 @@ const ChatWidget = () => {
     const targetId = activeChat?._id;
 
     if (!targetId) {
-      console.error("No target ID for message. activeChat:", activeChat);
       return;
     }
 
     if (socket) {
-      console.log(`EMITTING sendMessage to ${targetId} (Type: ${customType}):`, contentToSend);
 
       // Optimistic Assignment for the first message from an Admin
       if (isAdmin && !activeChatAssignedAdmin) {
@@ -267,7 +252,6 @@ const ChatWidget = () => {
       });
       if (!customContent) setMessage("");
     } else {
-      console.error("Socket NOT available in getSocket()");
     }
   };
 
@@ -309,7 +293,6 @@ const ChatWidget = () => {
         handleSendMessage(null, data.url, isImage ? "image" : "file", data.originalName || file.name);
       }
     } catch (error) {
-      console.error("File upload failed:", error);
       alert("Failed to upload file.");
     } finally {
       setUploadingImage(false);
@@ -343,7 +326,6 @@ const ChatWidget = () => {
 
     const socket = getSocket();
     if (socket && editingMessage) {
-      console.log("EMITTING editMessage:", { messageId: editingMessage, newContent: editContent });
       socket.emit("editMessage", {
         messageId: editingMessage,
         senderId: user._id,
@@ -353,7 +335,6 @@ const ChatWidget = () => {
       setEditingMessage(null);
       setEditContent("");
     } else {
-      console.warn("Cannot emit edit: socket or message missing", { socket: !!socket, editingMessage });
     }
   };
 
@@ -386,7 +367,6 @@ const ChatWidget = () => {
           setSearchResults(data.users);
         }
       } catch (error) {
-        console.error("Search failed:", error);
       } finally {
         setIsSearching(false);
       }

@@ -45,7 +45,7 @@ const ChatbotWidget = () => {
                 setMessages(prev => [...prev, { role: 'bot', content: response.data.reply }]);
             }
         } catch (error) {
-            console.error('Chatbot error:', error);
+            // Chatbot error
             setMessages(prev => [...prev, { role: 'bot', content: 'Sorry, I am having trouble connecting right now. Please try again later.' }]);
         } finally {
             setIsLoading(false);

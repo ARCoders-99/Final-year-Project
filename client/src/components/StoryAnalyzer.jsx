@@ -27,7 +27,7 @@ const StoryAnalyzer = ({ isOpen, onClose, textToAnalyze }) => {
                 setAnalysis(data.analysis);
             }
         } catch (error) {
-            console.error("Story Analysis Error:", error);
+            // Story Analysis Error
             toast.error(error.response?.data?.message || "Failed to analyze story");
             onClose();
         } finally {

@@ -4,7 +4,6 @@ import { User } from "../models/userModel.js";
 
 export const removeUnverifiedAccounts = () => {
   mongoose.connection.once("open", () => {
-    console.log("🧹 removeUnverifiedAccounts cron started after DB connection");
 
     cron.schedule("*/5 * * * *", async () => {
       try {
@@ -15,9 +14,8 @@ export const removeUnverifiedAccounts = () => {
           createdAt: { $lt: thirtyMinutesAgo },
         });
 
-        console.log("✅ Old unverified accounts removed");
       } catch (error) {
-        console.error("⚠️ Error in removeUnverifiedAccounts cron:", error);
+        // Error in removeUnverifiedAccounts cron
       }
     });
   });

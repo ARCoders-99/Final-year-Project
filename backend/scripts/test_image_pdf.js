@@ -17,28 +17,21 @@ const uploadTest = async () => {
     const dummyPdfPath = path.resolve("scripts", "sample.pdf");
     // fs.writeFileSync(dummyPdfPath, "%PDF-1.4\n1 0 obj\n<< /Title (Test) >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF");
 
-    console.log("Uploading dummy PDF with resource_type: image...");
     const response = await cloudinary.uploader.upload(dummyPdfPath, {
       folder: "CHAT_FILES_TEST",
       resource_type: "image",
     });
 
     const url = response.secure_url;
-    console.log("Upload Success!");
-    console.log("URL:", url);
 
     https.get(url, (res) => {
-      console.log("Status Code:", res.statusCode);
       if (res.statusCode === 200) {
-        console.log("Success! PDF as image type is accessible.");
       } else {
-        console.log("Failed. Status:", res.statusCode);
       }
     });
 
     fs.unlinkSync(dummyPdfPath);
   } catch (error) {
-    console.error("Upload Failed:", error);
   }
 };
 

@@ -16,18 +16,14 @@ const uploadTest = async () => {
     const dummyPdfPath = path.resolve("test_dummy.pdf");
     fs.writeFileSync(dummyPdfPath, "%PDF-1.4\n1 0 obj\n<< /Title (Test) >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF");
 
-    console.log("Uploading dummy PDF with resource_type: raw...");
     const response = await cloudinary.uploader.upload(dummyPdfPath, {
       folder: "CHAT_FILES_TEST",
       resource_type: "raw",
     });
 
-    console.log("Upload Success!");
-    console.log("URL:", response.secure_url);
 
     fs.unlinkSync(dummyPdfPath);
   } catch (error) {
-    console.error("Upload Failed:", error);
   }
 };
 

@@ -26,25 +26,19 @@ const testLocalUploadNative = () => {
     let responseData = "";
     res.on("data", (chunk) => responseData += chunk);
     res.on("end", () => {
-      console.log("Response Status:", res.statusCode);
-      console.log("Response Data:", responseData);
       
       const parsed = JSON.parse(responseData);
       if (parsed.success) {
-        console.log("SUCCESS! Local URL:", parsed.url);
         // Add a check for the file in the filesystem
         const fileName = parsed.url.split("/").pop();
         const expectedPath = path.join(process.cwd(), "uploads", "chat", fileName);
         if (fs.existsSync(expectedPath)) {
-          console.log("FILE EXISTS IN UPLOADS FOLDER!");
         } else {
-          console.log("FILE MISSING IN UPLOADS FOLDER:", expectedPath);
         }
       }
     });
   });
 
-  req.on("error", (e) => console.error("Error:", e.message));
   req.write(body);
   req.end();
 };

@@ -3,7 +3,8 @@ import {
     searchBooks,
     importBook,
     getAllDigitalBooks,
-    deleteDigitalBook
+    deleteDigitalBook,
+    imageProxy
 } from "../controller/digitalBookController.js";
 import {
     borrowDigitalBook,
@@ -21,6 +22,7 @@ const router = express.Router();
 router.get("/search", isAuthenticated, isAuthorized("Admin"), searchBooks);
 router.post("/import", isAuthenticated, isAuthorized("Admin"), importBook);
 router.get("/all", isAuthenticated, getAllDigitalBooks);
+router.get("/image-proxy", imageProxy);
 router.delete("/delete/:id", isAuthenticated, isAuthorized("Admin"), deleteDigitalBook);
 
 // Digital Borrow Routes

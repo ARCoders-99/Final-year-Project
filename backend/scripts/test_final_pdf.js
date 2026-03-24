@@ -17,14 +17,11 @@ const testSignedUpload = async () => {
     const pdfPath = path.resolve("scripts", "sample.pdf");
     fs.writeFileSync(pdfPath, "%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>\nendobj\ntrailer\n<< /Size 4 /Root 1 0 R >>\n%%EOF");
     
-    console.log("Uploading with resource_type: auto...");
     const uploadResponse = await cloudinary.uploader.upload(pdfPath, {
       folder: "CHAT_FILES_FINAL",
       resource_type: "auto",
     });
 
-    console.log("Upload Success! Public ID:", uploadResponse.public_id);
-    console.log("Secure URL:", uploadResponse.secure_url);
 
     // Now try a signed URL
     const signedUrl = cloudinary.url(uploadResponse.public_id, {
@@ -35,19 +32,14 @@ const testSignedUpload = async () => {
         format: uploadResponse.format
     });
 
-    console.log("Signed URL:", signedUrl);
 
     https.get(signedUrl, (res) => {
-      console.log("Signed URL Status Code:", res.statusCode);
       if (res.statusCode === 200) {
-        console.log("Success! Signed URL works.");
       } else {
-        console.log("Failed. Status:", res.statusCode);
       }
     });
 
   } catch (error) {
-    console.error("Test Failed:", error);
   }
 };
 

@@ -60,7 +60,7 @@ const PhysicalBookReader = () => {
                 toast.info("No text found on this page to analyze.");
             }
         } catch (error) {
-            console.error("Analysis extraction error:", error);
+            // Analysis extraction error
             toast.error("Failed to extract text for analysis.");
         }
     };
@@ -117,7 +117,7 @@ const PhysicalBookReader = () => {
                 setIsPaused(false);
             }
         } catch (error) {
-            console.error("Speech error:", error);
+            // Speech error
             setIsSpeaking(false);
             setIsPaused(false);
         }
@@ -242,7 +242,7 @@ const PhysicalBookReader = () => {
                 setExpiryDate(expiryDate);
                 setBook(data.book);
             } catch (err) {
-                console.error("Book fetch error:", err);
+                // Book fetch error
                 const errorMessage = err.response?.data?.message || err.message || "Failed to load book details.";
                 setFetchError(errorMessage);
 
@@ -282,7 +282,7 @@ const PhysicalBookReader = () => {
     }, []);
 
     const onDocumentLoadError = useCallback((err) => {
-        console.error("PDF load error:", err);
+        // PDF load error
         setPdfError("Failed to load the PDF. Please try again later.");
         setPdfLoading(false);
     }, []);
