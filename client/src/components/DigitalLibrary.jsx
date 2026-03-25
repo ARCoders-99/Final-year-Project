@@ -21,6 +21,7 @@ const DigitalLibrary = () => {
     const { user } = useSelector((state) => state.auth);
     const [isPaymentPopupOpen, setIsPaymentPopupOpen] = useState(false);
     const [paymentData, setPaymentData] = useState({ clientSecret: "", bookId: "", bookTitle: "", price: 0 });
+    const [borrowingId, setBorrowingId] = useState(null);
 
     // AI & Filter States (Preserving clean UI)
     const [searchedKeyword, setSearchedKeyword] = useState("");
@@ -44,7 +45,14 @@ const DigitalLibrary = () => {
         }
     }, [dispatch, error, message]);
 
+    useEffect(() => {
+        if (!loading) {
+            setBorrowingId(null);
+        }
+    }, [loading]);
+
     const handleBorrow = async (id) => {
+        setBorrowingId(id);
         const book = digitalBooks.find((b) => b._id === id);
         if (!book) return;
 
@@ -204,7 +212,7 @@ const DigitalLibrary = () => {
                                         <img
                                             src={
                                                 book.coverImage?.includes("gutenberg.org")
-                                                    ? `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/image-proxy?url=${encodeURIComponent(book.coverImage)}`
+                                                    ? `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/image-proxy?url=${encodeURIComponent(book.coverImage)}`
                                                     : book.coverImage || "https://via.placeholder.com/150x200?text=No+Cover"
                                             }
                                             alt={book.title}
@@ -250,7 +258,7 @@ const DigitalLibrary = () => {
                                         <div className="mt-auto flex gap-2">
                                             <Button
                                                 onClick={() => handleBorrow(book._id)}
-                                                loading={loading}
+                                                loading={loading && borrowingId === book._id}
                                                 disabled={borrowed}
                                                 className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors text-sm font-bold ${borrowed
                                                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"

@@ -9,12 +9,12 @@ const testUpload = async () => {
   formData.append("file", fs.createReadStream(filePath));
 
   try {
-    const res = await axios.post("http://localhost:4000/api/v1/messages/upload-image", formData, {
+    const res = await axios.post("http://localhost:5000/api/v1/messages/upload-image", formData, {
       headers: formData.getHeaders(),
     });
 
     if (res.data.success && res.data.url.includes("/uploads/chat/")) {
-      
+
       // Now check if it's accessible
       const getRes = await axios.get(res.data.url);
     }

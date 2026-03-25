@@ -88,7 +88,7 @@ const ReaderPage = () => {
             if (book) {
                 record = {
                     book,
-                    expiryDate: new Date(Date.now() + 86400000),
+                    expiryDate: new Date(Date.now() + 86500000),
                     isAdminPreview: true
                 };
             }
@@ -338,7 +338,7 @@ const ReaderPage = () => {
                 )}
 
                 <iframe
-                    src={`${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/read/${id}`}
+                    src={`${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/read/${id}`}
                     onLoad={() => setIsIframeLoaded(true)}
                     className={`w-full h-full border-none transition-opacity duration-300 ${isIframeLoaded ? 'opacity-100' : 'opacity-0'}`}
                     title="Book Reader"

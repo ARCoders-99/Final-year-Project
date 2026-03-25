@@ -13,6 +13,7 @@ const ImportDigitalBook = () => {
     const [borrowLimitHours, setBorrowLimitHours] = useState(0);
     const [borrowLimitMinutes, setBorrowLimitMinutes] = useState(0);
     const [price, setPrice] = useState(0);
+    const [importingId, setImportingId] = useState(null);
 
     const dispatch = useDispatch();
     const { loading, error, message, searchByGutenbergResults } = useSelector(
@@ -32,6 +33,7 @@ const ImportDigitalBook = () => {
     }, [title, author, dispatch]);
 
     const handleImport = (book) => {
+        setImportingId(book.gutenbergId);
         if (Number(borrowLimitDays) === 0 && Number(borrowLimitHours) === 0 && Number(borrowLimitMinutes) === 0) {
             toast.error("Please set a borrow limit (at least 1 minute).");
             return;
@@ -56,6 +58,12 @@ const ImportDigitalBook = () => {
             dispatch(resetDigitalSlice());
         }
     }, [dispatch, error, message]);
+
+    useEffect(() => {
+        if (!loading) {
+            setImportingId(null);
+        }
+    }, [loading]);
 
     return (
         <main className="relative flex-1 p-6 pt-28 bg-gray-50 min-h-screen">
@@ -163,7 +171,7 @@ const ImportDigitalBook = () => {
                                     <img
                                         src={
                                             book.coverImage?.includes("gutenberg.org")
-                                                ? `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/image-proxy?url=${encodeURIComponent(book.coverImage)}`
+                                                ? `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/image-proxy?url=${encodeURIComponent(book.coverImage)}`
                                                 : book.coverImage || "https://via.placeholder.com/150x200?text=No+Cover"
                                         }
                                         alt={book.title}
@@ -177,7 +185,7 @@ const ImportDigitalBook = () => {
                                     <div className="mt-auto">
                                         <Button
                                             onClick={() => handleImport(book)}
-                                            loading={loading}
+                                            loading={loading && importingId === book.gutenbergId}
                                             className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors font-bold"
                                         >
                                             <Import size={18} />

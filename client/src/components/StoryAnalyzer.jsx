@@ -18,7 +18,7 @@ const StoryAnalyzer = ({ isOpen, onClose, textToAnalyze }) => {
         setLoading(true);
         try {
             const { data } = await axios.post(
-                `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/ai/analyze`,
+                `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/ai/analyze`,
                 { text: textToAnalyze },
                 { withCredentials: true }
             );

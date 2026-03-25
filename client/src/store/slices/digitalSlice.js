@@ -57,7 +57,7 @@ export const searchGutenbergBooks = (title, author) => async (dispatch) => {
     dispatch(digitalSlice.actions.requestForDigital());
     try {
         const response = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/search`,
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/search`,
             {
                 params: { title, author },
                 withCredentials: true
@@ -73,7 +73,7 @@ export const importGutenbergBook = (bookData) => async (dispatch) => {
     dispatch(digitalSlice.actions.requestForDigital());
     try {
         const response = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/import`,
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/import`,
             bookData,
             {
                 withCredentials: true,
@@ -90,7 +90,7 @@ export const fetchAllDigitalBooks = () => async (dispatch) => {
     dispatch(digitalSlice.actions.requestForDigital());
     try {
         const response = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/all`,
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/all`,
             { withCredentials: true }
         );
         dispatch(digitalSlice.actions.successForDigitalBooks(response.data.books));
@@ -103,7 +103,7 @@ export const borrowDigitalBook = (id) => async (dispatch) => {
     dispatch(digitalSlice.actions.requestForDigital());
     try {
         const response = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/borrow/${id}`,
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/borrow/${id}`,
             {},
             { withCredentials: true }
         );
@@ -122,7 +122,7 @@ export const recordPaidDigitalBorrow = (bookId, sessionId) => async (dispatch) =
     dispatch(digitalSlice.actions.requestForDigital());
     try {
         const res = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/record-paid-borrow/${bookId}`,
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/record-paid-borrow/${bookId}`,
             { sessionId },
             { withCredentials: true }
         );
@@ -140,7 +140,7 @@ export const fetchMyDigitalBorrows = () => async (dispatch) => {
     dispatch(digitalSlice.actions.requestForDigital());
     try {
         const response = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/my-borrows`,
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/my-borrows`,
             { withCredentials: true }
         );
         dispatch(digitalSlice.actions.successForMyDigitalBorrows(response.data.borrows));
@@ -153,7 +153,7 @@ export const fetchAllDigitalBorrows = () => async (dispatch) => {
     dispatch(digitalSlice.actions.requestForDigital());
     try {
         const response = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/admin/all-borrows`,
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/admin/all-borrows`,
             { withCredentials: true }
         );
         dispatch(digitalSlice.actions.successForAllDigitalBorrows(response.data.borrows));
@@ -166,7 +166,7 @@ export const returnDigitalBook = (id) => async (dispatch) => {
     dispatch(digitalSlice.actions.requestForDigital());
     try {
         const response = await axios.post(
-            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/return/${id}`,
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/return/${id}`,
             {},
             { withCredentials: true }
         );
@@ -185,7 +185,7 @@ export const deleteDigitalBook = (id) => async (dispatch) => {
     dispatch(digitalSlice.actions.requestForDigital());
     try {
         const response = await axios.delete(
-            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/digital/delete/${id}`,
+            `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/digital/delete/${id}`,
             { withCredentials: true }
         );
         dispatch(digitalSlice.actions.successForImportDigitalBook(response.data.message));

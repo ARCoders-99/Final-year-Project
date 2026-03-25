@@ -173,7 +173,7 @@ export const register = (data) => async (dispatch) => {
   dispatch(authSlice.actions.registerRequest());
   try {
     const res = await axios.post(
-      "http://localhost:4000/api/v1/auth/register",
+      "http://localhost:5000/api/v1/auth/register",
       data,
       {
         withCredentials: true,
@@ -194,7 +194,7 @@ export const otpVerification = (email, otp) => async (dispatch) => {
   dispatch(authSlice.actions.otpVerificationRequest());
   try {
     const res = await axios.post(
-      "http://localhost:4000/api/v1/auth/verify-otp",
+      "http://localhost:5000/api/v1/auth/verify-otp",
       { email, otp },
       {
         withCredentials: true,
@@ -215,7 +215,7 @@ export const login = (data) => async (dispatch) => {
   dispatch(authSlice.actions.loginRequest());
   try {
     const res = await axios.post(
-      "http://localhost:4000/api/v1/auth/login",
+      "http://localhost:5000/api/v1/auth/login",
       data,
       {
         withCredentials: true,
@@ -236,7 +236,7 @@ export const adminLogin = (data) => async (dispatch) => {
   dispatch(authSlice.actions.loginRequest());
   try {
     const res = await axios.post(
-      "http://localhost:4000/api/v1/auth/admin-login",
+      "http://localhost:5000/api/v1/auth/admin-login",
       data,
       {
         withCredentials: true,
@@ -257,7 +257,7 @@ export const googleLogin = (data) => async (dispatch) => {
   dispatch(authSlice.actions.loginRequest());
   try {
     const res = await axios.post(
-      "http://localhost:4000/api/v1/auth/social-login",
+      "http://localhost:5000/api/v1/auth/social-login",
       data,
       {
         withCredentials: true,
@@ -278,7 +278,7 @@ export const googleLogin = (data) => async (dispatch) => {
 export const logout = () => async (dispatch) => {
   dispatch(authSlice.actions.logoutRequest());
   try {
-    const res = await axios.get("http://localhost:4000/api/v1/auth/logout", {
+    const res = await axios.get("http://localhost:5000/api/v1/auth/logout", {
       withCredentials: true,
     });
     dispatch(authSlice.actions.logoutSuccess(res.data.message));
@@ -294,7 +294,7 @@ export const logout = () => async (dispatch) => {
 export const getUser = () => async (dispatch) => {
   dispatch(authSlice.actions.getUserRequest());
   try {
-    const res = await axios.get("http://localhost:4000/api/v1/auth/me", {
+    const res = await axios.get("http://localhost:5000/api/v1/auth/me", {
       withCredentials: true,
     });
     dispatch(authSlice.actions.getUserSuccess(res.data));
@@ -307,7 +307,7 @@ export const forgotPassword = (email) => async (dispatch) => {
   dispatch(authSlice.actions.forgotPasswordRequest());
   try {
     const res = await axios.post(
-      "http://localhost:4000/api/v1/auth/password/forgot",
+      "http://localhost:5000/api/v1/auth/password/forgot",
       { email },
       {
         withCredentials: true,
@@ -328,7 +328,7 @@ export const verifyForgotPasswordOtp = (email, otp) => async (dispatch) => {
   dispatch(authSlice.actions.forgotPasswordRequest());
   try {
     const res = await axios.post(
-      "http://localhost:4000/api/v1/auth/password/verify-otp",
+      "http://localhost:5000/api/v1/auth/password/verify-otp",
       { email, otp },
       {
         withCredentials: true,
@@ -350,7 +350,7 @@ export const resetPassword = (data, token) => async (dispatch) => {
   dispatch(authSlice.actions.resetPasswordRequest());
   try {
     const res = await axios.put(
-      `http://localhost:4000/api/v1/auth/password/reset/${token}`,
+      `http://localhost:5000/api/v1/auth/password/reset/${token}`,
       data,
       {
         withCredentials: true,
@@ -371,7 +371,7 @@ export const updatePassword = (data) => async (dispatch) => {
   dispatch(authSlice.actions.updatePasswordRequest());
   try {
     const res = await axios.put(
-      "http://localhost:4000/api/v1/auth/password/update",
+      "http://localhost:5000/api/v1/auth/password/update",
       data,
       {
         withCredentials: true,
@@ -392,7 +392,7 @@ export const updateCredentials = (data) => async (dispatch) => {
   dispatch(authSlice.actions.updateProfileRequest());
   try {
     const res = await axios.put(
-      "http://localhost:4000/api/v1/auth/profile/update",
+      "http://localhost:5000/api/v1/auth/profile/update",
       data,
       {
         withCredentials: true,
@@ -411,7 +411,7 @@ export const updateCredentials = (data) => async (dispatch) => {
 export const uploadAvatarAction = (formData) => async (dispatch) => {
   dispatch(authSlice.actions.updateProfileRequest());
   try {
-    const { data } = await axios.post("http://localhost:4000/api/v1/auth/avatar", formData, {
+    const { data } = await axios.post("http://localhost:5000/api/v1/auth/avatar", formData, {
       withCredentials: true,
       headers: { "Content-Type": "multipart/form-data" },
     });

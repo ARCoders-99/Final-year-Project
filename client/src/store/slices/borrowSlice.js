@@ -107,7 +107,7 @@ export const fetchUserBorrowedBooks = () => async (dispatch) => {
   dispatch(borrowSlice.actions.fetchUserBorrowedBooksRequest());
   try {
     const res = await axios.get(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/borrow/my-borrowed-books`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/borrow/my-borrowed-books`,
       { withCredentials: true }
     );
     dispatch(
@@ -126,7 +126,7 @@ export const fetchAllBorrowedBooks = () => async (dispatch) => {
   dispatch(borrowSlice.actions.fetchAllBorrowedBooksRequest());
   try {
     const res = await axios.get(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/borrow/borrowed-books-by-users`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/borrow/borrowed-books-by-users`,
       { withCredentials: true }
     );
     dispatch(
@@ -145,7 +145,7 @@ export const recordBorrowBook = (email, id) => async (dispatch) => {
   dispatch(borrowSlice.actions.recordBookRequest());
   try {
     const res = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/borrow/record-borrow-book/${id}`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/borrow/record-borrow-book/${id}`,
       { email },
       {
         withCredentials: true,
@@ -167,7 +167,7 @@ export const returnBook = ({ email, borrowId }) => async (dispatch) => {
   dispatch(borrowSlice.actions.returnBookRequest());
   try {
     const res = await axios.put(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/borrow/return-borrowed-book/${borrowId}`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/borrow/return-borrowed-book/${borrowId}`,
       { email },
       {
         withCredentials: true,
@@ -197,7 +197,7 @@ export const createPaymentIntent = (bookId) => async (dispatch) => {
   dispatch(borrowSlice.actions.paymentRequest());
   try {
     const res = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/payment/create-payment-intent/${bookId}`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/payment/create-payment-intent/${bookId}`,
       {},
       { withCredentials: true }
     );
@@ -217,7 +217,7 @@ export const recordPaidBorrow = (bookId, sessionId) => async (dispatch) => {
   dispatch(borrowSlice.actions.recordBookRequest());
   try {
     const res = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/borrow/record-paid-borrow/${bookId}`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/borrow/record-paid-borrow/${bookId}`,
       { sessionId },
       { withCredentials: true }
     );
@@ -237,7 +237,7 @@ export const fetchAllPayments = () => async (dispatch) => {
   dispatch(borrowSlice.actions.paymentRequest());
   try {
     const res = await axios.get(
-      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:4000"}/api/v1/payment/admin/payments`,
+      `${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/payment/admin/payments`,
       { withCredentials: true }
     );
     dispatch(borrowSlice.actions.fetchAllPaymentsSuccess(res.data));
