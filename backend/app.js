@@ -24,7 +24,7 @@ config(); // Load local .env first (secrets)
 config({ path: "./config/config.env" }); // Load defaults second (non-sensitive)
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL, // Remove the array brackets
+    origin: [process.env.FRONTEND_URL, "http://127.0.0.1:5173", "http://localhost:5173"],
     methods: ["GET", "PUT", "POST", "DELETE"],
     credentials: true,
   })
