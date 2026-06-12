@@ -49,7 +49,7 @@ const bookSlice = createSlice({
 export const fetchAllBooks = () => async (dispatch) => {
   dispatch(bookSlice.actions.fetchBooksRequest());
   await axios
-    .get("http://localhost:5000/api/v1/book/all", {
+    .get(`${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/book/all`, {
       withCredentials: true,
     })
     .then((res) => {
@@ -67,7 +67,7 @@ export const fetchAllBooks = () => async (dispatch) => {
 export const addBook = (formData) => async (dispatch) => {
   dispatch(bookSlice.actions.addBookRequest());
   await axios
-    .post("http://localhost:5000/api/v1/book/admin/add", formData, {
+    .post(`${import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"}/api/v1/book/admin/add`, formData, {
       withCredentials: true,
       // Do NOT set Content-Type manually — axios sets it with boundary for FormData
     })
